@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>我的小游戏库 · 主页</title>
+  <!-- Font Awesome 5 (免费版) 用于丰富图标 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(145deg, #f6f9fc 0%, #edf2f9 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+    }
+
+    /* 主容器，限定最大宽度，居中 */
+    .library-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* 头部区域 */
+    .header {
+      margin-bottom: 2.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .header-left h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1e2b5e, #2c3e82);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .header-left i {
+      font-size: 2.6rem;
+      color: #3a4f9a;
+      filter: drop-shadow(0 4px 6px rgba(45, 62, 120, 0.15));
+    }
+
+    /* 新增IP检测按钮样式 */
+    .ip-btn {
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(4px);
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #1e2b5e;
+      border: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      margin-left: 0.5rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.15s;
+    }
+
+    .ip-btn:hover {
+      background: white;
+      box-shadow: 0 8px 16px rgba(30, 45, 80, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .ip-btn i {
+      font-size: 1rem;
+      color: #2e3f7a;
+    }
+
+    .header-stats {
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(4px);
+      padding: 0.6rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 500;
+      color: #1e2b5e;
+      border: 1px solid rgba(255,255,255,0.7);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      font-size: 0.95rem;
+    }
+
+    .header-stats i {
+      margin-right: 6px;
+      color: #ff9f43;
+    }
+
+    /* 分类导航 (视觉装饰，无实际筛选逻辑) */
+    .category-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.8rem 1.5rem;
+      margin-bottom: 2.5rem;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(4px);
+      padding: 0.8rem 1.8rem;
+      border-radius: 60px;
+      box-shadow: 0 8px 18px -8px rgba(30, 45, 80, 0.1);
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+
+    .category-label {
+      font-weight: 600;
+      color: #3f4e7a;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+    }
+
+    .category-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .category-pill {
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      background: white;
+      color: #2e3b5e;
+      cursor: default;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .category-pill.active {
+      background: linear-gradient(145deg, #31487a, #233162);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 6px 12px rgba(35, 45, 95, 0.2);
+    }
+
+    .category-pill i {
+      margin-right: 6px;
+      font-size: 0.8rem;
+    }
+
+    /* 游戏网格 */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 2rem 1.5rem;
+      margin: 2.5rem 0 3.5rem;
+    }
+
+    /* 卡片设计 */
+    .game-card {
+      background: white;
+      border-radius: 32px;
+      padding: 1.8rem 1.2rem 1.5rem;
+      box-shadow: 0 20px 30px -12px rgba(28, 40, 70, 0.15);
+      transition: transform 0.25s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.5);
+      backdrop-filter: blur(2px);
+      height: 100%;
+    }
+
+    .game-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 40px -15px #1e2f5570;
+    }
+
+    /* 图标容器 (圆形渐变背景) */
+    .icon-bg {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(145deg, #e9eefa, #d9e2f5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.4rem;
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.02), 0 12px 18px -12px #2d4170;
+      transition: all 0.2s;
+    }
+
+    .game-card:hover .icon-bg {
+      background: linear-gradient(145deg, #dfe8ff, #ccd9f5);
+    }
+
+    .icon-bg i {
+      font-size: 3.4rem;
+      color: #2d3f77;
+      filter: drop-shadow(0 6px 8px rgba(35, 55, 110, 0.15));
+      transition: transform 0.15s;
+    }
+
+    .game-card:hover .icon-bg i {
+      transform: scale(1.02);
+    }
+
+    .game-card h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      color: #1f2b4e;
+      letter-spacing: -0.3px;
+    }
+
+    .game-category {
+      font-size: 0.9rem;
+      background: #eef3fd;
+      padding: 0.3rem 1.2rem;
+      border-radius: 40px;
+      color: #314e8a;
+      font-weight: 600;
+      margin: 0.6rem 0 1.2rem;
+      display: inline-block;
+      border: 1px solid rgba(68, 94, 164, 0.1);
+    }
+
+    .play-btn {
+      background: linear-gradient(105deg, #38549b, #233568);
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.8rem 1.8rem;
+      border-radius: 60px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: fit-content;
+      margin-top: auto;
+      box-shadow: 0 12px 18px -10px #1f2d5a;
+      transition: all 0.15s ease;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .play-btn i {
+      font-size: 0.9rem;
+      transition: transform 0.1s;
+    }
+
+    .play-btn:hover {
+      background: linear-gradient(105deg, #4160ac, #2c3f7a);
+      box-shadow: 0 16px 22px -10px #1e2b57;
+      transform: scale(1.02);
+    }
+
+    .play-btn:hover i {
+      transform: translateX(3px);
+    }
+
+    .play-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* 页脚 */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.8rem;
+      border-top: 1px solid rgba(45, 65, 110, 0.15);
+      color: #3a4870;
+      font-size: 0.95rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .footer-links a {
+      color: #2c3b64;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.1s;
+    }
+
+    .footer-links a:hover {
+      color: #141f3b;
+      text-decoration: underline;
+    }
+
+    .social-icons i {
+      font-size: 1.2rem;
+      margin-left: 1rem;
+      color: #314e85;
+      cursor: default;
+    }
+
+    /* 空操作提示 (保持界面干净) */
+    .mock-link {
+      cursor: default;
+    }
+
+    /* 手机优化 */
+    @media (max-width: 600px) {
+      body {
+        padding: 1.2rem 1rem;
+      }
+      .header-left h1 {
+        font-size: 1.8rem;
+      }
+      .category-row {
+        border-radius: 30px;
+        padding: 0.8rem 1.2rem;
+      }
+      .games-grid {
+        gap: 1.5rem 1rem;
+      }
+      .icon-bg {
+        width: 85px;
+        height: 85px;
+      }
+      .icon-bg i {
+        font-size: 2.8rem;
+      }
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer-links {
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+    }
+
+    /* 简单动画 */
+    .game-card, .category-pill, .play-btn {
+      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+  </style>
+</head>
+<body>
+  <div class="library-container">
+    <!-- 头部区域 - 新增IP检测按钮 -->
+    <div class="header">
+      <div class="header-left">
+        <i class="fas fa-gamepad"></i>
+        <h1>我的小游戏库</h1>
+        <!-- IP检测按钮，新窗口打开 -->
+        <a href="https://c2244937243-ui.github.io/ipppp/" class="ip-btn" target="_blank" rel="noopener noreferrer">
+          <i class="fas fa-network-wired"></i> IP检测
+        </a>
+      </div>
+      <div class="header-stats">
+        <i class="fas fa-crown"></i> 8 款精选 · 随时畅玩
+      </div>
+    </div>
+
+    <!-- 分类浏览 (静态装饰) -->
+    <div class="category-row">
+      <span class="category-label"><i class="fas fa-compass"></i> 分类</span>
+      <div class="category-items">
+        <span class="category-pill active"><i class="fas fa-th-large"></i> 全部</span>
+        <span class="category-pill"><i class="fas fa-bolt"></i> 动作</span>
+        <span class="category-pill"><i class="fas fa-puzzle-piece"></i> 益智</span>
+        <span class="category-pill"><i class="fas fa-flag-checkered"></i> 竞速</span>
+        <span class="category-pill"><i class="fas fa-chess-knight"></i> 策略</span>
+        <span class="category-pill"><i class="fas fa-dragon"></i> 街机</span>
+      </div>
+    </div>
+
+    <!-- 游戏网格：我的小游戏库核心 (按用户要求更新前三款) -->
+    <div class="games-grid">
+      
+      <!-- 卡片 1 - 狼人杀 (原方块迷阵) 更新链接 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-user-secret"></i></div>
+        <h3>狼人杀</h3>
+        <span class="game-category"><i class="fas fa-chess-knight"></i> 策略</span>
+        <button class="play-btn" onclick="window.open('https://c2244937243-ui.github.io/ipppp/wolf', '_blank')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 2 - 三国杀 (原急速赛车) 更新名称/链接/图标/分类 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-dragon"></i></div> <!-- 龙形图标，贴合三国杀气质 -->
+        <h3>三国杀</h3>
+        <span class="game-category"><i class="fas fa-chess-knight"></i> 策略</span>
+        <button class="play-btn" onclick="window.open('https://c2244937243-ui.github.io/ipppp/chinakills', '_blank')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 3 - 斗地主 (原太空入侵者) 更新名称/链接/图标/分类 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-spade"></i></div> <!-- 黑桃扑克图标 -->
+        <h3>斗地主</h3>
+        <span class="game-category"><i class="fas fa-chess-knight"></i> 策略</span>
+        <button class="play-btn" onclick="window.open('https://c2244937243-ui.github.io/ipppp/ddz', '_blank')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 4 - 贪食蛇 (经典) 保持不变 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-apple-alt"></i></div>
+        <h3>贪食蛇</h3>
+        <span class="game-category"><i class="fas fa-dragon"></i> 街机</span>
+        <button class="play-btn" onclick="alert('🐍 贪食蛇 · 经典永不过时')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 5 - 记忆翻牌 保持不变 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-brain"></i></div>
+        <h3>记忆翻牌</h3>
+        <span class="game-category"><i class="fas fa-puzzle-piece"></i> 益智</span>
+        <button class="play-btn" onclick="alert('🧠 记忆翻牌 · 测测你的记忆力')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 6 - 井字棋 保持不变 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-border-all"></i></div>
+        <h3>井字棋</h3>
+        <span class="game-category"><i class="fas fa-chess-knight"></i> 策略</span>
+        <button class="play-btn" onclick="alert('❌⭕ 井字棋 · 轮到你了')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 7 - 泡泡龙 保持不变 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-star"></i></div>
+        <h3>泡泡龙</h3>
+        <span class="game-category"><i class="fas fa-puzzle-piece"></i> 益智</span>
+        <button class="play-btn" onclick="alert('🫧 泡泡龙 · 发射泡泡！')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+
+      <!-- 卡片 8 - 国际象棋 保持不变 -->
+      <div class="game-card">
+        <div class="icon-bg"><i class="fas fa-chess-queen"></i></div>
+        <h3>国际象棋</h3>
+        <span class="game-category"><i class="fas fa-chess-knight"></i> 策略</span>
+        <button class="play-btn" onclick="alert('♟️ 国际象棋 ·  checkmate?')"><i class="fas fa-play"></i> 开始游戏</button>
+      </div>
+    </div>
+
+    <!-- 页脚 (装饰) -->
+    <div class="footer">
+      <div>© 2025 我的小游戏库 · 闲暇时光，快乐游戏</div>
+      <div class="footer-links">
+        <a href="#" class="mock-link" onclick="return false;">关于</a>
+        <a href="#" class="mock-link" onclick="return false;">隐私</a>
+        <a href="#" class="mock-link" onclick="return false;">新游戏建议</a>
+      </div>
+      <div class="social-icons">
+        <i class="fab fa-github"></i>
+        <i class="fab fa-twitter"></i>
+        <i class="fas fa-envelope"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- 微交互：让所有 mock 链接点击不跳转并且优雅提示 (可选) -->
+  <script>
+    (function() {
+      // 防止 mock 链接意外刷新或跳转，同时可给出友好提示 (不影响卡片按钮)
+      const mockLinks = document.querySelectorAll('.mock-link');
+      mockLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert('🌟 功能开发中，先玩会儿游戏吧～');
+        });
+      });
+
+      // 分类pill无实际筛选，但增加一个轻提醒 (更逼真)
+      const pills = document.querySelectorAll('.category-pill');
+      pills.forEach(pill => {
+        pill.addEventListener('click', (e) => {
+          e.preventDefault();
+          // 移除其他active (模拟切换效果，只是视觉)
+          pills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
