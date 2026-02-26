@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>欢乐斗地主</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0e3d1a;font-family:'Noto Sans SC',sans-serif;}
+:root{--gold:#f5c842;--gold2:#e8a020;--red:#d42020;--dark:#1a0800;--card-w:50px;--card-h:72px;}
+
+/* MENU */
+#menuScreen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:999;background:radial-gradient(ellipse at 50% 40%,#22703a 0%,#0b2e14 70%);}
+.menuTitle{font-size:52px;font-weight:900;letter-spacing:8px;color:var(--gold);text-shadow:3px 3px 0 #7a4a00,6px 6px 0 #3a2000,0 0 40px #f5c84260;animation:glow 2s ease-in-out infinite alternate;}
+@keyframes glow{from{text-shadow:3px 3px 0 #7a4a00,6px 6px 0 #3a2000,0 0 20px #f5c84230;}to{text-shadow:3px 3px 0 #7a4a00,6px 6px 0 #3a2000,0 0 60px #f5c842aa;}}
+.menuSub{color:#9dd8a0;font-size:16px;letter-spacing:4px;margin-top:-10px;}
+.modeRow{display:flex;gap:10px;}
+.modeBtn{padding:11px 24px;border:2px solid transparent;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;letter-spacing:1px;background:linear-gradient(135deg,#2a6040,#1a4030);color:#9dd8a0;transition:all .2s;}
+.modeBtn.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#3a1800;border-color:#fff4;}
+.modeBtn:hover:not(.active){background:linear-gradient(135deg,#3a7050,#2a5040);color:#c8f0c0;}
+.startBtn{padding:14px 64px;border:none;border-radius:50px;cursor:pointer;font-size:22px;font-weight:900;font-family:inherit;letter-spacing:4px;background:linear-gradient(135deg,#ff5522,#cc1111);color:#fff;box-shadow:0 5px 25px #cc111160;transition:all .2s;animation:startPulse 1.5s ease-in-out infinite alternate;}
+@keyframes startPulse{from{box-shadow:0 5px 20px #cc111150;}to{box-shadow:0 5px 35px #cc1111aa;}}
+.startBtn:hover{transform:scale(1.06);}
+.deco{position:absolute;font-size:80px;opacity:.06;pointer-events:none;}
+
+/* GAME */
+#gameScreen{position:absolute;inset:0;display:none;background:radial-gradient(ellipse at 50% 50%,#1d7035 0%,#0d3d1a 60%,#061507 100%);}
+#gameScreen.active{display:block;}
+
+/* TOP BAR */
+#topBar{position:absolute;top:0;left:0;right:0;height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;z-index:100;background:linear-gradient(to bottom,#0008,transparent);}
+.tag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#0005;border:1px solid #f5c84240;color:var(--gold);}
+.multTag{padding:3px 10px;border-radius:20px;font-size:13px;font-weight:900;background:linear-gradient(135deg,#c00,#800);color:#fff;box-shadow:0 2px 8px #c0000050;}
+.exitBtn{background:#0005;border:1px solid #f5c84230;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:14px;transition:.2s;}
+.exitBtn:hover{background:#f5c84220;}
+
+/* PLAYER AREAS */
+#areaTop{position:absolute;top:36px;left:0;right:0;height:108px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:30;pointer-events:none;}
+#areaLeft{position:absolute;left:0;top:36px;bottom:126px;width:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:30;}
+#areaBottom{position:absolute;bottom:0;left:0;right:0;height:124px;display:flex;flex-direction:column;align-items:center;z-index:30;}
+#playerHand{display:flex;justify-content:center;align-items:flex-end;height:84px;overflow:visible;padding:0 8px;position:relative;}
+#actionBar{height:40px;display:flex;align-items:center;gap:10px;padding:0 16px;background:linear-gradient(to top,#0009,transparent);width:100%;justify-content:center;}
+
+/* WIDGET */
+.pWidget{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.pAvatar{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,#2a5080,#1a305a);box-shadow:0 4px 15px rgba(0,0,0,.5);position:relative;}
+.pAvatar.lm::after{content:'👑';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:16px;}
+.pName{color:#b8e0b8;font-size:12px;font-weight:700;}
+.pCount{background:#0006;border:1px solid #f5c84240;border-radius:20px;padding:2px 8px;color:var(--gold);font-size:11px;font-weight:700;}
+
+/* CARD BACKS ROW */
+#cbTop{display:flex;flex-wrap:wrap;max-width:220px;margin-top:4px;}
+#cbLeft{display:flex;flex-direction:column;align-items:center;margin-top:6px;}
+.cb{width:18px;height:26px;border-radius:3px;background:linear-gradient(135deg,#1a4080,#0a2050);border:1.5px solid #4a70c0;box-shadow:1px 1px 3px #0006;margin-left:-5px;}
+.cb:first-child{margin-left:0;}
+.cbV{width:26px;height:16px;border-radius:3px;background:linear-gradient(135deg,#1a4080,#0a2050);border:1.5px solid #4a70c0;box-shadow:1px 1px 3px #0006;margin-top:-4px;}
+.cbV:first-child{margin-top:0;}
+
+/* LANDLORD CARDS */
+#landlordArea{position:absolute;top:42px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:45;transition:opacity .4s;}
+
+/* PLAY ZONES */
+#pzTop{position:absolute;top:148px;left:50%;transform:translateX(-50%);display:flex;z-index:35;justify-content:center;min-height:52px;align-items:flex-end;}
+#pzLeft{position:absolute;left:128px;top:50%;transform:translateY(-60%);display:flex;z-index:35;min-height:52px;max-width:240px;flex-wrap:wrap;align-items:flex-end;}
+#pzBottom{position:absolute;bottom:130px;left:50%;transform:translateX(-50%);display:flex;z-index:35;justify-content:center;min-height:52px;align-items:flex-end;}
+.passLbl{color:#f5c84280;font-size:18px;font-weight:900;letter-spacing:2px;padding:8px 12px;align-self:center;}
+
+/* BUBBLES */
+.bub{position:absolute;background:var(--gold);color:#3a1800;padding:5px 11px;border-radius:10px;font-size:13px;font-weight:700;pointer-events:none;z-index:60;white-space:nowrap;box-shadow:0 4px 15px rgba(0,0,0,.5);opacity:0;transition:opacity .25s;}
+.bub.show{opacity:1;}
+#bTop{top:148px;left:50%;transform:translateX(-50%);}
+#bTop::after{content:'';position:absolute;border:5px solid transparent;border-top-color:var(--gold);top:100%;left:50%;transform:translateX(-50%);}
+#bLeft{left:128px;top:43%;transform:translateY(-50%);}
+#bLeft::after{content:'';position:absolute;border:5px solid transparent;border-left-color:var(--gold);left:100%;top:50%;transform:translateY(-50%);}
+#bBottom{bottom:134px;left:50%;transform:translateX(-50%);}
+#bBottom::after{content:'';position:absolute;border:5px solid transparent;border-bottom-color:var(--gold);bottom:100%;left:50%;transform:translateX(-50%);}
+
+/* ARROWS */
+.arr{position:absolute;font-size:20px;z-index:50;pointer-events:none;animation:blink .7s ease-in-out infinite alternate;display:none;}
+@keyframes blink{from{opacity:.3;transform:scale(.85);}to{opacity:1;transform:scale(1.1);}}
+#aTop{top:150px;left:50%;transform:translateX(-50%);}
+#aLeft{left:116px;top:48%;transform:translateY(-50%);}
+#aBottom{bottom:134px;left:50%;transform:translateX(-50%);}
+
+/* TIMER */
+#timerBar{position:absolute;bottom:124px;left:50%;transform:translateX(-50%);width:180px;height:5px;background:#0005;border-radius:3px;z-index:40;overflow:hidden;}
+#timerFill{height:100%;border-radius:3px;background:linear-gradient(90deg,#2a9a3a,#f5c842,#e02020);transition:width .1s linear;}
+
+/* CARDS */
+.card{width:var(--card-w);height:var(--card-h);border-radius:7px;background:#fffef8;border:1px solid #ccc;box-shadow:2px 3px 8px #0009,inset 0 1px 0 #fff9;position:relative;cursor:pointer;transition:transform .12s,box-shadow .12s;flex-shrink:0;margin-left:-14px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3px 3px 3px 4px;font-weight:900;}
+.card:first-child{margin-left:0;}
+.card.red{color:var(--red);}
+.card.black{color:#111;}
+.card.jB{background:linear-gradient(160deg,#1a1a3a,#050518);color:#f5c842!important;}
+.card.jS{background:linear-gradient(160deg,#2a1010,#150808);color:#e07030!important;}
+.card.wild{outline:2px solid var(--gold);box-shadow:2px 3px 8px #0009,0 0 10px #f5c84260;}
+.card.sel{transform:translateY(-18px);box-shadow:2px 8px 20px #f5c84280,2px 3px 8px #0009;z-index:5;}
+.card:hover:not(.sel){transform:translateY(-6px);z-index:4;}
+.card.sm{width:40px;height:58px;cursor:default;margin-left:-8px;transform:none!important;}
+.card.sm:hover{transform:none!important;}
+.cR{font-size:16px;font-weight:900;line-height:1;align-self:flex-start;}
+.cS{font-size:18px;line-height:1;}
+.cRb{font-size:16px;font-weight:900;line-height:1;align-self:flex-end;transform:rotate(180deg);}
+.card.sm .cR,.card.sm .cRb{font-size:12px;}
+.card.sm .cS{font-size:13px;}
+
+/* BUTTONS */
+.btn{padding:7px 18px;border:none;border-radius:22px;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit;letter-spacing:1px;transition:all .15s;}
+.btn:active{transform:scale(.94)!important;}
+.bPlay{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#3a1800;box-shadow:0 3px 12px #f5c84250;}
+.bPlay:hover{transform:translateY(-2px);box-shadow:0 5px 18px #f5c84270;}
+.bPass{background:linear-gradient(135deg,#555,#333);color:#ddd;box-shadow:0 2px 8px #0004;}
+.bPass:hover{background:linear-gradient(135deg,#777,#555);}
+.bHint{background:linear-gradient(135deg,#3a7aaa,#1a4a7a);color:#ddf;box-shadow:0 2px 8px #3a7aaa40;}
+.bHint:hover{transform:translateY(-2px);}
+.btn.off{opacity:.35;cursor:not-allowed;pointer-events:none;}
+
+/* BID */
+#bidPanel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:200;background:linear-gradient(160deg,#1a0900,#2a1200);border:2px solid var(--gold);border-radius:14px;padding:22px 30px;text-align:center;box-shadow:0 12px 40px #0009;display:none;min-width:280px;}
+#bidPanel.show{display:block;}
+.bidTitle{color:var(--gold);font-size:20px;font-weight:900;margin-bottom:10px;}
+.bidCur{font-size:36px;font-weight:900;color:#fff;text-shadow:0 0 20px #f5c84290;margin:6px 0;}
+.bidHint{color:#888;font-size:12px;margin-bottom:4px;}
+.bidBtns{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.bBid{padding:9px 18px;border:none;border-radius:22px;cursor:pointer;font-size:15px;font-weight:700;font-family:inherit;transition:all .15s;}
+.bBid:hover{transform:scale(1.06);}
+.bScore{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#3a1800;}
+.bNoBid{background:linear-gradient(135deg,#555,#333);color:#ccc;}
+.bBid.dim{opacity:.3;pointer-events:none;}
+
+/* BOMB */
+.bFlash{position:absolute;inset:0;background:#fff8;pointer-events:none;z-index:300;animation:bfAnim .35s ease-out forwards;}
+@keyframes bfAnim{from{opacity:.8;}to{opacity:0;}}
+.bTxt{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);font-size:56px;font-weight:900;color:var(--gold);text-shadow:0 0 25px var(--gold),0 0 50px #e83030;z-index:301;pointer-events:none;animation:btAnim .8s ease-out forwards;}
+@keyframes btAnim{0%{transform:translate(-50%,-50%) scale(.5);opacity:1;}60%{transform:translate(-50%,-50%) scale(1.3);opacity:1;}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0;}}
+
+/* RESULT */
+#resultOv{position:absolute;inset:0;background:#0009;z-index:400;display:none;align-items:center;justify-content:center;}
+#resultOv.show{display:flex;}
+.resPanel{background:linear-gradient(160deg,#1a0800,#2a1400);border:3px solid var(--gold);border-radius:18px;padding:28px 44px;text-align:center;box-shadow:0 15px 50px #0009,0 0 40px #f5c84225;animation:resIn .35s ease-out;}
+@keyframes resIn{from{transform:scale(.7) translateY(20px);opacity:0;}to{transform:scale(1);opacity:1;}}
+.resTitle{font-size:44px;font-weight:900;margin-bottom:10px;}
+.win{color:var(--gold);text-shadow:0 0 25px var(--gold);}
+.lose{color:#e03030;text-shadow:0 0 25px #e03030;}
+.resScore{color:#c8e8c0;font-size:20px;font-weight:700;margin-bottom:6px;}
+.resDet{color:#88a888;font-size:13px;margin-bottom:18px;}
+.resBtns{display:flex;gap:10px;justify-content:center;}
+.toast{position:absolute;top:38%;left:50%;transform:translateX(-50%);background:var(--gold);color:#3a1800;padding:8px 20px;border-radius:30px;font-size:15px;font-weight:700;z-index:500;pointer-events:none;animation:tAnim .8s ease-out forwards;}
+@keyframes tAnim{0%{opacity:1;transform:translateX(-50%) translateY(0);}100%{opacity:0;transform:translateX(-50%) translateY(-30px);}}
+.laiziBadge{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#c07010,#804000);color:#fff;border:1px solid #f5c84260;}
+</style>
+</head>
+<body>
+
+<!-- MENU -->
+<div id="menuScreen">
+  <div class="deco" style="top:4%;left:3%;transform:rotate(-15deg)">♠</div>
+  <div class="deco" style="bottom:4%;right:3%;transform:rotate(20deg)">♥</div>
+  <div class="deco" style="top:4%;right:5%;transform:rotate(10deg)">♦</div>
+  <div class="deco" style="bottom:7%;left:4%;transform:rotate(-20deg)">♣</div>
+  <div class="menuTitle">斗地主</div>
+  <div class="menuSub">欢乐棋牌 · 经典玩法</div>
+  <div class="modeRow">
+    <button class="modeBtn active" onclick="setMode('classic',this)">经典模式</button>
+    <button class="modeBtn" onclick="setMode('laizi',this)">癞子模式</button>
+    <button class="modeBtn" onclick="setMode('noshuffle',this)">不洗牌</button>
+  </div>
+  <button class="startBtn" onclick="startGame()">开始游戏</button>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen">
+  <div id="topBar">
+    <div style="display:flex;gap:6px;align-items:center;">
+      <div class="tag" id="modeTag">经典模式</div>
+      <div class="laiziBadge" id="lzTag" style="display:none">癞子:?</div>
+    </div>
+    <div class="multTag" id="multTag">×1</div>
+    <div class="exitBtn" onclick="exitGame()">✕</div>
+  </div>
+
+  <div id="landlordArea"></div>
+
+  <!-- Top AI -->
+  <div id="areaTop">
+    <div class="pWidget">
+      <div class="pAvatar" id="avTop">😼</div>
+      <div class="pName">电脑甲</div>
+      <div class="pCount" id="ctTop">17张</div>
+    </div>
+    <div id="cbTop"></div>
+  </div>
+
+  <!-- Left AI -->
+  <div id="areaLeft">
+    <div class="pWidget">
+      <div class="pAvatar" id="avLeft">🐺</div>
+      <div class="pName">电脑乙</div>
+      <div class="pCount" id="ctLeft">17张</div>
+    </div>
+    <div id="cbLeft"></div>
+  </div>
+
+  <!-- Play zones -->
+  <div id="pzTop"></div>
+  <div id="pzLeft"></div>
+  <div id="pzBottom"></div>
+
+  <!-- Bubbles -->
+  <div class="bub" id="bTop"></div>
+  <div class="bub" id="bLeft"></div>
+  <div class="bub" id="bBottom"></div>
+
+  <!-- Arrows -->
+  <div class="arr" id="aTop">⬇️</div>
+  <div class="arr" id="aLeft">➡️</div>
+  <div class="arr" id="aBottom">⬆️</div>
+
+  <!-- Timer -->
+  <div id="timerBar"><div id="timerFill" style="width:100%"></div></div>
+
+  <!-- Human -->
+  <div id="areaBottom">
+    <div id="playerHand"></div>
+    <div id="actionBar">
+      <button class="btn bHint" onclick="hintPlay()">💡提示</button>
+      <button class="btn bPass off" id="btnPass" onclick="playerPass()">不出</button>
+      <button class="btn bPlay" id="btnPlay" onclick="playerPlay()">出牌</button>
+    </div>
+  </div>
+
+  <!-- Bid -->
+  <div id="bidPanel">
+    <div class="bidTitle">叫分 - 争夺地主</div>
+    <div class="bidCur" id="bidCur">0<span style="font-size:16px;color:#aaa;margin-left:4px">分</span></div>
+    <div class="bidHint">当前最高叫分</div>
+    <div class="bidBtns">
+      <button class="bBid bScore" id="bb1" onclick="playerBid(1)">叫1分</button>
+      <button class="bBid bScore" id="bb2" onclick="playerBid(2)">叫2分</button>
+      <button class="bBid bScore" id="bb3" onclick="playerBid(3)">叫3分</button>
+      <button class="bBid bNoBid" onclick="playerBid(0)">不叫</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="resultOv">
+  <div class="resPanel">
+    <div class="resTitle" id="resTitle">胜利</div>
+    <div class="resScore" id="resScore">+300分</div>
+    <div class="resDet" id="resDet"></div>
+    <div class="resBtns">
+      <button class="btn bPlay" onclick="startGame()">再来一局</button>
+      <button class="btn bPass" onclick="exitGame()">返回菜单</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+const SUITS=['♠','♥','♦','♣'];
+const RANKS=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
+const BV={'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14,'2':15,'小':16,'大':17};
+
+let G={mode:'classic',deck:[],hands:[[],[],[]],landlordCards:[],landlordIdx:-1,
+  currentPlayer:0,phase:'menu',lastRealPlay:null,
+  bidScores:[0,0,0],maxBid:0,bidOrder:[],bidIdx:0,
+  multiplier:1,wildCard:null,timerH:null,hintIdx:0,hintSets:[]};
+
+function makeDeck(){
+  let d=[];
+  for(let s of SUITS) for(let r of RANKS) d.push({suit:s,rank:r,id:r+s,_sel:false});
+  d.push({suit:'',rank:'小',id:'小王',_sel:false});
+  d.push({suit:'',rank:'大',id:'大王',_sel:false});
+  return d;
+}
+function shuf(a){for(let i=a.length-1;i>0;i--){let j=~~(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function cv(c){if(G.mode==='laizi'&&c.rank===G.wildCard)return 18;return BV[c.rank]||0;}
+function isWild(c){return G.mode==='laizi'&&c.rank===G.wildCard;}
+function isRed(c){return c.suit==='♥'||c.suit==='♦';}
+function srtH(h){h.sort((a,b)=>cv(b)-cv(a));}
+
+// ============================================================
+// PLAY TYPE
+function getType(cards){
+  if(!cards||!cards.length)return null;
+  let n=cards.length,freq={},byV={};
+  for(let c of cards){let v=cv(c);freq[v]=(freq[v]||0)+1;(byV[v]=byV[v]||[]).push(c);}
+  let uvs=Object.keys(freq).map(Number).sort((a,b)=>a-b);
+  let cts=uvs.map(v=>freq[v]).sort((a,b)=>b-a);
+  
+  if(n===2&&cards.some(c=>c.rank==='小')&&cards.some(c=>c.rank==='大'))return{type:'rocket',val:100,len:1};
+  if(n===4&&cts[0]===4)return{type:'bomb',val:uvs[0],len:1};
+  if(n===1)return{type:'single',val:uvs[0],len:1};
+  if(n===2&&cts[0]===2)return{type:'pair',val:uvs[0],len:1};
+  if(n===3&&cts[0]===3)return{type:'trio',val:uvs[0],len:1};
+  if(n===4&&cts[0]===3)return{type:'trio1',val:uvs.find(v=>freq[v]===3),len:1};
+  if(n===5&&cts[0]===3&&cts[1]===2)return{type:'trioP',val:uvs.find(v=>freq[v]===3),len:1};
+  if(n>=5&&n<=12&&uvs.length===n&&csc(uvs)&&uvs[n-1]<15)return{type:'str',val:uvs[n-1],len:n};
+  if(n>=6&&n%2===0){let ps=uvs.filter(v=>freq[v]===2);if(ps.length===n/2&&ps.length>=3&&csc(ps)&&ps[ps.length-1]<15)return{type:'pStr',val:ps[ps.length-1],len:ps.length};}
+  if(n>=6&&n%3===0){let ts=uvs.filter(v=>freq[v]===3);if(ts.length===n/3&&ts.length>=2&&csc(ts)&&ts[ts.length-1]<15)return{type:'plane',val:ts[ts.length-1],len:ts.length};}
+  if(n>=8){
+    for(let tc=2;tc<=5;tc++){
+      let ts=fcTrios(uvs,freq,tc);
+      if(ts&&ts.length===tc){
+        let wn=n-tc*3;
+        if(wn===tc)return{type:'planeS',val:Math.max(...ts),len:tc};
+        if(wn===tc*2){let wv=uvs.filter(v=>!ts.includes(v));if(wv.every(v=>freq[v]>=2))return{type:'planeP',val:Math.max(...ts),len:tc};}
+      }
+    }
+  }
+  if(n===6){let qv=uvs.find(v=>freq[v]===4);if(qv!==undefined)return{type:'q2',val:qv,len:1};}
+  if(n===8){let qv=uvs.find(v=>freq[v]===4);if(qv!==undefined){let wv=uvs.filter(v=>v!==qv);if(wv.every(v=>freq[v]===2))return{type:'q2P',val:qv,len:1};}}
+  return null;
+}
+function csc(a){for(let i=1;i<a.length;i++)if(a[i]!==a[i-1]+1)return false;return true;}
+function fcTrios(uvs,freq,c){let ts=uvs.filter(v=>freq[v]>=3&&v<15);for(let i=0;i<=ts.length-c;i++){let sl=ts.slice(i,i+c);if(sl.length===c&&csc(sl))return sl;}return null;}
+function canBeat(nc,last){
+  if(!last||!last.cards||!last.cards.length)return true;
+  let nt=getType(nc),lt=last.type||getType(last.cards);
+  if(!nt||!lt)return false;
+  if(nt.type==='rocket')return true;
+  if(lt.type==='rocket')return false;
+  if(nt.type==='bomb'&&lt.type!=='bomb')return true;
+  if(lt.type==='bomb'&&nt.type!=='bomb')return false;
+  if(nt.type!==lt.type)return false;
+  if(['str','pStr','plane','planeS','planeP'].includes(nt.type)&&nt.len!==lt.len)return false;
+  return nt.val>lt.val;
+}
+
+// ============================================================
+// COMBO GENERATION
+function genAll(hand){
+  let res=[],freq={},byV={};
+  for(let c of hand){let v=cv(c);freq[v]=(freq[v]||0)+1;(byV[v]=byV[v]||[]).push(c);}
+  let uvs=Object.keys(freq).map(Number).sort((a,b)=>a-b);
+  for(let v of uvs)res.push([byV[v][0]]);
+  for(let v of uvs)if(freq[v]>=2)res.push(byV[v].slice(0,2));
+  for(let v of uvs)if(freq[v]>=3)res.push(byV[v].slice(0,3));
+  for(let v of uvs)if(freq[v]>=3)for(let v2 of uvs)if(v2!==v)res.push([...byV[v].slice(0,3),byV[v2][0]]);
+  for(let v of uvs)if(freq[v]>=3)for(let v2 of uvs)if(v2!==v&&freq[v2]>=2)res.push([...byV[v].slice(0,3),...byV[v2].slice(0,2)]);
+  for(let v of uvs)if(freq[v]>=4)res.push(byV[v].slice(0,4));
+  if(byV[16]&&byV[17])res.push([byV[16][0],byV[17][0]]);
+  for(let len=5;len<=12;len++)for(let i=0;i<=uvs.length-len;i++){let sl=uvs.slice(i,i+len);if(csc(sl)&&sl[sl.length-1]<15)res.push(sl.map(v=>byV[v][0]));}
+  let pvs=uvs.filter(v=>freq[v]>=2);
+  for(let len=3;len<=10;len++)for(let i=0;i<=pvs.length-len;i++){let sl=pvs.slice(i,i+len);if(csc(sl)&&sl[sl.length-1]<15)res.push(sl.flatMap(v=>byV[v].slice(0,2)));}
+  let ts=uvs.filter(v=>freq[v]>=3&&v<15);
+  for(let len=2;len<=5;len++)for(let i=0;i<=ts.length-len;i++){
+    let sl=ts.slice(i,i+len);
+    if(csc(sl)){
+      let pl=sl.flatMap(v=>byV[v].slice(0,3));res.push(pl);
+      let wvs=uvs.filter(v=>!sl.includes(v));
+      if(wvs.length>=len)res.push([...pl,...wvs.slice(0,len).map(v=>byV[v][0])]);
+      let pv2=uvs.filter(v=>!sl.includes(v)&&freq[v]>=2);
+      if(pv2.length>=len)res.push([...pl,...pv2.slice(0,len).flatMap(v=>byV[v].slice(0,2))]);
+    }
+  }
+  for(let v of uvs)if(freq[v]>=4){
+    let wvs=uvs.filter(v2=>v2!==v);
+    if(wvs.length>=2)res.push([...byV[v].slice(0,4),...wvs.slice(0,2).map(v2=>byV[v2][0])]);
+    let pv2=wvs.filter(v2=>freq[v2]>=2);
+    if(pv2.length>=2)res.push([...byV[v].slice(0,4),...pv2.slice(0,2).flatMap(v2=>byV[v2].slice(0,2))]);
+  }
+  let seen=new Set();
+  return res.filter(r=>{let k=r.map(c=>c.id).sort().join(',');if(seen.has(k))return false;seen.add(k);return true;});
+}
+
+function findBeats(hand,last){
+  let all=genAll(hand);
+  if(!last||!last.cards||!last.cards.length)return all;
+  return all.filter(c=>getType(c)&&canBeat(c,last));
+}
+
+// ============================================================
+// DEAL
+function deal(){
+  G.deck=makeDeck();
+  if(G.mode!=='noshuffle')shuf(G.deck);
+  if(G.mode==='laizi'){let n=G.deck.filter(c=>c.rank!=='小'&&c.rank!=='大');G.wildCard=n[~~(Math.random()*n.length)].rank;}
+  else G.wildCard=null;
+  G.landlordCards=G.deck.slice(0,3);
+  G.hands=[[],[],[]];
+  for(let i=0;i<51;i++)G.hands[i%3].push(G.deck[3+i]);
+  G.hands.forEach(srtH);
+}
+
+// ============================================================
+// BIDDING
+function startBidding(){
+  G.phase='bidding';G.bidScores=[0,0,0];G.maxBid=0;
+  let s=~~(Math.random()*3);G.bidOrder=[s,(s+1)%3,(s+2)%3];G.bidIdx=0;
+  nextBid();
+}
+function nextBid(){
+  if(G.maxBid>=3){doLandlord(G.bidScores.indexOf(3));return;}
+  if(G.bidIdx>=3){let mx=Math.max(...G.bidScores);doLandlord(mx>0?G.bidScores.indexOf(mx):G.bidOrder[0]);return;}
+  let cur=G.bidOrder[G.bidIdx];
+  if(cur===0)showBidPanel();
+  else setTimeout(()=>aiBid(cur),800);
+}
+function showBidPanel(){
+  document.getElementById('bidCur').innerHTML=G.maxBid+'<span style="font-size:16px;color:#aaa;margin-left:4px">分</span>';
+  ['bb1','bb2','bb3'].forEach((id,i)=>document.getElementById(id).classList.toggle('dim',i+1<=G.maxBid));
+  document.getElementById('bidPanel').classList.add('show');
+}
+function playerBid(s){
+  document.getElementById('bidPanel').classList.remove('show');
+  if(s>0&&s>G.maxBid){G.bidScores[0]=s;G.maxBid=s;bubble('bBottom',s===3?'抢地主！':'叫'+s+'分');}
+  else bubble('bBottom','不叫');
+  G.bidIdx++;setTimeout(nextBid,500);
+}
+function aiBid(idx){
+  let h=G.hands[idx],str=evalHand(h),min=G.maxBid+1,bid=0;
+  if(str>0.62&&min<=3)bid=3;else if(str>0.48&&min<=2)bid=2;else if(str>0.36&&min<=1)bid=1;
+  if(bid>0){G.bidScores[idx]=bid;G.maxBid=bid;bubble(bID(idx),bid===3?'抢地主！':'叫'+bid+'分');}
+  else bubble(bID(idx),'不叫');
+  G.bidIdx++;setTimeout(nextBid,600);
+}
+function evalHand(h){let s=0;for(let c of h){let v=cv(c);if(v===17)s+=.2;else if(v===16)s+=.16;else if(v===15)s+=.12;else if(v===14)s+=.08;else if(v>=11)s+=.04;else s+=.015;}return Math.min(1,s);}
+function doLandlord(idx){
+  G.landlordIdx=idx;G.hands[idx]=G.hands[idx].concat(G.landlordCards);srtH(G.hands[idx]);
+  G.multiplier=Math.max(1,G.maxBid);updMult();
+  showLC();markLandlord(idx);bubble(bID(idx),'我是地主！');
+  G.phase='playing';G.currentPlayer=idx;G.lastRealPlay=null;
+  setTimeout(()=>{renderAll();startTurn(G.currentPlayer);},1300);
+}
+function bID(idx){return['bBottom','bTop','bLeft'][idx];}
+
+// ============================================================
+// TURNS
+function startTurn(idx){
+  showArr(idx);updBtns();
+  if(idx===0){G.hintSets=[];G.hintIdx=0;startTimer(22,()=>{if(G.hintSets.length>0){selCards(G.hintSets[0]);playerPlay(true);}else playerPass(true);});}
+  else{stopTimer();setTimeout(()=>aiTurn(idx),950);}
+}
+function aiTurn(idx){
+  if(G.phase!=='playing')return;
+  let cards=aiChoose(idx);
+  if(!cards||!cards.length){bubble(bID(idx),'不出');setZone(idx,[]);setTimeout(nextTurn,750);}
+  else{
+    let t=getType(cards);
+    if(t&&(t.type==='bomb'||t.type==='rocket'))bombFx();
+    bubble(bID(idx),tLabel(t));
+    rmCards(idx,cards);G.lastRealPlay={player:idx,cards,type:t};
+    setZone(idx,cards);updCount(idx);
+    if(!G.hands[idx].length){setTimeout(()=>endGame(idx),400);return;}
+    setTimeout(nextTurn,1000);
+  }
+}
+function nextTurn(){
+  if(G.phase!=='playing')return;
+  G.currentPlayer=(G.currentPlayer+1)%3;
+  if(G.lastRealPlay&&G.lastRealPlay.player===G.currentPlayer)G.lastRealPlay=null;
+  startTurn(G.currentPlayer);
+}
+function playerPlay(auto=false){
+  let sel=auto&&G.hintSets[0]?G.hintSets[0]:G.hands[0].filter(c=>c._sel);
+  if(!sel.length){toast('请选择要出的牌');return;}
+  let t=getType(sel);
+  if(!t){toast('牌型不对，请重新选择');return;}
+  if(G.lastRealPlay&&G.lastRealPlay.player!==0&&!canBeat(sel,G.lastRealPlay)){toast('不能压过上家的牌');return;}
+  stopTimer();
+  if(t.type==='bomb'||t.type==='rocket')bombFx();
+  rmCards(0,sel);G.lastRealPlay={player:0,cards:sel,type:t};
+  setZone(0,sel);renderHand();updCount(0);
+  bubble('bBottom',tLabel(t));
+  if(!G.hands[0].length){setTimeout(()=>endGame(0),400);return;}
+  setTimeout(nextTurn,600);
+}
+function playerPass(auto=false){
+  if(!G.lastRealPlay||G.lastRealPlay.player===0){if(!auto)toast('必须出牌！');return;}
+  stopTimer();setZone(0,[]);bubble('bBottom','不出');setTimeout(nextTurn,500);
+}
+function hintPlay(){
+  if(G.phase!=='playing'||G.currentPlayer!==0)return;
+  let beats=G.lastRealPlay&&G.lastRealPlay.player!==0?findBeats(G.hands[0],G.lastRealPlay):genAll(G.hands[0]);
+  if(!beats.length){toast('没有可以出的牌');return;}
+  G.hintSets=beats;G.hintIdx=(G.hintIdx||0)%beats.length;
+  selCards(beats[G.hintIdx]);G.hintIdx=(G.hintIdx+1)%beats.length;renderHand();
+}
+function selCards(cards){G.hands[0].forEach(c=>c._sel=false);cards.forEach(c=>c._sel=true);}
+
+// ============================================================
+// AI CHOICE
+function aiChoose(idx){
+  let isLL=idx===G.landlordIdx;
+  if(!G.lastRealPlay||G.lastRealPlay.player===idx)return aiFree(idx);
+  let lastLL=G.lastRealPlay.player===G.landlordIdx;
+  if(!isLL&&!lastLL&&G.hands[G.lastRealPlay.player].length<=4)return null;
+  let beats=findBeats(G.hands[idx],G.lastRealPlay).filter(c=>getType(c));
+  if(!beats.length)return null;
+  beats.sort((a,b)=>{let ta=getType(a),tb=getType(b);if(ta.type==='bomb'&&tb.type!=='bomb')return 1;if(tb.type==='bomb'&&ta.type!=='bomb')return -1;return ta.val-tb.val;});
+  return beats[0];
+}
+function aiFree(idx){
+  let combos=genAll(G.hands[idx]);if(!combos.length)return[G.hands[idx][G.hands[idx].length-1]];
+  combos.sort((a,b)=>{let ta=getType(a),tb=getType(b);if(!ta)return 1;if(!tb)return -1;let ba=(ta.type==='bomb'||ta.type==='rocket'),bb=(tb.type==='bomb'||tb.type==='rocket');if(ba&&!bb&&G.hands[idx].length>6)return 1;if(bb&&!ba&&G.hands[idx].length>6)return -1;return b.length-a.length||(ta.val-tb.val);});
+  return combos[0];
+}
+
+// ============================================================
+// RENDER
+function renderAll(){renderHand();updCount(0);updCount(1);updCount(2);renderBacks();}
+function renderHand(){
+  let el=document.getElementById('playerHand');el.innerHTML='';
+  let n=G.hands[0].length;if(!n)return;
+  let sw=el.offsetWidth||window.innerWidth-20;
+  let ov=Math.max(14,Math.min(26,(n*50-sw*.88)/(n-1)+14));
+  G.hands[0].forEach((c,i)=>{
+    let d=mkCard(c);
+    if(i>0)d.style.marginLeft='-'+ov+'px';
+    if(c._sel)d.classList.add('sel');
+    if(G.mode==='laizi'&&isWild(c))d.classList.add('wild');
+    d.addEventListener('click',()=>{if(G.phase!=='playing'||G.currentPlayer!==0)return;c._sel=!c._sel;d.classList.toggle('sel',c._sel);});
+    el.appendChild(d);
+  });
+}
+function mkCard(c,sm=false){
+  let d=document.createElement('div');d.className='card';
+  if(sm)d.classList.add('sm');
+  if(c.rank==='大')d.classList.add('jB');else if(c.rank==='小')d.classList.add('jS');else if(isRed(c))d.classList.add('red');else d.classList.add('black');
+  let j=c.rank==='大'||c.rank==='小';
+  if(j){d.innerHTML=`<div class="cR">${c.rank==='大'?'🃏':'🎴'}</div><div class="cS" style="font-size:11px;line-height:1.3">${c.rank}王</div><div class="cRb">${c.rank==='大'?'🃏':'🎴'}</div>`;}
+  else{d.innerHTML=`<div class="cR">${c.rank}</div><div class="cS">${c.suit}</div><div class="cRb">${c.rank}</div>`;}
+  return d;
+}
+function renderBacks(){
+  let tEl=document.getElementById('cbTop');tEl.innerHTML='';
+  for(let i=0;i<G.hands[1].length;i++){let b=document.createElement('div');b.className='cb';if(i>0)b.style.marginLeft='-5px';tEl.appendChild(b);}
+  let lEl=document.getElementById('cbLeft');lEl.innerHTML='';
+  for(let i=0;i<G.hands[2].length;i++){let b=document.createElement('div');b.className='cbV';lEl.appendChild(b);}
+}
+function updCount(idx){
+  if(idx===1){let e=document.getElementById('ctTop');if(e)e.textContent=G.hands[1].length+'张';}
+  if(idx===2){let e=document.getElementById('ctLeft');if(e)e.textContent=G.hands[2].length+'张';}
+  renderBacks();
+}
+function setZone(idx,cards){
+  let zId=['pzBottom','pzTop','pzLeft'][idx];let z=document.getElementById(zId);z.innerHTML='';
+  if(!cards||!cards.length){let l=document.createElement('div');l.className='passLbl';l.textContent='不出';z.appendChild(l);}
+  else cards.forEach((c,i)=>{let d=mkCard(c,true);if(i>0)d.style.marginLeft='-8px';d.style.cursor='default';z.appendChild(d);});
+}
+function showLC(){
+  let a=document.getElementById('landlordArea');a.innerHTML='';a.style.opacity='1';
+  G.landlordCards.forEach((c,i)=>{let d=mkCard(c);d.style.cursor='default';if(i>0)d.style.marginLeft='4px';a.appendChild(d);});
+  if(G.landlordIdx!==0){setTimeout(()=>{a.style.opacity='0';},2200);setTimeout(()=>{a.innerHTML='';a.style.opacity='1';},2700);}
+}
+function markLandlord(idx){
+  ['avTop','avLeft'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('lm');});
+  if(idx===1)document.getElementById('avTop').classList.add('lm');
+  if(idx===2)document.getElementById('avLeft').classList.add('lm');
+}
+function showArr(idx){
+  ['aTop','aLeft','aBottom'].forEach(id=>document.getElementById(id).style.display='none');
+  let map=['aBottom','aTop','aLeft'];let e=document.getElementById(map[idx]);if(e)e.style.display='block';
+}
+let bTimers={};
+function bubble(id,txt){
+  let el=document.getElementById(id);if(!el)return;
+  el.textContent=txt;el.classList.add('show');
+  if(bTimers[id])clearTimeout(bTimers[id]);
+  bTimers[id]=setTimeout(()=>el.classList.remove('show'),1600);
+}
+function updBtns(){
+  let cp=G.lastRealPlay&&G.lastRealPlay.player!==0&&G.currentPlayer===0;
+  document.getElementById('btnPass').classList.toggle('off',!cp);
+  document.getElementById('btnPlay').classList.toggle('off',G.currentPlayer!==0);
+}
+function updMult(){document.getElementById('multTag').textContent='×'+G.multiplier;}
+function rmCards(idx,cards){let s=new Set(cards);G.hands[idx]=G.hands[idx].filter(c=>!s.has(c));}
+
+// ============================================================
+// TIMER
+function startTimer(s,cb){
+  stopTimer();let fill=document.getElementById('timerFill');fill.style.width='100%';
+  let rem=s*10,tot=rem;
+  G.timerH=setInterval(()=>{rem--;fill.style.width=(rem/tot*100)+'%';if(rem<=0){stopTimer();cb();}},100);
+}
+function stopTimer(){if(G.timerH){clearInterval(G.timerH);G.timerH=null;}let f=document.getElementById('timerFill');if(f)f.style.width='100%';}
+
+// ============================================================
+// EFFECTS
+function bombFx(){
+  let gs=document.getElementById('gameScreen');
+  let fl=document.createElement('div');fl.className='bFlash';
+  let tx=document.createElement('div');tx.className='bTxt';tx.textContent='💣 炸弹！';
+  gs.appendChild(fl);gs.appendChild(tx);G.multiplier*=2;updMult();
+  setTimeout(()=>{fl.remove();tx.remove();},900);
+}
+function toast(msg){
+  let gs=document.getElementById('gameScreen');
+  let d=document.createElement('div');d.className='toast';d.textContent=msg;
+  gs.appendChild(d);setTimeout(()=>d.remove(),850);
+}
+function tLabel(t){
+  if(!t)return'';
+  const L={single:'单张',pair:'对子',trio:'三张',trio1:'三带一',trioP:'三带对',
+    str:'顺子',pStr:'连对',plane:'飞机',planeS:'飞机带翅',planeP:'飞机带双翅',
+    bomb:'💣炸弹',rocket:'🚀火箭',q2:'四带二',q2P:'四带两对'};
+  return L[t.type]||'出牌';
+}
+
+// ============================================================
+// END GAME
+function endGame(winnerIdx){
+  G.phase='ended';stopTimer();
+  let humanLL=G.landlordIdx===0,llWon=winnerIdx===G.landlordIdx;
+  let hw=humanLL?llWon:!llWon;
+  let base=G.multiplier*100;
+  document.getElementById('resultOv').classList.add('show');
+  let rt=document.getElementById('resTitle');rt.textContent=hw?'🎉 胜利！':'😢 失败';rt.className='resTitle '+(hw?'win':'lose');
+  document.getElementById('resScore').textContent=hw?'获得 +'+base+' 分':'失去 -'+base+' 分';
+  let wn=['你','电脑甲','电脑乙'][winnerIdx],ln=['你','电脑甲','电脑乙'][G.landlordIdx];
+  document.getElementById('resDet').textContent='地主:'+ln+'  |  获胜:'+wn+'  |  倍率:×'+G.multiplier;
+}
+
+// ============================================================
+// MODE & START
+let selMode='classic';
+function setMode(m,btn){
+  selMode=m;document.querySelectorAll('.modeBtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+}
+function startGame(){
+  stopTimer();
+  G={mode:selMode,deck:[],hands:[[],[],[]],landlordCards:[],landlordIdx:-1,
+    currentPlayer:0,phase:'playing',lastRealPlay:null,
+    bidScores:[0,0,0],maxBid:0,bidOrder:[],bidIdx:0,
+    multiplier:1,wildCard:null,timerH:null,hintIdx:0,hintSets:[]};
+  deal();
+  document.getElementById('gameScreen').classList.add('active');
+  document.getElementById('menuScreen').style.display='none';
+  document.getElementById('resultOv').classList.remove('show');
+  document.getElementById('bidPanel').classList.remove('show');
+  ['pzBottom','pzTop','pzLeft','landlordArea'].forEach(id=>{let e=document.getElementById(id);if(e)e.innerHTML='';});
+  ['aTop','aLeft','aBottom'].forEach(id=>{let e=document.getElementById(id);if(e)e.style.display='none';});
+  ['bTop','bLeft','bBottom'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('show');});
+  ['avTop','avLeft'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('lm');});
+  const mn={classic:'经典模式',laizi:'癞子模式',noshuffle:'不洗牌'};
+  document.getElementById('modeTag').textContent=mn[selMode];
+  let lt=document.getElementById('lzTag');
+  if(G.mode==='laizi'&&G.wildCard){lt.textContent='癞子:'+G.wildCard;lt.style.display='';}else lt.style.display='none';
+  updMult();
+  // Show face-down landlord cards
+  let la=document.getElementById('landlordArea');la.style.opacity='1';la.innerHTML='';
+  for(let i=0;i<3;i++){let b=document.createElement('div');b.style.cssText='width:44px;height:64px;border-radius:7px;background:linear-gradient(135deg,#1a4080,#0a2050);border:2px solid #f5c842;box-shadow:2px 3px 8px #0009;'+(i>0?'margin-left:4px;':'');la.appendChild(b);}
+  renderAll();
+  setTimeout(startBidding,600);
+}
+function exitGame(){
+  stopTimer();G.phase='menu';
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('resultOv').classList.remove('show');
+  document.getElementById('menuScreen').style.display='';
+}
+</script>
+</body>
+</html>
