@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>三国杀 - 网页版</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap');
+
+/* ===== DESIGN TOKENS ===== */
+:root {
+  --gold:#c8a96e; --gold2:#ffd700; --dark:#0d0803; --ink:#f5e6c8;
+  --red:#cc3333; --blue:#3366cc; --green:#2a7a2a;
+
+  /* Layout */
+  --hud-h: 36px;
+  --side-w: 170px;
+  --player-zone-h: 175px;
+
+  /* Card dimensions */
+  --cw: 60px; --ch: 88px; --cfont: 14px; --cnfont: 11px;
+
+  /* Avatar */
+  --av-w: 52px; --av-h: 66px; --av-font: 26px;
+
+  /* Spacing */
+  --gap: 6px;
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* Phone landscape: very compact */
+@media (max-height: 430px) {
+  :root {
+    --hud-h: 30px;
+    --side-w: 145px;
+    --player-zone-h: 150px;
+    --cw: 48px; --ch: 70px; --cfont: 12px; --cnfont: 10px;
+    --av-w: 40px; --av-h: 52px; --av-font: 20px;
+    --gap: 4px;
+  }
+}
+
+/* Tablet landscape: slightly bigger */
+@media (min-height: 700px) {
+  :root {
+    --side-w: 200px;
+    --player-zone-h: 200px;
+    --cw: 66px; --ch: 96px;
+    --av-w: 58px; --av-h: 74px;
+  }
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--dark); color: var(--gold);
+  font-family: 'Noto Serif SC','STKaiti','KaiTi',serif;
+  height: 100vh; overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+/* ======================================================
+   SELECTION SCREEN
+   ====================================================== */
+#screen-select {
+  display: flex; flex-direction: column; align-items: center;
+  height: 100vh; overflow-y: auto;
+  background: radial-gradient(ellipse at 50% 25%, #2d1a0e 0%, #0a0703 100%);
+  padding: calc(var(--safe-l) + 12px) calc(var(--safe-r) + 12px) 20px;
+  gap: 10px;
+}
+
+.sel-title {
+  text-align: center; padding-top: 4px;
+}
+.title-zh {
+  font-size: clamp(28px, 5vw, 52px);
+  font-weight: 700; color: var(--gold); letter-spacing: 8px;
+  text-shadow: 0 0 30px rgba(200,169,110,.5), 0 2px 4px rgba(0,0,0,.8);
+}
+.title-sub { font-size: 11px; letter-spacing: 4px; color: #5a4030; margin-top: 2px; }
+
+.select-prompt {
+  font-size: 13px; letter-spacing: 2px; color: #8a7055;
+  padding: 5px 18px; border: 1px solid rgba(200,169,110,.2); border-radius: 20px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 10px; width: 100%; max-width: 900px;
+}
+
+/* Portrait card for selection */
+.hero-card {
+  background: linear-gradient(145deg,#2a1508,#1a0d04);
+  border: 2px solid #3a2015; border-radius: 8px;
+  padding: 10px 8px; cursor: pointer; transition: all .22s;
+  position: relative; overflow: hidden;
+}
+.hero-card::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg,rgba(200,169,110,.05),transparent);
+  pointer-events:none;
+}
+.hero-card:hover  { border-color:var(--gold); transform:translateY(-2px); box-shadow:0 6px 20px rgba(200,169,110,.18); }
+.hero-card.selected { border-color:var(--gold2); background:linear-gradient(145deg,#3a2010,#2a1508); box-shadow:0 0 22px rgba(255,215,0,.35); }
+
+.hero-portrait {
+  width: 64px; height: 80px; margin: 0 auto 7px;
+  border-radius: 5px; display:flex; align-items:center; justify-content:center;
+  font-size: 34px; border: 2px solid #4a3020;
+  background: linear-gradient(145deg,#1a0d04,#2a1508);
+  position:relative; overflow:hidden;
+}
+.hero-portrait::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
+.portrait-shu::after { background:linear-gradient(90deg,#2a7a2a,#66cc66); }
+.portrait-wei::after { background:linear-gradient(90deg,#1a4a8a,#6699ff); }
+.portrait-wu::after  { background:linear-gradient(90deg,#8a4a1a,#ff9933); }
+.portrait-qun::after { background:linear-gradient(90deg,#5a1a8a,#cc99cc); }
+
+.hero-kingdom { font-size:10px; padding:1px 7px; border-radius:10px; display:inline-block; text-align:center; }
+.kd-shu{color:#66cc66;background:rgba(42,122,42,.2);}
+.kd-wei{color:#6699ff;background:rgba(26,74,138,.2);}
+.kd-wu {color:#ff9933;background:rgba(138,74,26,.2);}
+.kd-qun{color:#cc99cc;background:rgba(90,26,138,.2);}
+.hero-name { font-size:18px; font-weight:700; text-align:center; color:#e8d5a3; margin:3px 0; }
+.hero-hp-row { display:flex; justify-content:center; gap:2px; margin:3px 0; }
+.hp-heart { font-size:12px; color:var(--red); }
+.hero-skills { font-size:10px; color:#7a6050; line-height:1.6; margin-top:3px; }
+.skill-badge {
+  display:inline-block; padding:0 4px; border-radius:3px;
+  background:rgba(200,169,110,.15); color:var(--gold); font-size:9px; margin-right:2px;
+}
+
+.start-btn {
+  padding:12px 60px; background:linear-gradient(135deg,#8B4513,#c8a96e);
+  border:none; border-radius:5px; color:#1a0f0a; font-size:20px;
+  font-family:inherit; cursor:pointer; letter-spacing:5px;
+  transition:all .3s; font-weight:700; min-width:200px;
+  flex-shrink: 0;
+}
+.start-btn:hover { background:linear-gradient(135deg,#c8a96e,#ffd700); transform:scale(1.03); }
+.start-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+/* ======================================================
+   GAME SCREEN — CSS Grid layout
+   ┌─────────────────────────────────────┐  ← HUD bar
+   │ LEFT AI │    CENTER ARENA    │ R AI │  ← play area
+   │  zone-1 │ zone-0 | deck/play │zone-2│
+   ├─────────┴────────────────────┴──────┤  ← player zone
+   │         PLAYER (zone-3)            │
+   │  info strip  |  action btns        │
+   │────────────────────────────────────│
+   │  hand cards scrollable row         │
+   └─────────────────────────────────────┘
+   ====================================================== */
+#screen-game {
+  display: none;
+  width: 100vw; height: 100vh;
+  display: none;
+  grid-template-rows: var(--hud-h) 1fr var(--player-zone-h);
+  grid-template-columns: 1fr;
+  background: radial-gradient(ellipse at 50% 40%, #1e1005 0%, #0a0703 100%);
+  position: relative;
+}
+#screen-game.active {
+  display: grid;
+}
+
+/* Subtle grid overlay */
+#screen-game::after {
+  content:''; position:absolute; inset:0;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(200,169,110,.012) 60px,rgba(200,169,110,.012) 61px),
+    repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(200,169,110,.012) 60px,rgba(200,169,110,.012) 61px);
+  pointer-events:none; z-index:0;
+}
+
+/* ---- HUD BAR ---- */
+#hud-bar {
+  grid-row:1; grid-column:1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px 0 calc(var(--safe-l) + 10px);
+  background: rgba(0,0,0,.65); border-bottom: 1px solid rgba(200,169,110,.15);
+  z-index: 30; position: relative;
+  gap: 8px;
+}
+#phase-text { font-size: clamp(10px,1.6vw,13px); color:var(--gold); white-space:nowrap; flex:1; }
+#hud-center {
+  font-size: clamp(10px,1.5vw,12px); color:#6a5040; white-space:nowrap;
+  padding: 0 8px; border-left: 1px solid rgba(200,169,110,.15); border-right: 1px solid rgba(200,169,110,.15);
+}
+#hud-right { display:flex; gap:6px; align-items:center; }
+.hud-btn {
+  padding: 3px 10px; border:1px solid rgba(200,169,110,.3);
+  background:rgba(0,0,0,.5); color:var(--gold);
+  border-radius:4px; font-family:inherit; font-size:11px;
+  cursor:pointer; transition:all .2s; white-space:nowrap;
+  height: calc(var(--hud-h) - 8px);
+}
+.hud-btn:hover { background:rgba(200,169,110,.15); border-color:var(--gold); }
+.hud-btn.active { background:rgba(200,169,110,.2); border-color:var(--gold2); color:var(--gold2); }
+
+/* ---- PLAY AREA (middle row): 3 columns ---- */
+#play-area {
+  grid-row:2; grid-column:1;
+  display: grid;
+  grid-template-columns: var(--side-w) 1fr var(--side-w);
+  grid-template-rows: 1fr;
+  position: relative; overflow:hidden;
+  z-index: 1;
+}
+
+/* Side zones (left/right AIs) */
+.side-zone {
+  padding: var(--gap);
+  display: flex; flex-direction:column; justify-content:center;
+  border-right: 1px solid rgba(200,169,110,.1);
+}
+#pzone-2.side-zone { border-right:none; border-left: 1px solid rgba(200,169,110,.1); }
+
+/* Center column: top AI zone + deck area */
+#center-col {
+  display: flex; flex-direction:column;
+  align-items:center; justify-content:space-between;
+  padding: var(--gap) 0;
+  gap: var(--gap);
+  position:relative;
+}
+
+/* Top AI zone */
+#pzone-0 {
+  width: min(280px, 90%); padding: var(--gap);
+  align-self:flex-start; flex-shrink:0;
+}
+
+/* Deck + discard area */
+#deck-area {
+  display:flex; align-items:center; justify-content:center;
+  gap: 14px; flex:1; width:100%;
+}
+#deck-pile {
+  width: var(--cw); height: var(--ch);
+  background: linear-gradient(135deg,#8B2020,#4a1010);
+  border: 2px solid #8B2020; border-radius: 5px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size: 10px; color:var(--gold); cursor:default;
+  box-shadow: 3px 3px 8px rgba(0,0,0,.5); flex-shrink:0;
+}
+#deck-pile .deck-n { font-size:16px; font-weight:700; margin-top:2px; }
+#discard-top {
+  width: var(--cw); height: var(--ch);
+  background:#f5e6c8; border-radius:5px; border:1px solid #4a3020;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:12px; color:#1a1a1a;
+  box-shadow: 3px 3px 8px rgba(0,0,0,.5); flex-shrink:0; position:relative;
+  overflow:hidden;
+}
+
+/* Played cards (float above deck area) */
+#play-cards {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  display:flex; gap:8px; align-items:center; justify-content:center;
+  pointer-events:none; z-index:5;
+}
+
+/* ---- PLAYER ZONE (bottom row) ---- */
+#pzone-3 {
+  grid-row:3; grid-column:1;
+  display: flex; flex-direction:column;
+  background: rgba(5,3,1,.85);
+  border-top: 1px solid rgba(200,169,110,.25);
+  padding: 0;
+  position:relative; z-index:10;
+  padding-bottom: var(--safe-b);
+  padding-left: var(--safe-l);
+  padding-right: var(--safe-r);
+}
+
+/* Player info + action strip */
+#player-strip {
+  display: flex; align-items: center;
+  padding: 5px 8px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(200,169,110,.12);
+  flex-shrink: 0;
+  min-height: 0;
+}
+#prow-3 { flex:1; min-width:0; }
+
+/* Action buttons in player strip */
+#action-btns {
+  display: flex; flex-direction:column; gap:4px; flex-shrink:0;
+}
+#skills-inline {
+  display:flex; gap:4px; flex-wrap:wrap; justify-content:flex-end;
+}
+
+/* Hand area */
+#player-hand-wrap {
+  display: flex; align-items: flex-end;
+  gap: 4px; padding: 5px 8px 4px;
+  overflow-x: auto; overflow-y:hidden;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#player-hand-wrap::-webkit-scrollbar { display:none; }
+
+/* ======================================================
+   SHARED PLAYER ZONE STYLES
+   ====================================================== */
+.pzone {
+  border-radius: 7px;
+  background: rgba(10,5,2,.75);
+  border: 1px solid rgba(200,169,110,.18);
+  transition: border-color .3s, box-shadow .3s;
+  position: relative;
+}
+.pzone.active-turn {
+  border-color: rgba(200,169,110,.65);
+  box-shadow: 0 0 16px rgba(200,169,110,.12);
+}
+.pzone.targetable {
+  border-color: rgba(255,80,80,.8);
+  box-shadow: 0 0 18px rgba(255,80,80,.3);
+  cursor: crosshair;
+}
+.pzone.targetable:hover { box-shadow:0 0 28px rgba(255,80,80,.5); }
+.pzone.dead { opacity:.42; border-style:dashed; }
+
+/* Pulse animation for targetable */
+@keyframes tgtPulse {
+  0%   { box-shadow:0 0 0 0 rgba(255,80,80,.6); }
+  100% { box-shadow:0 0 0 10px rgba(255,80,80,0); }
+}
+.pzone.targetable { animation: tgtPulse 1.2s ease-out infinite; }
+
+/* ---- HERO ROW INSIDE A ZONE ---- */
+.hero-row { display:flex; align-items:flex-start; gap:7px; }
+
+.g-avatar {
+  width: var(--av-w); height: var(--av-h);
+  flex-shrink:0; border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+  font-size: var(--av-font); border:2px solid #3a2015;
+  background: linear-gradient(145deg,#1a0d04,#2a1508);
+}
+.g-avatar.dead-portrait { filter:grayscale(1) brightness(.45); }
+
+.g-info { flex:1; min-width:0; overflow:hidden; }
+.g-name { font-size:clamp(11px,1.8vw,15px); color:#e8d5a3; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.g-role { font-size:9px; padding:1px 5px; border-radius:7px; display:inline-block; margin-left:3px; }
+.role-zhu  { background:#7a0000; color:#ffd700; }
+.role-zhong{ background:#1a4a1a; color:#90ee90; }
+.role-fan  { background:#4a0808; color:#ff8888; }
+.role-nei  { background:#3a3a08; color:#ffd700; }
+.role-hide { background:#1a1a1a; color:#555; }
+
+.g-hp { display:flex; gap:2px; flex-wrap:wrap; max-width:85px; margin:2px 0; }
+.g-hp-heart { font-size:12px; transition:all .3s; }
+.full-heart  { color:var(--red); }
+.empty-heart { color:#2a1a10; }
+
+.g-equip { display:flex; gap:2px; flex-wrap:wrap; margin-top:2px; min-height:16px; }
+.equip-tag {
+  font-size:8px; padding:1px 4px; border-radius:3px;
+  background:#1a0d04; border:1px solid #4a3020; color:var(--gold);
+  white-space:nowrap; max-width:72px; overflow:hidden; text-overflow:ellipsis;
+}
+.g-delay { display:flex; gap:2px; flex-wrap:wrap; margin-top:2px; }
+.delay-tag {
+  font-size:8px; padding:1px 4px; border-radius:3px;
+  background:rgba(100,50,200,.3); border:1px solid rgba(150,100,255,.35); color:#cc99ff;
+}
+.g-hand-count { font-size:10px; color:#5a4030; margin-top:2px; }
+
+/* Mini card backs for opponent hands */
+.opp-hand { display:flex; gap:2px; flex-wrap:wrap; margin-top:4px; }
+.mini-back {
+  width:18px; height:26px;
+  background:linear-gradient(135deg,#8B2020,#4a1010);
+  border:1px solid #5a1010; border-radius:2px;
+}
+
+/* ======================================================
+   CARDS
+   ====================================================== */
+.card {
+  width: var(--cw); height: var(--ch);
+  border-radius:6px; border:1px solid #4a3020;
+  background: var(--ink);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition: transform .16s, box-shadow .16s, border-color .16s;
+  position:relative; flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.card:hover  { transform:translateY(-10px); box-shadow:0 10px 20px rgba(0,0,0,.6); z-index:10; border-color:var(--gold); }
+.card.sel    { transform:translateY(-16px); box-shadow:0 14px 26px rgba(255,215,0,.35); border-color:var(--gold2); border-width:2px; z-index:11; }
+.card.no-play{ opacity:.45; cursor:not-allowed; }
+.card.no-play:hover { transform:none; box-shadow:none; border-color:#4a3020; }
+.card.discard-sel { transform:translateY(-16px); box-shadow:0 0 16px rgba(204,51,51,.5); border-color:var(--red); border-width:2px; z-index:11; }
+
+.card .cn { position:absolute; top:3px; left:3px; font-size:var(--cnfont); font-weight:700; line-height:1; }
+.card .cs { position:absolute; top:calc(var(--cnfont) + 5px); left:3px; font-size:var(--cnfont); line-height:1; }
+.card .cname { font-size:var(--cfont); font-weight:700; color:#1a1a1a; text-align:center; line-height:1.1; }
+.card .csub  { font-size:8px; color:#666; text-align:center; padding:0 2px; margin-top:1px; line-height:1.2; }
+
+.red-suit   { color:var(--red); }
+.black-suit { color:#1a1a1a; }
+
+/* Card type color bars */
+.card-sha    { border-left:3px solid #cc3333; }
+.card-shan   { border-left:3px solid #3399cc; }
+.card-tao    { border-left:3px solid #cc3366; }
+.card-jiu    { border-left:3px solid #9933cc; }
+.card-equip  { border-left:3px solid #cc9933; }
+.card-delay  { border-left:3px solid #6633cc; }
+.card-jinnang{ border-left:3px solid #339933; }
+.card-wuxie  { border-left:3px solid #ff9900; }
+
+/* Played card in center */
+.played-card {
+  width:var(--cw); height:var(--ch);
+  border-radius:6px; border:2px solid #4a3020; background:var(--ink);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  position:relative; animation:playAnim .28s ease-out;
+}
+@keyframes playAnim { from{transform:scale(.35) rotate(-15deg);opacity:0;} to{transform:scale(1) rotate(0);opacity:1;} }
+
+/* Card back face */
+.card-back-face {
+  width:100%; height:100%; border-radius:4px;
+  background:linear-gradient(135deg,#8B1a1a,#3a0a0a);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; color:rgba(200,169,110,.25);
+}
+
+/* ======================================================
+   ACTION BUTTONS
+   ====================================================== */
+.abtn {
+  padding:6px 14px; border:1px solid var(--gold);
+  background:rgba(0,0,0,.7); color:var(--gold);
+  border-radius:5px; cursor:pointer; font-family:inherit;
+  font-size:clamp(11px,1.5vw,13px); transition:all .2s;
+  letter-spacing:0.5px; white-space:nowrap;
+  min-height: 36px; /* touch target */
+}
+.abtn:hover  { background:rgba(200,169,110,.2); border-color:var(--gold2); color:var(--gold2); }
+.abtn.primary{ background:rgba(139,69,19,.4); }
+.abtn:disabled { opacity:.32; cursor:not-allowed; }
+.abtn.end-turn-active { background:rgba(200,169,110,.18); border-color:var(--gold); }
+
+/* Skill inline buttons */
+.skill-inline-btn {
+  padding:5px 10px; border:1px solid rgba(200,169,110,.4);
+  background:rgba(200,169,110,.1); color:var(--gold);
+  border-radius:4px; cursor:pointer; font-family:inherit;
+  font-size:11px; transition:all .2s; white-space:nowrap;
+  min-height:32px;
+}
+.skill-inline-btn:hover { background:rgba(200,169,110,.25); border-color:var(--gold2); }
+.skill-inline-btn:disabled { opacity:.3; cursor:not-allowed; }
+.skill-inline-btn.used { background:rgba(0,0,0,.2); border-color:#3a2010; color:#4a3020; }
+
+/* ======================================================
+   GAME LOG — slide-in panel from right
+   ====================================================== */
+#game-log {
+  position:fixed;
+  top: var(--hud-h); right:0;
+  width: min(260px, 90vw); height: calc(100vh - var(--hud-h) - var(--player-zone-h));
+  background: rgba(5,2,1,.93);
+  border-left:1px solid rgba(200,169,110,.18);
+  border-bottom:1px solid rgba(200,169,110,.18);
+  overflow-y:auto; padding:8px;
+  font-size:11px; line-height:1.75; color:#7a6050;
+  z-index:40; border-radius:0 0 0 8px;
+  transform: translateX(105%);
+  transition: transform .25s ease;
+}
+#game-log.visible { transform:translateX(0); }
+#game-log::-webkit-scrollbar { width:3px; }
+#game-log::-webkit-scrollbar-track { background:#0d0803; }
+#game-log::-webkit-scrollbar-thumb { background:#4a3020; border-radius:2px; }
+
+.log-entry { padding:1px 0; border-bottom:1px solid rgba(200,169,110,.05); }
+.log-atk  { color:#ff8888; }
+.log-heal { color:#88ff88; }
+.log-card { color:var(--gold); }
+.log-die  { color:#ff4444; font-weight:700; }
+.log-sys  { color:#5a4535; font-style:italic; }
+.log-win  { color:var(--gold2); font-weight:700; }
+
+/* Log notification dot */
+#log-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:var(--red); display:none;
+  position:absolute; top:4px; right:4px;
+  animation: blink 1s ease infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* ======================================================
+   RESPONSE PANEL — centered overlay
+   ====================================================== */
+#response-panel {
+  display:none; position:fixed;
+  bottom: calc(var(--player-zone-h) + 6px);
+  left: 50%; transform:translateX(-50%);
+  background:rgba(8,4,1,.94); border:2px solid var(--gold);
+  border-radius:10px; padding:12px 16px;
+  z-index:50; text-align:center;
+  width: min(420px, 96vw);
+  box-shadow:0 0 28px rgba(200,169,110,.18);
+}
+.resp-prompt { color:var(--gold); font-size:13px; margin-bottom:8px; }
+.resp-cards  { display:flex; gap:6px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; overflow-x:auto; }
+.resp-btns   { display:flex; gap:8px; justify-content:center; }
+
+/* ======================================================
+   MODAL
+   ====================================================== */
+#modal {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.78); z-index:100;
+  align-items:center; justify-content:center;
+}
+.modal-box {
+  background:linear-gradient(145deg,#2a1508,#1a0d04);
+  border:2px solid var(--gold); border-radius:10px;
+  padding:18px; max-width:min(440px,94vw); width:100%;
+  box-shadow:0 0 36px rgba(200,169,110,.18);
+}
+.modal-title { font-size:16px; color:var(--gold); text-align:center; margin-bottom:12px; }
+.modal-cards { display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:12px; overflow-y:auto; max-height:160px; }
+.modal-btns  { display:flex; gap:8px; justify-content:center; }
+.mbtn {
+  padding:8px 18px; background:rgba(200,169,110,.15);
+  border:1px solid var(--gold); border-radius:5px;
+  color:var(--gold); cursor:pointer; font-family:inherit; font-size:14px;
+  transition:all .2s; min-height:40px;
+}
+.mbtn:hover { background:rgba(200,169,110,.3); }
+
+/* ======================================================
+   WIN SCREEN
+   ====================================================== */
+#win-screen {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.88); z-index:200;
+  align-items:center; justify-content:center; flex-direction:column;
+  gap:12px;
+}
+#win-screen.active { display:flex; }
+.win-title {
+  font-size:clamp(36px,7vw,58px); font-weight:700; color:var(--gold2);
+  text-shadow:0 0 40px rgba(255,215,0,.5), 0 4px 8px rgba(0,0,0,.8);
+  letter-spacing:6px;
+  animation:winPop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes winPop { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+.win-sub { font-size:16px; color:var(--gold); letter-spacing:2px; }
+.win-btn {
+  padding:12px 48px; background:linear-gradient(135deg,#8B4513,#c8a96e);
+  border:none; border-radius:5px; color:#1a0f0a; font-size:18px;
+  font-family:inherit; cursor:pointer; letter-spacing:4px; font-weight:700;
+  transition:all .3s; min-height:48px;
+}
+.win-btn:hover { background:linear-gradient(135deg,#c8a96e,#ffd700); }
+
+/* ======================================================
+   FLOAT EFFECTS
+   ====================================================== */
+@keyframes dmgFloat  { from{transform:translateY(0);opacity:1;} to{transform:translateY(-50px);opacity:0;} }
+@keyframes healFloat { from{transform:translateY(0);opacity:1;} to{transform:translateY(-50px);opacity:0;} }
+.dmg-float {
+  position:fixed; font-size:24px; font-weight:700;
+  color:#ff3333; text-shadow:0 0 10px #ff0000, 0 2px 4px rgba(0,0,0,.8);
+  pointer-events:none; z-index:200;
+  animation:dmgFloat 1.3s ease-out forwards;
+}
+.heal-float {
+  position:fixed; font-size:20px; font-weight:700; color:#33ff66;
+  text-shadow:0 0 8px #00ff44; pointer-events:none; z-index:200;
+  animation:healFloat 1.3s ease-out forwards;
+}
+
+/* Discard overlay */
+#discard-overlay {
+  display:none; position:fixed;
+  bottom:calc(var(--player-zone-h) + 8px); left:50%;
+  transform:translateX(-50%);
+  background:rgba(80,10,10,.9); border:1px solid rgba(200,100,100,.4);
+  border-radius:8px; padding:7px 14px;
+  font-size:12px; color:#ffaaaa; z-index:20;
+  white-space:nowrap; pointer-events:none;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SELECTION SCREEN ===== -->
+<div id="screen-select">
+  <div class="sel-title">
+    <div class="title-zh">三国杀</div>
+    <div class="title-sub">LEGEND OF THE THREE KINGDOMS</div>
+  </div>
+  <div class="select-prompt">选择你的武将，征战沙场</div>
+  <div id="hero-grid" class="hero-grid"></div>
+  <button id="start-btn" class="start-btn" onclick="startGame()" disabled>开始游戏</button>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="screen-game">
+
+  <!-- HUD BAR -->
+  <div id="hud-bar">
+    <div id="phase-text">等待中</div>
+    <div id="hud-center">回合 <span id="round-num">1</span></div>
+    <div id="hud-right">
+      <button class="hud-btn" id="btn-log-toggle" onclick="toggleLog()" style="position:relative">
+        战报
+        <span id="log-dot"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PLAY AREA: 3 columns -->
+  <div id="play-area">
+
+    <!-- Left AI: pzone-1 -->
+    <div id="pzone-1" class="pzone side-zone" onclick="onZoneClick(1)">
+      <div class="hero-row" id="prow-1"></div>
+    </div>
+
+    <!-- Center column: top AI + deck/discard -->
+    <div id="center-col">
+      <!-- Top AI: pzone-0 -->
+      <div id="pzone-0" class="pzone" onclick="onZoneClick(0)">
+        <div class="hero-row" id="prow-0"></div>
+      </div>
+
+      <!-- Deck / Played / Discard -->
+      <div id="deck-area">
+        <div id="deck-pile">
+          <div style="font-size:10px;">牌堆</div>
+          <div id="deck-count" class="deck-n">108</div>
+        </div>
+        <div id="play-cards"></div>
+        <div id="discard-top">
+          <div id="discard-inner" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;font-size:10px;color:#888;">弃牌堆</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right AI: pzone-2 -->
+    <div id="pzone-2" class="pzone side-zone" onclick="onZoneClick(2)">
+      <div class="hero-row" id="prow-2"></div>
+    </div>
+  </div>
+
+  <!-- PLAYER ZONE (bottom) -->
+  <div id="pzone-3" class="pzone">
+    <!-- Info + action strip -->
+    <div id="player-strip">
+      <div id="prow-3" class="hero-row" style="flex:1;min-width:0;"></div>
+      <div id="action-btns">
+        <div id="skills-inline"></div>
+        <div style="display:flex;gap:5px;justify-content:flex-end;margin-top:3px;">
+          <button class="abtn" id="btn-cancel" onclick="cancelAction()" style="display:none">取消</button>
+          <button class="abtn" id="btn-end-play" onclick="endPlayPhase()" disabled>结束出牌</button>
+        </div>
+      </div>
+    </div>
+    <!-- Hand cards -->
+    <div id="player-hand-wrap"></div>
+  </div>
+
+  <!-- Game Log (slide panel) -->
+  <div id="game-log"></div>
+
+  <!-- Discard overlay -->
+  <div id="discard-overlay"></div>
+
+  <!-- Response Panel -->
+  <div id="response-panel">
+    <div class="resp-prompt" id="resp-prompt"></div>
+    <div class="resp-cards" id="resp-cards"></div>
+    <div class="resp-btns">
+      <button class="abtn primary" id="resp-confirm" onclick="confirmResponse()">确认</button>
+      <button class="abtn" id="resp-skip" onclick="skipResponse()">跳过</button>
+    </div>
+  </div>
+</div>
+
+<!-- Win screen -->
+<div id="win-screen">
+  <div class="win-title" id="win-title">游戏结束</div>
+  <div class="win-sub" id="win-sub"></div>
+  <button class="win-btn" onclick="location.reload()">再来一局</button>
+</div>
+
+<!-- Modal -->
+<div id="modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">选择</div>
+    <div class="modal-cards" id="modal-cards"></div>
+    <div class="modal-btns" id="modal-btns"></div>
+  </div>
+</div>
+
+<script>
+/* ======================================================
+   三国杀 - 完整实现 v2 (响应式横屏优化)
+   4人对战: 玩家(3号位) + 3个AI
+   角色: 主公/忠臣/反贼/内奸
+   ====================================================== */
+
+// ============ LOG TOGGLE ============
+let logVisible=false;
+let logUnread=0;
+function toggleLog(){
+  logVisible=!logVisible;
+  const el=document.getElementById('game-log');
+  el.classList.toggle('visible',logVisible);
+  const btn=document.getElementById('btn-log-toggle');
+  btn.classList.toggle('active',logVisible);
+  if(logVisible){logUnread=0;document.getElementById('log-dot').style.display='none';}
+}
+
+// ============ HEROES DATA ============
+const HEROES = [
+  {
+    id:'liubei',name:'刘备',emoji:'👑',kingdom:'shu',maxHp:4,
+    skills:[
+      {id:'rende',name:'仁德',active:true,
+       desc:'出牌阶段，你可以将一张手牌交给一名其他角色（每送出2张牌即可视为使用一张桃）。',
+       use:skillRende}
+    ]
+  },
+  {
+    id:'guanyu',name:'关羽',emoji:'🗡️',kingdom:'shu',maxHp:5,
+    skills:[
+      {id:'wusheng',name:'武圣',active:false,
+       desc:'你可以将♥或♦的非锦囊牌当【杀】使用或打出。',
+       use:null}
+    ]
+  },
+  {
+    id:'zhangfei',name:'张飞',emoji:'⚡',kingdom:'shu',maxHp:4,
+    skills:[
+      {id:'paoxiao',name:'咆哮',active:false,
+       desc:'你每回合使用【杀】的次数没有限制。',
+       use:null}
+    ]
+  },
+  {
+    id:'caocao',name:'曹操',emoji:'🦅',kingdom:'wei',maxHp:4,
+    skills:[
+      {id:'jianxiong',name:'奸雄',active:false,
+       desc:'当你受到伤害时，你可以获得造成伤害的牌（加入手牌）。',
+       use:null}
+    ]
+  },
+  {
+    id:'sunquan',name:'孙权',emoji:'🐲',kingdom:'wu',maxHp:4,
+    skills:[
+      {id:'zhiheng',name:'制衡',active:true,
+       desc:'出牌阶段限一次，你可以弃置任意张手牌，然后摸等量的牌。',
+       use:skillZhiheng,usedThisTurn:false}
+    ]
+  },
+  {
+    id:'zhugeliang',name:'诸葛亮',emoji:'🪁',kingdom:'shu',maxHp:3,
+    skills:[
+      {id:'kongcheng',name:'空城',active:false,
+       desc:'锁定技：若你没有手牌，你不能被指定为【杀】的目标。',
+       use:null}
+    ]
+  },
+  {
+    id:'zhaoyun',name:'赵云',emoji:'🛡️',kingdom:'shu',maxHp:4,
+    skills:[
+      {id:'longdan',name:'龙胆',active:false,
+       desc:'你可以将【杀】当【闪】、【闪】当【杀】使用或打出。',
+       use:null}
+    ]
+  },
+  {
+    id:'zhouyu',name:'周瑜',emoji:'🎭',kingdom:'wu',maxHp:3,
+    skills:[
+      {id:'yingzi',name:'英姿',active:false,
+       desc:'锁定技：你摸牌阶段多摸一张牌（共摸3张）。',
+       use:null}
+    ]
+  }
+];
+
+// ============ CARD DEFINITIONS ============
+const SUITS=['♠','♥','♦','♣'];
+const NUMS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+function makeCard(suit,num,type,name,sub){
+  return{suit,num,type,name,sub:sub||'',
+    isRed:(suit==='♥'||suit==='♦'),
+    numVal:NUMS.indexOf(num)+1
+  };
+}
+
+function buildDeck(){
+  const d=[];
+  const shaSuits=[['♠','A'],['♠','3'],['♠','4'],['♠','5'],['♠','6'],['♠','7'],['♠','8'],['♠','9'],['♠','10'],
+    ['♥','3'],['♥','4'],['♥','5'],['♥','7'],['♥','8'],['♥','9'],['♥','10'],['♦','6'],['♦','7'],['♣','6'],['♣','7']];
+  shaSuits.forEach(([s,n])=>d.push(makeCard(s,n,'sha','杀','基本牌')));
+  const shanS=[['♠','2'],['♠','J'],['♠','Q'],['♥','2'],['♥','J'],['♥','Q'],
+    ['♦','A'],['♦','2'],['♦','3'],['♦','4'],['♦','5'],['♦','8'],['♦','9'],['♦','10'],['♣','2']];
+  shanS.forEach(([s,n])=>d.push(makeCard(s,n,'shan','闪','基本牌')));
+  [['♥','A'],['♥','6'],['♥','K'],['♥','2'],['♦','J'],['♦','Q'],['♦','K'],['♣','A']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'tao','桃','基本牌')));
+  [['♠','3'],['♣','4'],['♦','6'],['♥','5']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'jiu','酒','基本牌')));
+  [['♠','J'],['♣','Q'],['♥','J'],['♦','J']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'wuxie','无懈可击','锦囊')));
+  [['♠','A'],['♣','A'],['♦','A']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'juedou','决斗','锦囊')));
+  [['♠','7'],['♠','8'],['♠','9']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'nanzhuang','南蛮入侵','锦囊')));
+  [['♥','A'],['♣','A']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'wanjian','万箭齐发','锦囊')));
+  [['♠','3'],['♥','3'],['♦','3'],['♣','3']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'shunqian','顺手牵羊','锦囊')));
+  [['♠','4'],['♥','4'],['♦','4'],['♣','4']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'guohe','过河拆桥','锦囊')));
+  [['♠','5'],['♥','5'],['♣','5']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'jiedao','借刀杀人','锦囊')));
+  [['♠','10'],['♠','Q'],['♣','10'],['♦','10']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'bingliangcuanduan','兵粮寸断','延时锦囊')));
+  [['♥','6'],['♥','7'],['♥','8'],['♣','8']].forEach(([s,n])=>
+    d.push(makeCard(s,n,'lebusishu','乐不思蜀','延时锦囊')));
+  d.push(makeCard('♠','K','equip-weapon','青龙偃月刀','武器·攻击范围3'));
+  d.push(makeCard('♠','2','equip-weapon','诸葛连弩','武器·不限出杀'));
+  d.push(makeCard('♦','5','equip-weapon','贯石斧','武器·攻击范围3'));
+  d.push(makeCard('♣','6','equip-weapon','丈八蛇矛','武器·弃2牌当杀'));
+  d.push(makeCard('♦','2','equip-armor','仁王盾','防具·黑杀无效'));
+  d.push(makeCard('♣','K','equip-armor','八卦阵','防具·判定闪伤'));
+  d.push(makeCard('♥','K','equip-plus','赤兔','+1马·攻击+1'));
+  d.push(makeCard('♠','5','equip-plus','绝影','+1马·攻击+1'));
+  d.push(makeCard('♦','Q','equip-minus','爪黄飞电','-1马·防御+1'));
+  d.push(makeCard('♥','4','equip-minus','的卢','-1马·防御+1'));
+  return d;
+}
+
+// ============ GAME STATE ============
+let G={
+  players:[],deck:[],discard:[],
+  current:3,
+  turnPhase:'',roundNum:1,
+  selectedCard:-1,
+  targeting:false,
+  pendingCard:null,
+  pending:null,
+  shaCount:0,
+  rendeGiftCount:0,
+  zhihengUsed:false,
+  gameOver:false,
+  aiDelay:750,
+};
+
+function makePlayer(idx,heroId,role,isHuman){
+  const h=HEROES.find(x=>x.id===heroId);
+  return{
+    idx,hero:{...h,skills:h.skills.map(s=>({...s}))},
+    role,isHuman,
+    hp:h.maxHp,maxHp:h.maxHp,
+    hand:[],
+    equip:{weapon:null,armor:null,plusHorse:null,minusHorse:null},
+    delayCards:[],
+    alive:true,
+    roleRevealed:isHuman||(role==='主公'),
+  };
+}
+
+function distance(from,to){
+  const alive=G.players.filter(p=>p.alive);
+  const fi=alive.findIndex(p=>p.idx===from);
+  const ti=alive.findIndex(p=>p.idx===to);
+  if(fi<0||ti<0)return 999;
+  const n=alive.length;
+  const basic=Math.min(Math.abs(fi-ti),n-Math.abs(fi-ti));
+  const fp=G.players[from], tp=G.players[to];
+  let plus=(fp.equip.plusHorse?1:0);
+  let minus=(tp.equip.minusHorse?1:0);
+  return Math.max(1,basic+plus-minus);
+}
+
+function attackRange(playerIdx){
+  const p=G.players[playerIdx];
+  if(!p.equip.weapon)return 1;
+  const w=p.equip.weapon;
+  if(w.name==='青龙偃月刀'||w.name==='贯石斧')return 3;
+  return 2;
+}
+
+function canAttack(from,to){ return distance(from,to)<=attackRange(from); }
+function canReach(from,to){ return distance(from,to)<=1; }
+
+// ============ INITIALIZATION ============
+let selectedHeroId=null;
+
+function initHeroGrid(){
+  const grid=document.getElementById('hero-grid');
+  grid.innerHTML=HEROES.map(h=>`
+    <div class="hero-card" id="hc-${h.id}" onclick="selectHero('${h.id}')">
+      <div style="text-align:center;margin-bottom:5px;">
+        <span class="hero-kingdom kd-${h.kingdom}">${{shu:'[蜀]',wei:'[魏]',wu:'[吴]',qun:'[群]'}[h.kingdom]}</span>
+      </div>
+      <div class="hero-portrait portrait-${h.kingdom}">${h.emoji}</div>
+      <div class="hero-name">${h.name}</div>
+      <div class="hero-hp-row">${'♥'.repeat(h.maxHp).split('').map(c=>`<span class="hp-heart">${c}</span>`).join('')}</div>
+      <div class="hero-skills">${h.skills.map(s=>`<span class="skill-badge">${s.name}</span> ${s.desc.slice(0,22)}...`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function selectHero(id){
+  selectedHeroId=id;
+  document.querySelectorAll('.hero-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('hc-'+id).classList.add('selected');
+  document.getElementById('start-btn').disabled=false;
+}
+
+function startGame(){
+  if(!selectedHeroId)return;
+  const pool=HEROES.filter(h=>h.id!==selectedHeroId).map(h=>h.id);
+  shuffle(pool);
+  const aiHeroes=pool.slice(0,3);
+  const roles=shuffle(['忠臣','反贼','内奸']);
+  const allRoles=['','','','主公'];
+  roles.forEach((r,i)=>allRoles[i]=r);
+
+  G.players=[
+    makePlayer(0,aiHeroes[0],allRoles[0],false),
+    makePlayer(1,aiHeroes[1],allRoles[1],false),
+    makePlayer(2,aiHeroes[2],allRoles[2],false),
+    makePlayer(3,selectedHeroId,'主公',true),
+  ];
+
+  G.deck=buildDeck();
+  shuffle(G.deck);
+  G.discard=[];
+  G.current=3;
+  G.roundNum=1;
+  G.gameOver=false;
+
+  G.players.forEach((p,i)=>{
+    p.hand=G.deck.splice(0,i===3?5:4);
+  });
+
+  document.getElementById('screen-select').style.display='none';
+  const sg=document.getElementById('screen-game');
+  sg.style.display='';
+  sg.classList.add('active');
+
+  renderAll();
+  addLog('游戏开始！你是主公，摸5张牌。','log-win');
+  G.players.forEach(p=>{
+    if(!p.isHuman)addLog(`${p.hero.name}(${p.role.replace('主公','').replace('忠臣','忠').replace('反贼','反').replace('内奸','内')||'主'})参战。`,'log-sys');
+  });
+
+  setTimeout(()=>beginTurn(3),500);
+}
+
+// ============ SHUFFLING ============
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function drawFromDeck(n){
+  const cards=[];
+  for(let i=0;i<n;i++){
+    if(G.deck.length===0){
+      if(G.discard.length===0)break;
+      G.deck=shuffle([...G.discard]);
+      G.discard=[];
+      addLog('牌堆已空，洗入弃牌堆。','log-sys');
+    }
+    cards.push(G.deck.pop());
+  }
+  updateDeckCount();
+  return cards;
+}
+
+function updateDeckCount(){
+  const el=document.getElementById('deck-count');
+  if(el)el.textContent=G.deck.length;
+}
+
+// ============ TURN MANAGEMENT ============
+function beginTurn(idx){
+  if(G.gameOver)return;
+  const p=G.players[idx];
+  if(!p||!p.alive){nextPlayer(idx);return;}
+  G.current=idx;
+  G.shaCount=0;
+  G.rendeGiftCount=0;
+  if(p.hero.id==='sunquan'){
+    p.hero.skills.forEach(s=>{if(s.id==='zhiheng')s.usedThisTurn=false;});
+  }
+  addLog(`【${p.hero.name}】的回合开始。`,'log-sys');
+  if(p.delayCards.length>0){processJudge(idx,0);}
+  else{drawPhase(idx);}
+}
+
+function processJudge(idx,delayIdx){
+  const p=G.players[idx];
+  if(delayIdx>=p.delayCards.length){drawPhase(idx);return;}
+  const dc=p.delayCards[delayIdx];
+  const judgeCard=drawFromDeck(1)[0];
+  if(!judgeCard){drawPhase(idx);return;}
+
+  if(dc.type==='bingliangcuanduan'){
+    const hit=judgeCard.suit==='♣';
+    addLog(`${p.hero.name}判定【兵粮寸断】：${judgeCard.suit}${judgeCard.num}，${hit?'生效！跳过摸牌。':'无效。'}`,'log-card');
+    G.discard.push(dc);p.delayCards.splice(delayIdx,1);
+    G.discard.push(judgeCard);
+    if(hit)p._skipDraw=true;
+    processJudge(idx,delayIdx);
+  } else if(dc.type==='lebusishu'){
+    const hit=judgeCard.suit!=='♥';
+    addLog(`${p.hero.name}判定【乐不思蜀】：${judgeCard.suit}${judgeCard.num}，${hit?'生效！跳过出牌。':'无效。'}`,'log-card');
+    G.discard.push(dc);p.delayCards.splice(delayIdx,1);
+    G.discard.push(judgeCard);
+    if(hit)p._skipPlay=true;
+    processJudge(idx,delayIdx);
+  }
+  renderAll();
+}
+
+function drawPhase(idx){
+  const p=G.players[idx];
+  if(p._skipDraw){p._skipDraw=false;playPhase(idx);return;}
+  let drawN=2;
+  if(p.hero.id==='zhouyu')drawN=3;
+  const cards=drawFromDeck(drawN);
+  p.hand.push(...cards);
+  addLog(`${p.hero.name} 摸了${drawN}张牌。`,'log-sys');
+  renderAll();
+  playPhase(idx);
+}
+
+function playPhase(idx){
+  const p=G.players[idx];
+  G.turnPhase='play';
+  if(p._skipPlay){p._skipPlay=false;discardPhase(idx);return;}
+  updatePhaseBar();
+  if(p.isHuman){
+    setHumanPlayMode(true);
+    renderHand(idx);
+    updateSkillsPanel();
+  } else {
+    setTimeout(()=>aiPlayTurn(idx),G.aiDelay);
+  }
+}
+
+function discardPhase(idx){
+  const p=G.players[idx];
+  G.turnPhase='discard';
+  setHumanPlayMode(false);
+  const limit=Math.max(p.hp,0);
+  if(p.hand.length>limit){
+    if(p.isHuman){
+      const need=p.hand.length-limit;
+      addLog(`弃牌阶段：需弃${need}张牌。`,'log-sys');
+      showDiscardOverlay(`请选择 ${need} 张牌弃置`);
+      G.turnPhase='discard-select';
+      G.discardTarget=need;
+      G.discardSelected=[];
+      renderHand(idx);
+      document.getElementById('btn-end-play').disabled=false;
+      document.getElementById('btn-end-play').textContent='确认弃牌';
+      document.getElementById('btn-end-play').onclick=confirmDiscard;
+      updatePhaseBar();
+    } else {
+      while(p.hand.length>limit){
+        const ri=Math.floor(Math.random()*p.hand.length);
+        G.discard.push(p.hand.splice(ri,1)[0]);
+      }
+      renderAll();
+      setTimeout(()=>nextPlayer(idx),300);
+    }
+  } else {
+    renderAll();
+    setTimeout(()=>nextPlayer(idx),p.isHuman?0:300);
+  }
+}
+
+function showDiscardOverlay(msg){
+  const el=document.getElementById('discard-overlay');
+  el.textContent=msg;el.style.display='block';
+}
+function hideDiscardOverlay(){
+  document.getElementById('discard-overlay').style.display='none';
+}
+
+function confirmDiscard(){
+  const p=G.players[3];
+  if(!G.discardSelected||G.discardSelected.length!==G.discardTarget){
+    showDiscardOverlay(`还需选择 ${G.discardTarget-(G.discardSelected?.length||0)} 张`);return;
+  }
+  G.discardSelected.sort((a,b)=>b-a).forEach(i=>{G.discard.push(p.hand.splice(i,1)[0]);});
+  G.discardSelected=[];G.discardTarget=0;G.turnPhase='';
+  hideDiscardOverlay();
+  document.getElementById('btn-end-play').textContent='结束出牌';
+  document.getElementById('btn-end-play').onclick=endPlayPhase;
+  renderAll();
+  nextPlayer(3);
+}
+
+function nextPlayer(idx){
+  if(G.gameOver)return;
+  const alive=G.players.filter(p=>p.alive);
+  if(alive.length===0)return;
+  let next=(idx+1)%4;
+  while(!G.players[next].alive)next=(next+1)%4;
+  if(next===3||next<idx)G.roundNum++;
+  document.getElementById('round-num').textContent=G.roundNum;
+  beginTurn(next);
+}
+
+function setHumanPlayMode(active){
+  const btn=document.getElementById('btn-end-play');
+  btn.disabled=!active;
+  if(active)btn.textContent='结束出牌';
+  btn.onclick=endPlayPhase;
+  if(!active){document.getElementById('btn-cancel').style.display='none';}
+  renderHand(3);
+}
+
+function endPlayPhase(){
+  if(G.turnPhase!=='play')return;
+  G.targeting=false;G.selectedCard=-1;G.pendingCard=null;
+  document.getElementById('btn-cancel').style.display='none';
+  renderHand(3);
+  discardPhase(3);
+}
+
+function cancelAction(){
+  G.targeting=false;G.selectedCard=-1;G.pendingCard=null;
+  document.querySelectorAll('.pzone').forEach(z=>z.classList.remove('targetable'));
+  document.getElementById('btn-cancel').style.display='none';
+  renderHand(3);
+}
+
+// ============ PLAYING CARDS ============
+function canPlaySha(playerIdx){
+  const p=G.players[playerIdx];
+  if(p.hero.id==='zhangfei')return true;
+  return G.shaCount<1;
+}
+
+function cardPlayable(card,playerIdx){
+  if(G.turnPhase!=='play')return false;
+  const p=G.players[playerIdx];
+  switch(card.type){
+    case'sha':
+      if(!canPlaySha(playerIdx))return false;
+      return G.players.some(t=>t.alive&&t.idx!==playerIdx&&canAttack(playerIdx,t.idx));
+    case'shan':return false;
+    case'tao':return p.hp<p.maxHp;
+    case'jiu':return false;
+    case'juedou':return G.players.some(t=>t.alive&&t.idx!==playerIdx);
+    case'nanzhuang':case'wanjian':return true;
+    case'shunqian':return G.players.some(t=>t.alive&&t.idx!==playerIdx&&canReach(playerIdx,t.idx)&&(t.hand.length>0||equipCount(t)>0||t.delayCards.length>0));
+    case'guohe':return G.players.some(t=>t.alive&&t.idx!==playerIdx&&(t.hand.length>0||equipCount(t)>0||t.delayCards.length>0));
+    case'jiedao':return G.players.some(t=>t.alive&&t.idx!==playerIdx&&t.equip.weapon);
+    case'bingliangcuanduan':return G.players.some(t=>t.alive&&t.idx!==playerIdx&&!t.delayCards.some(d=>d.type==='bingliangcuanduan'));
+    case'lebusishu':return G.players.some(t=>t.alive&&t.idx!==playerIdx&&!t.delayCards.some(d=>d.type==='lebusishu'));
+    case'wuxie':return false;
+    case'equip-weapon':case'equip-armor':case'equip-plus':case'equip-minus':return true;
+    default:return false;
+  }
+}
+
+function equipCount(p){
+  return[p.equip.weapon,p.equip.armor,p.equip.plusHorse,p.equip.minusHorse].filter(Boolean).length;
+}
+
+function onHandCardClick(cardIdx){
+  if(G.gameOver)return;
+  if(G.turnPhase==='discard-select'){
+    if(!G.discardSelected)G.discardSelected=[];
+    const pos=G.discardSelected.indexOf(cardIdx);
+    if(pos>=0)G.discardSelected.splice(pos,1);
+    else if(G.discardSelected.length<G.discardTarget)G.discardSelected.push(cardIdx);
+    const left=G.discardTarget-(G.discardSelected?.length||0);
+    if(left>0)showDiscardOverlay(`还需选择 ${left} 张`);
+    else showDiscardOverlay('点击"确认弃牌"完成');
+    renderHand(3);return;
+  }
+  if(G.turnPhase!=='play')return;
+  const p=G.players[3];
+  const card=p.hand[cardIdx];
+  if(!card)return;
+
+  if(G.targeting){
+    G.targeting=false;G.pendingCard=null;
+    document.querySelectorAll('.pzone').forEach(z=>z.classList.remove('targetable'));
+  }
+
+  if(G.selectedCard===cardIdx){
+    G.selectedCard=-1;
+    document.getElementById('btn-cancel').style.display='none';
+    renderHand(3);return;
+  }
+
+  G.selectedCard=cardIdx;
+  renderHand(3);
+
+  if(card.type==='tao'){
+    if(p.hp>=p.maxHp){addLog('血量已满，无法使用桃。','log-sys');G.selectedCard=-1;renderHand(3);return;}
+    playCard(3,cardIdx,null);return;
+  }
+  if(card.type==='nanzhuang'||card.type==='wanjian'){playCard(3,cardIdx,null);return;}
+  if(card.type.startsWith('equip')){playCard(3,cardIdx,null);return;}
+
+  const needsTarget=['sha','juedou','shunqian','guohe','jiedao','bingliangcuanduan','lebusishu'].includes(card.type)||
+    (p.hero.id==='guanyu'&&card.isRed&&card.sub==='基本牌');
+
+  if(needsTarget){
+    if(!cardPlayable(card,3)){
+      addLog('当前无法使用此牌。','log-sys');G.selectedCard=-1;renderHand(3);return;
+    }
+    G.targeting=true;
+    G.pendingCard={cardIdx,card,type:card.type};
+    document.getElementById('btn-cancel').style.display='inline-block';
+    G.players.forEach(t=>{
+      if(!t.alive||t.idx===3)return;
+      const zone=document.getElementById('pzone-'+t.idx);
+      if(!zone)return;
+      let targetable=false;
+      if(card.type==='sha')targetable=canAttack(3,t.idx)&&!(p.hero.id==='zhugeliang'&&t.hand.length===0);
+      else if(card.type==='juedou')targetable=true;
+      else if(card.type==='shunqian')targetable=canReach(3,t.idx)&&(t.hand.length>0||equipCount(t)>0||t.delayCards.length>0);
+      else if(card.type==='guohe')targetable=t.hand.length>0||equipCount(t)>0||t.delayCards.length>0;
+      else if(card.type==='jiedao')targetable=!!t.equip.weapon;
+      else if(card.type==='bingliangcuanduan')targetable=!t.delayCards.some(d=>d.type==='bingliangcuanduan');
+      else if(card.type==='lebusishu')targetable=!t.delayCards.some(d=>d.type==='lebusishu');
+      else if(p.hero.id==='guanyu'&&card.isRed)targetable=canAttack(3,t.idx);
+      if(targetable)zone.classList.add('targetable');
+    });
+    addLog('请点击目标角色。','log-sys');
+  } else {
+    G.selectedCard=-1;renderHand(3);
+    addLog('此牌不能使用。','log-sys');
+  }
+}
+
+function onZoneClick(targetIdx){
+  if(G.gameOver)return;
+  if(!G.targeting||!G.pendingCard)return;
+  const zone=document.getElementById('pzone-'+targetIdx);
+  if(!zone||!zone.classList.contains('targetable'))return;
+
+  G.targeting=false;
+  document.querySelectorAll('.pzone').forEach(z=>z.classList.remove('targetable'));
+  document.getElementById('btn-cancel').style.display='none';
+
+  if(G.pendingCard.type==='rende'){
+    G.pendingCard=null;
+    const p=G.players[3];
+    const ci=G.rendeCardIdx||0;
+    if(ci<0||ci>=p.hand.length){renderHand(3);return;}
+    const card=p.hand.splice(ci,1)[0];
+    if(!card){renderHand(3);return;}
+    G.players[targetIdx].hand.push(card);
+    G.rendeGiftCount++;
+    addLog(`刘备[仁德]：将[${card.name}]赠予${G.players[targetIdx].hero.name}。`,'log-card');
+    if(G.rendeGiftCount%2===0){
+      const pp=G.players[3];
+      if(pp.hp<pp.maxHp){recoverHp(3,1);addLog('仁德触发回复！','log-heal');}
+    }
+    G.selectedCard=-1;renderAll();setHumanPlayMode(true);return;
+  }
+
+  const ci=G.pendingCard.cardIdx;
+  G.pendingCard=null;
+  G.selectedCard=-1;
+  playCard(3,ci,targetIdx);
+}
+
+function playCard(playerIdx,cardIdx,targetIdx){
+  const p=G.players[playerIdx];
+  const card=p.hand.splice(cardIdx,1)[0];
+  if(!card)return;
+
+  G.selectedCard=-1;
+  showPlayedCard(card,playerIdx);
+  addLog(`${p.hero.name} 使用了 [${card.name}]${targetIdx!=null?' → '+G.players[targetIdx].hero.name:''}`,'log-card');
+
+  applyCardEffect(card,playerIdx,targetIdx);
+  updateDiscardTop(card);
+  renderAll();
+}
+
+function showPlayedCard(card,fromIdx){
+  const area=document.getElementById('play-cards');
+  const el=document.createElement('div');
+  el.className='played-card';
+  const isRed=card.suit==='♥'||card.suit==='♦';
+  el.innerHTML=`<div class="cn ${isRed?'red-suit':'black-suit'}">${card.num}</div>
+    <div class="cs ${isRed?'red-suit':'black-suit'}">${card.suit}</div>
+    <div class="cname">${card.name}</div>`;
+  area.innerHTML='';area.appendChild(el);
+  setTimeout(()=>{area.innerHTML='';},2000);
+}
+
+function updateDiscardTop(card){
+  const el=document.getElementById('discard-inner');
+  if(!el)return;
+  const isRed=card.suit==='♥'||card.suit==='♦';
+  document.getElementById('discard-top').style.background=isRed?'#fff5f5':'#f5e6c8';
+  el.innerHTML=`<div class="cn ${isRed?'red-suit':'black-suit'}" style="position:relative;font-size:10px;font-weight:700">${card.num}</div>
+    <div class="cs ${isRed?'red-suit':'black-suit'}" style="font-size:10px">${card.suit}</div>
+    <div style="font-size:12px;font-weight:700;color:#1a1a1a;text-align:center">${card.name}</div>`;
+}
+
+// ============ CARD EFFECTS ============
+function applyCardEffect(card,fromIdx,targetIdx){
+  switch(card.type){
+    case'sha':
+      G.shaCount++;
+      G.discard.push(card);
+      requestResponse('sha-shan',targetIdx,{fromIdx,card},resolved=>{
+        if(resolved){addLog(`${G.players[targetIdx].hero.name} 使用了[闪]，躲过攻击！`,'log-card');}
+        else{dealDamage(fromIdx,targetIdx,1,'sha',card);}
+        continueAfterResponse();
+      });
+      break;
+    case'tao':
+      G.discard.push(card);recoverHp(fromIdx,1);continueAfterResponse();break;
+    case'jiu':
+      G.discard.push(card);
+      G.players[fromIdx].juiBoost=(G.players[fromIdx].juiBoost||0)+1;
+      addLog(`${G.players[fromIdx].hero.name} 喝了酒，下一张杀+1伤。`,'log-card');
+      continueAfterResponse();break;
+    case'juedou':
+      G.discard.push(card);processDuel(fromIdx,targetIdx,fromIdx,()=>continueAfterResponse());break;
+    case'nanzhuang':
+      G.discard.push(card);processNanZhuang(fromIdx,0,()=>continueAfterResponse());break;
+    case'wanjian':
+      G.discard.push(card);processWanJian(fromIdx,0,()=>continueAfterResponse());break;
+    case'shunqian':
+      G.discard.push(card);processShunqian(fromIdx,targetIdx,()=>continueAfterResponse());break;
+    case'guohe':
+      G.discard.push(card);processGuohe(fromIdx,targetIdx,()=>continueAfterResponse());break;
+    case'jiedao':
+      G.discard.push(card);processJiedao(fromIdx,targetIdx,()=>continueAfterResponse());break;
+    case'bingliangcuanduan':
+      G.players[targetIdx].delayCards.push(card);
+      addLog(`${G.players[fromIdx].hero.name} 对 ${G.players[targetIdx].hero.name} 使用了[兵粮寸断]。`,'log-card');
+      continueAfterResponse();break;
+    case'lebusishu':
+      G.players[targetIdx].delayCards.push(card);
+      addLog(`${G.players[fromIdx].hero.name} 对 ${G.players[targetIdx].hero.name} 使用了[乐不思蜀]。`,'log-card');
+      continueAfterResponse();break;
+    case'equip-weapon':case'equip-armor':case'equip-plus':case'equip-minus':
+      installEquip(fromIdx,card);continueAfterResponse();break;
+    default:
+      G.discard.push(card);continueAfterResponse();
+  }
+}
+
+function installEquip(playerIdx,card){
+  const p=G.players[playerIdx];
+  let slot=null;
+  if(card.type==='equip-weapon')slot='weapon';
+  else if(card.type==='equip-armor')slot='armor';
+  else if(card.type==='equip-plus')slot='plusHorse';
+  else if(card.type==='equip-minus')slot='minusHorse';
+  if(!slot)return;
+  if(p.equip[slot])G.discard.push(p.equip[slot]);
+  p.equip[slot]=card;
+  addLog(`${p.hero.name} 装备了[${card.name}]。`,'log-card');
+}
+
+// ============ RESPONSE SYSTEM ============
+function requestResponse(type,responderIdx,context,callback){
+  const p=G.players[responderIdx];
+  G.pending={type,responderIdx,context,callback};
+  renderAll();
+  if(p.isHuman){showResponsePanel(type,context);}
+  else{setTimeout(()=>aiRespond(type,responderIdx,context,callback),G.aiDelay);}
+}
+
+function showResponsePanel(type,context){
+  const panel=document.getElementById('response-panel');
+  const prompt=document.getElementById('resp-prompt');
+  const cardsEl=document.getElementById('resp-cards');
+  panel.style.display='block';
+  G.respSelectedCard=-1;
+
+  const p=G.players[3];
+  let validTypes=[];
+
+  if(type==='sha-shan'){
+    const attacker=G.players[context.fromIdx];
+    prompt.textContent=`${attacker.hero.name} 对你使用了【杀】，是否打出【闪】？`;
+    validTypes=['shan'];
+    if(p.hero.id==='zhaoyun')validTypes=['shan','sha'];
+  } else if(type==='duel-sha'){
+    prompt.textContent=`【决斗】：打出【杀】，否则受1伤。`;
+    validTypes=['sha'];
+    if(p.hero.id==='zhaoyun')validTypes=['sha','shan'];
+  } else if(type==='nanzhuang-sha'){
+    prompt.textContent=`【南蛮入侵】：打出【杀】，否则受1伤。`;
+    validTypes=['sha'];
+  } else if(type==='wanjian-shan'){
+    prompt.textContent=`【万箭齐发】：打出【闪】，否则受1伤。`;
+    validTypes=['shan'];
+    if(p.hero.id==='zhaoyun')validTypes=['shan','sha'];
+  } else if(type==='wuxie'){
+    prompt.textContent=`是否打出【无懈可击】？`;
+    validTypes=['wuxie'];
+  }
+
+  cardsEl.innerHTML='';
+  p.hand.forEach((card,i)=>{
+    let usable=validTypes.includes(card.type)||
+      (p.hero.id==='guanyu'&&card.isRed&&validTypes.includes('sha')&&card.sub==='基本牌');
+    if(!usable)return;
+    const isRed=card.suit==='♥'||card.suit==='♦';
+    const el=document.createElement('div');
+    el.className='card';
+    el.dataset.idx=i;
+    el.innerHTML=`<div class="cn ${isRed?'red-suit':'black-suit'}">${card.num}</div>
+      <div class="cs ${isRed?'red-suit':'black-suit'}">${card.suit}</div>
+      <div class="cname">${card.name}</div>`;
+    el.onclick=()=>{
+      cardsEl.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
+      el.classList.add('sel');G.respSelectedCard=i;
+    };
+    cardsEl.appendChild(el);
+  });
+
+  document.getElementById('resp-skip').textContent='跳过';
+  document.getElementById('resp-confirm').onclick=confirmResponse;
+}
+
+function confirmResponse(){
+  if(G.respSelectedCard===undefined||G.respSelectedCard<0){skipResponse();return;}
+  const ci=G.respSelectedCard;
+  const p=G.players[3];
+  const card=p.hand[ci];
+  if(!card){skipResponse();return;}
+  hideResponsePanel();
+  p.hand.splice(ci,1);
+  showPlayedCard(card,3);
+  G.discard.push(card);
+  addLog(`${p.hero.name} 打出了 [${card.name}]`,'log-card');
+  const {callback}=G.pending||{};
+  G.pending=null;
+  if(callback)callback(true,card);
+  renderAll();
+}
+
+function skipResponse(){
+  hideResponsePanel();
+  const {callback}=G.pending||{};
+  G.pending=null;
+  if(callback)callback(false,null);
+}
+
+function hideResponsePanel(){
+  document.getElementById('response-panel').style.display='none';
+  G.respSelectedCard=-1;
+}
+
+function aiRespond(type,respIdx,context,callback){
+  const p=G.players[respIdx];
+  let validTypes=[];
+  if(type==='sha-shan'){validTypes=['shan'];if(p.hero.id==='zhaoyun')validTypes=['shan','sha'];}
+  else if(type==='duel-sha'||type==='nanzhuang-sha'){validTypes=['sha'];}
+  else if(type==='wanjian-shan'){validTypes=['shan'];if(p.hero.id==='zhaoyun')validTypes=['shan','sha'];}
+  else if(type==='wuxie'){validTypes=['wuxie'];}
+
+  if(p.hero.id==='guanyu'&&validTypes.includes('sha')){
+    const idx=p.hand.findIndex(c=>c.isRed&&c.sub==='基本牌');
+    if(idx>=0){
+      const card=p.hand.splice(idx,1)[0];
+      G.discard.push(card);
+      addLog(`${p.hero.name}(武圣) 打出了 [${card.name}] 当【杀】`,'log-card');
+      G.pending=null;if(callback)callback(true,card);renderAll();return;
+    }
+  }
+
+  const idx=p.hand.findIndex(c=>validTypes.includes(c.type));
+  if(idx>=0){
+    const card=p.hand.splice(idx,1)[0];
+    G.discard.push(card);
+    addLog(`${p.hero.name} 打出了 [${card.name}]`,'log-card');
+    G.pending=null;if(callback)callback(true,card);renderAll();
+  } else {
+    G.pending=null;if(callback)callback(false,null);
+  }
+}
+
+function continueAfterResponse(){
+  renderAll();
+  if(G.gameOver)return;
+  if(G.pending)return;
+  const p=G.players[G.current];
+  if(!p||!p.alive)return;
+  if(p.isHuman&&G.turnPhase==='play'){
+    setHumanPlayMode(true);renderHand(3);updateSkillsPanel();
+  } else if(!p.isHuman&&G.turnPhase==='play'){
+    setTimeout(()=>aiPlayTurn(G.current),G.aiDelay);
+  }
+}
+
+// ============ DUEL ============
+function processDuel(initiatorIdx,currentTargetIdx,originalInitiatorIdx,done){
+  requestResponse('duel-sha',currentTargetIdx,{initiatorIdx,originalInitiatorIdx},
+    (played,card)=>{
+      if(played){
+        const nowResponder=currentTargetIdx===originalInitiatorIdx?initiatorIdx:originalInitiatorIdx;
+        processDuel(currentTargetIdx,nowResponder,originalInitiatorIdx,done);
+      } else {
+        dealDamage(
+          currentTargetIdx===originalInitiatorIdx?initiatorIdx:originalInitiatorIdx,
+          currentTargetIdx,1,'sha',null
+        );
+        done();
+      }
+    }
+  );
+}
+
+function processNanZhuang(fromIdx,step,done){
+  const targets=G.players.filter(p=>p.alive&&p.idx!==fromIdx);
+  if(step>=targets.length){done();return;}
+  const target=targets[step];
+  requestResponse('nanzhuang-sha',target.idx,{fromIdx},
+    (played)=>{
+      if(!played){dealDamage(fromIdx,target.idx,1,'sha',null);if(G.gameOver){done();return;}}
+      processNanZhuang(fromIdx,step+1,done);
+    }
+  );
+}
+
+function processWanJian(fromIdx,step,done){
+  const targets=G.players.filter(p=>p.alive&&p.idx!==fromIdx);
+  if(step>=targets.length){done();return;}
+  const target=targets[step];
+  if(target.equip.armor&&target.equip.armor.name==='仁王盾'){
+    addLog(`${target.hero.name} 的[仁王盾]无效了万箭。`,'log-card');
+    processWanJian(fromIdx,step+1,done);return;
+  }
+  requestResponse('wanjian-shan',target.idx,{fromIdx},
+    (played)=>{
+      if(!played){dealDamage(fromIdx,target.idx,1,'sha',null);if(G.gameOver){done();return;}}
+      processWanJian(fromIdx,step+1,done);
+    }
+  );
+}
+
+function processShunqian(fromIdx,targetIdx,done){
+  const target=G.players[targetIdx];
+  const options=[];
+  target.hand.forEach((_,i)=>options.push({zone:'hand',i}));
+  Object.keys(target.equip).forEach(k=>{if(target.equip[k])options.push({zone:'equip',k});});
+  target.delayCards.forEach((_,i)=>options.push({zone:'delay',i}));
+  if(options.length===0){done();return;}
+  if(G.players[fromIdx].isHuman){
+    showPickModal('顺手牵羊：选择一张牌',target,options,(chosen)=>{takeCardFromPlayer(fromIdx,target,chosen);done();});
+  } else {
+    const chosen=options[Math.floor(Math.random()*options.length)];
+    takeCardFromPlayer(fromIdx,target,chosen);done();
+  }
+}
+
+function takeCardFromPlayer(fromIdx,target,chosen){
+  const from=G.players[fromIdx];let card=null;
+  if(chosen.zone==='hand'){card=target.hand.splice(chosen.i,1)[0];}
+  else if(chosen.zone==='equip'){card=target.equip[chosen.k];target.equip[chosen.k]=null;}
+  else if(chosen.zone==='delay'){card=target.delayCards.splice(chosen.i,1)[0];}
+  if(card){from.hand.push(card);addLog(`${from.hero.name} 从 ${target.hero.name} 处获得了1张牌。`,'log-card');}
+}
+
+function processGuohe(fromIdx,targetIdx,done){
+  const from=G.players[fromIdx];const target=G.players[targetIdx];
+  const options=[];
+  target.hand.forEach((_,i)=>options.push({zone:'hand',i}));
+  Object.keys(target.equip).forEach(k=>{if(target.equip[k])options.push({zone:'equip',k});});
+  target.delayCards.forEach((_,i)=>options.push({zone:'delay',i}));
+  if(options.length===0){done();return;}
+  if(from.isHuman){
+    showPickModal('过河拆桥：选择一张牌弃置',target,options,(chosen)=>{discardCardFromPlayer(target,chosen);done();});
+  } else {
+    let chosen=options.find(o=>o.zone==='equip')||options[0];
+    discardCardFromPlayer(target,chosen);done();
+  }
+}
+
+function discardCardFromPlayer(target,chosen){
+  let card=null;
+  if(chosen.zone==='hand'){card=target.hand.splice(chosen.i,1)[0];}
+  else if(chosen.zone==='equip'){card=target.equip[chosen.k];target.equip[chosen.k]=null;}
+  else if(chosen.zone==='delay'){card=target.delayCards.splice(chosen.i,1)[0];}
+  if(card){G.discard.push(card);addLog(`[${card.name}] 被弃置。`,'log-card');}
+}
+
+function processJiedao(fromIdx,targetIdx,done){
+  const from=G.players[fromIdx];const target=G.players[targetIdx];
+  if(!target.equip.weapon){done();return;}
+  addLog(`${from.hero.name}[借刀杀人]，${target.hero.name} 交出武器。`,'log-card');
+  const weapon=target.equip.weapon;
+  target.equip.weapon=null;
+  from.hand.push(weapon);
+  addLog(`${target.hero.name} 将[${weapon.name}]交给了${from.hero.name}。`,'log-card');
+  done();
+}
+
+// ============ DAMAGE ============
+function dealDamage(fromIdx,toIdx,amount,type,card){
+  const from=fromIdx!=null?G.players[fromIdx]:null;
+  const to=G.players[toIdx];
+  if(!to||!to.alive)return;
+
+  if(to.equip.armor&&to.equip.armor.name==='仁王盾'&&type==='sha'&&card&&!card.isRed){
+    addLog(`${to.hero.name}[仁王盾]格挡！`,'log-card');return;
+  }
+  if(to.equip.armor&&to.equip.armor.name==='八卦阵'&&type==='sha'){
+    const jc=drawFromDeck(1)[0];
+    if(jc){
+      const blocked=jc.isRed;G.discard.push(jc);
+      addLog(`${to.hero.name}[八卦阵]判定：${jc.suit}${jc.num}，${blocked?'格挡！':'未挡。'}`,'log-card');
+      if(blocked)return;
+    }
+  }
+
+  if(from&&from.juiBoost>0){amount+=from.juiBoost;from.juiBoost=0;}
+
+  to.hp=Math.max(0,to.hp-amount);
+  showDamageFloat(toIdx,amount);
+  addLog(`${from?from.hero.name:'?'}→${to.hero.name} 造成${amount}伤（剩${to.hp}/${to.maxHp}血）`,'log-atk');
+
+  if(to.hero.id==='caocao'&&card&&from){
+    to.hand.push({...card});addLog(`曹操[奸雄]获得伤害来源牌。`,'log-card');
+  }
+
+  renderAll();
+  if(to.hp<=0)handleDying(toIdx,fromIdx!=null?fromIdx:null);
+}
+
+function handleDying(dyingIdx,killerIdx){
+  const dying=G.players[dyingIdx];
+  if(dying.isHuman){
+    const hasTao=dying.hand.findIndex(c=>c.type==='tao');
+    const hasJiu=dying.hand.findIndex(c=>c.type==='jiu');
+    if(hasTao>=0||hasJiu>=0){showSavePrompt(dyingIdx,killerIdx);return;}
+  } else {
+    const ti=dying.hand.findIndex(c=>c.type==='tao');
+    if(ti>=0){
+      const card=dying.hand.splice(ti,1)[0];G.discard.push(card);
+      recoverHp(dyingIdx,1);addLog(`${dying.hero.name} 自救使用了[桃]！`,'log-heal');return;
+    }
+    const ji=dying.hand.findIndex(c=>c.type==='jiu');
+    if(ji>=0){
+      const card=dying.hand.splice(ji,1)[0];G.discard.push(card);
+      recoverHp(dyingIdx,1);addLog(`${dying.hero.name} 自救使用了[酒]！`,'log-heal');return;
+    }
+  }
+  executeDeath(dyingIdx,killerIdx);
+}
+
+function showSavePrompt(dyingIdx,killerIdx){
+  const panel=document.getElementById('response-panel');
+  const prompt=document.getElementById('resp-prompt');
+  const cardsEl=document.getElementById('resp-cards');
+  panel.style.display='block';
+  G.respSelectedCard=-1;
+  prompt.textContent=`你濒死！使用【桃】或【酒】自救！`;
+  const p=G.players[dyingIdx];
+  cardsEl.innerHTML='';
+  p.hand.forEach((card,i)=>{
+    if(card.type!=='tao'&&card.type!=='jiu')return;
+    const isRed=card.suit==='♥'||card.suit==='♦';
+    const el=document.createElement('div');el.className='card';el.dataset.idx=i;
+    el.innerHTML=`<div class="cn ${isRed?'red-suit':'black-suit'}">${card.num}</div>
+      <div class="cs ${isRed?'red-suit':'black-suit'}">${card.suit}</div>
+      <div class="cname">${card.name}</div>`;
+    el.onclick=()=>{cardsEl.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');G.respSelectedCard=i;};
+    cardsEl.appendChild(el);
+  });
+  G.pending={
+    type:'dying-save',responderIdx:dyingIdx,context:{killerIdx},
+    callback:(saved)=>{
+      document.getElementById('resp-confirm').onclick=confirmResponse;
+      document.getElementById('resp-skip').onclick=skipResponse;
+      if(!saved){executeDeath(dyingIdx,killerIdx);}
+      else{if(G.players[dyingIdx].hp<=0){handleDying(dyingIdx,killerIdx);}else{continueAfterResponse();}}
+    }
+  };
+  document.getElementById('resp-skip').textContent='放弃';
+  document.getElementById('resp-confirm').onclick=confirmSave;
+  document.getElementById('resp-skip').onclick=()=>{
+    hideResponsePanel();
+    const {callback}=G.pending||{};G.pending=null;
+    if(callback)callback(false);
+  };
+}
+
+function confirmSave(){
+  if(G.respSelectedCard<0){skipResponse();return;}
+  const ci=G.respSelectedCard;const p=G.players[3];const card=p.hand[ci];
+  if(!card){skipResponse();return;}
+  hideResponsePanel();p.hand.splice(ci,1);G.discard.push(card);
+  recoverHp(3,1);addLog(`${p.hero.name} 使用了[${card.name}]自救！`,'log-heal');
+  const {callback}=G.pending||{};G.pending=null;
+  if(callback)callback(true);
+  renderAll();
+}
+
+function executeDeath(dyingIdx,killerIdx){
+  const dying=G.players[dyingIdx];
+  dying.alive=false;
+  addLog(`${dying.hero.name}(${dying.role}) 阵亡！`,'log-die');
+  dying.roleRevealed=true;
+  const killer=killerIdx!=null?G.players[killerIdx]:null;
+  if(killer){
+    if(dying.role==='反贼'&&killer.role!=='反贼'){
+      killer.hand.push(...drawFromDeck(3));
+      addLog(`${killer.hero.name} 击杀反贼，奖励摸3张！`,'log-win');
+    } else if(dying.role==='忠臣'&&killer.role==='主公'){
+      killer.hand=[];
+      Object.keys(killer.equip).forEach(k=>{if(killer.equip[k]){G.discard.push(killer.equip[k]);killer.equip[k]=null;}});
+      addLog(`${killer.hero.name}(主公) 误杀忠臣，弃置所有牌！`,'log-die');
+    }
+  }
+  G.discard.push(...dying.hand);dying.hand=[];
+  Object.keys(dying.equip).forEach(k=>{if(dying.equip[k]){G.discard.push(dying.equip[k]);dying.equip[k]=null;}});
+  G.discard.push(...dying.delayCards);dying.delayCards=[];
+  renderAll();checkWin();
+}
+
+function recoverHp(playerIdx,amount){
+  const p=G.players[playerIdx];
+  p.hp=Math.min(p.maxHp,p.hp+amount);
+  showHealFloat(playerIdx,amount);
+  addLog(`${p.hero.name} 恢复${amount}血（${p.hp}/${p.maxHp}）`,'log-heal');
+  renderAll();
+}
+
+// ============ WIN CHECK ============
+function checkWin(){
+  if(G.gameOver)return;
+  const player=G.players[3];
+  const alive=G.players.filter(p=>p.alive);
+  if(!player.alive){
+    if(alive.length===1&&alive[0].role==='内奸'){showWin('内奸胜利','内奸孤身存活，笑到最后！');}
+    else{showWin('反贼胜利','主公已阵亡，反贼取得胜利！');}
+    return;
+  }
+  const enemies=G.players.filter(p=>p.alive&&(p.role==='反贼'||p.role==='内奸'));
+  if(enemies.length===0){showWin('主公胜利','所有敌方势力已消灭，天下归于一统！');}
+}
+
+function showWin(title,sub){
+  G.gameOver=true;
+  document.getElementById('win-title').textContent=title;
+  document.getElementById('win-sub').textContent=sub;
+  document.getElementById('win-screen').classList.add('active');
+  G.players.forEach(p=>p.roleRevealed=true);
+  renderAll();
+}
+
+// ============ SKILLS ============
+function skillRende(playerIdx){
+  const p=G.players[playerIdx];
+  if(p.hand.length===0){addLog('手牌为空，无法使用仁德。','log-sys');return;}
+  if(G.selectedCard<0){addLog('仁德：请先在手牌中点选要赠送的牌，再点击技能按钮。','log-sys');return;}
+  addLog('仁德：请点击目标角色。','log-sys');
+  G.targeting=true;G.pendingCard={type:'rende'};G.rendeCardIdx=G.selectedCard;
+  document.getElementById('btn-cancel').style.display='inline-block';
+  G.players.forEach(t=>{
+    if(!t.alive||t.idx===3)return;
+    document.getElementById('pzone-'+t.idx)?.classList.add('targetable');
+  });
+}
+
+function skillZhiheng(playerIdx){
+  const p=G.players[playerIdx];
+  const skill=p.hero.skills.find(s=>s.id==='zhiheng');
+  if(!skill||skill.usedThisTurn){addLog('制衡本回合已使用。','log-sys');return;}
+  if(p.hand.length===0){addLog('手牌为空，无法使用制衡。','log-sys');return;}
+  skill.usedThisTurn=true;
+  const n=p.hand.length;
+  G.discard.push(...p.hand);p.hand=[];
+  p.hand.push(...drawFromDeck(n));
+  addLog(`孙权[制衡]：弃${n}张，重摸${n}张。`,'log-card');
+  renderAll();
+  if(p.isHuman){renderHand(3);updateSkillsPanel();}
+}
+
+// ============ AI LOGIC ============
+function aiPlayTurn(idx){
+  if(G.gameOver||G.turnPhase!=='play')return;
+  const p=G.players[idx];
+  if(!p||!p.alive)return;
+  const played=aiChooseAndPlay(idx);
+  if(!played)setTimeout(()=>discardPhase(idx),G.aiDelay*0.4);
+}
+
+function aiChooseAndPlay(idx){
+  const p=G.players[idx];
+  if(G.gameOver||!p.alive)return false;
+  const enemies=G.players.filter(t=>t.alive&&t.idx!==idx&&isEnemy(idx,t.idx));
+
+  if(p.hp<p.maxHp){
+    const ti=p.hand.findIndex(c=>c.type==='tao');
+    if(ti>=0){playCard(idx,ti,null);return true;}
+  }
+  const ei=p.hand.findIndex(c=>c.type.startsWith('equip'));
+  if(ei>=0){playCard(idx,ei,null);return true;}
+
+  if(enemies.length>0){
+    const ni=p.hand.findIndex(c=>c.type==='nanzhuang');
+    if(ni>=0){playCard(idx,ni,null);return true;}
+    const wi=p.hand.findIndex(c=>c.type==='wanjian');
+    if(wi>=0){playCard(idx,wi,null);return true;}
+  }
+
+  if(canPlaySha(idx)){
+    const shaIdx=p.hand.findIndex(c=>c.type==='sha');
+    if(shaIdx>=0){
+      const validTargets=enemies.filter(t=>canAttack(idx,t.idx));
+      if(validTargets.length>0){
+        const target=validTargets.sort((a,b)=>a.hp-b.hp)[0];
+        playCard(idx,shaIdx,target.idx);return true;
+      }
+    }
+  }
+  const di=p.hand.findIndex(c=>c.type==='juedou');
+  if(di>=0&&enemies.length>0){playCard(idx,di,enemies.sort((a,b)=>a.hp-b.hp)[0].idx);return true;}
+
+  const si=p.hand.findIndex(c=>c.type==='shunqian');
+  if(si>=0){
+    const targets=enemies.filter(t=>canReach(idx,t.idx)&&(t.hand.length>0||equipCount(t)>0));
+    if(targets.length>0){playCard(idx,si,targets[0].idx);return true;}
+  }
+  const gi=p.hand.findIndex(c=>c.type==='guohe');
+  if(gi>=0){
+    const targets=enemies.filter(t=>t.hand.length>0||equipCount(t)>0);
+    if(targets.length>0){playCard(idx,gi,targets[0].idx);return true;}
+  }
+  const li=p.hand.findIndex(c=>c.type==='lebusishu');
+  if(li>=0){
+    const targets=enemies.filter(t=>!t.delayCards.some(d=>d.type==='lebusishu'));
+    if(targets.length>0){playCard(idx,li,targets[0].idx);return true;}
+  }
+  const bi=p.hand.findIndex(c=>c.type==='bingliangcuanduan');
+  if(bi>=0){
+    const targets=enemies.filter(t=>!t.delayCards.some(d=>d.type==='bingliangcuanduan'));
+    if(targets.length>0){playCard(idx,bi,targets[0].idx);return true;}
+  }
+  return false;
+}
+
+function isEnemy(aIdx,bIdx){
+  const a=G.players[aIdx],b=G.players[bIdx];
+  if(!a||!b)return false;
+  if(a.role==='主公'||a.role==='忠臣')return b.role==='反贼'||b.role==='内奸';
+  if(a.role==='反贼')return b.role==='主公'||b.role==='忠臣';
+  if(a.role==='内奸')return b.alive;
+  return true;
+}
+
+// ============ PICK MODAL ============
+function showPickModal(title,target,options,callback){
+  const modal=document.getElementById('modal');
+  document.getElementById('modal-title').textContent=title;
+  const mCards=document.getElementById('modal-cards');
+  const mBtns=document.getElementById('modal-btns');
+  mCards.innerHTML='';mBtns.innerHTML='';
+  modal.style.display='flex';
+  let selected=null;
+
+  options.forEach((opt)=>{
+    let card=null;
+    if(opt.zone==='hand')card=target.hand[opt.i];
+    else if(opt.zone==='equip')card=target.equip[opt.k];
+    else if(opt.zone==='delay')card=target.delayCards[opt.i];
+    if(!card)return;
+    const el=document.createElement('div');el.className='card';
+    if(opt.zone==='hand'){
+      el.innerHTML=`<div class="card-back-face">🀄</div>`;
+    } else {
+      const isRed=card.suit==='♥'||card.suit==='♦';
+      el.innerHTML=`<div class="cn ${isRed?'red-suit':'black-suit'}">${card.num}</div>
+        <div class="cs ${isRed?'red-suit':'black-suit'}">${card.suit}</div>
+        <div class="cname">${card.name}</div>`;
+    }
+    el.onclick=()=>{mCards.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');selected=opt;};
+    mCards.appendChild(el);
+  });
+
+  const btn=document.createElement('button');btn.className='mbtn';btn.textContent='确认';
+  btn.onclick=()=>{if(!selected)selected=options[0];modal.style.display='none';callback(selected);};
+  mBtns.appendChild(btn);
+}
+
+// ============ RENDERING ============
+function renderAll(){
+  G.players.forEach((_,i)=>renderPlayer(i));
+  updateDeckCount();
+  updatePhaseBar();
+  if(G.current===3&&G.turnPhase==='play')renderHand(3);
+}
+
+function renderPlayer(idx){
+  const p=G.players[idx];
+  const row=document.getElementById('prow-'+idx);
+  const zone=document.getElementById('pzone-'+idx);
+  if(!row||!zone)return;
+
+  zone.classList.toggle('active-turn',G.current===idx&&p.alive);
+  zone.classList.toggle('dead',!p.alive);
+
+  const roleLabel=p.roleRevealed?
+    `<span class="g-role role-${roleClass(p.role)}">${p.role}</span>`:
+    `<span class="g-role role-hide">身份未知</span>`;
+
+  const hearts=Array.from({length:p.maxHp},(_,i)=>{
+    const cls=i<p.hp?'full-heart':'empty-heart';
+    return`<span class="g-hp-heart ${cls}">♥</span>`;
+  }).join('');
+
+  const equips=[
+    p.equip.weapon?`<span class="equip-tag">⚔️${p.equip.weapon.name}</span>`:'',
+    p.equip.armor?`<span class="equip-tag">🛡${p.equip.armor.name}</span>`:'',
+    p.equip.plusHorse?`<span class="equip-tag">🐴+1</span>`:'',
+    p.equip.minusHorse?`<span class="equip-tag">🐴-1</span>`:'',
+  ].join('');
+  const delays=p.delayCards.map(d=>`<span class="delay-tag">⏰${d.name}</span>`).join('');
+
+  let handDisplay='';
+  if(p.isHuman){
+    handDisplay=`<div class="g-hand-count">手牌 ${p.hand.length}张</div>`;
+  } else {
+    handDisplay=`<div class="opp-hand">${Array.from({length:Math.min(p.hand.length,9)}).map(()=>'<div class="mini-back"></div>').join('')}</div>`;
+  }
+
+  const deadOpacity=p.alive?'':' style="opacity:.5"';
+  row.innerHTML=`
+    <div class="g-avatar${p.alive?'':' dead-portrait'}">${p.hero.emoji}</div>
+    <div class="g-info"${deadOpacity}>
+      <div class="g-name">${p.hero.name}${roleLabel}</div>
+      <div class="g-hp">${hearts}</div>
+      <div class="g-equip">${equips}</div>
+      ${delays?`<div class="g-delay">${delays}</div>`:''}
+      ${handDisplay}
+    </div>
+  `;
+}
+
+function roleClass(role){
+  if(role==='主公')return'zhu';if(role==='忠臣')return'zhong';
+  if(role==='反贼')return'fan';if(role==='内奸')return'nei';return'hide';
+}
+
+function renderHand(idx){
+  const p=G.players[idx];
+  if(!p.isHuman)return;
+  const wrap=document.getElementById('player-hand-wrap');
+  wrap.innerHTML='';
+
+  p.hand.forEach((card,i)=>{
+    const isRed=card.suit==='♥'||card.suit==='♦';
+    const el=document.createElement('div');
+    const playable=G.turnPhase==='play'&&cardPlayable(card,idx);
+    const isSelected=(G.turnPhase==='discard-select'?G.discardSelected?.includes(i):G.selectedCard===i);
+
+    el.className='card';
+    if(card.type==='sha')el.classList.add('card-sha');
+    else if(card.type==='shan')el.classList.add('card-shan');
+    else if(card.type==='tao')el.classList.add('card-tao');
+    else if(card.type==='jiu')el.classList.add('card-jiu');
+    else if(card.type.startsWith('equip'))el.classList.add('card-equip');
+    else if(card.sub==='延时锦囊')el.classList.add('card-delay');
+    else if(card.type==='wuxie')el.classList.add('card-wuxie');
+    else el.classList.add('card-jinnang');
+
+    if(G.turnPhase==='discard-select'&&isSelected)el.classList.add('discard-sel');
+    else if(isSelected)el.classList.add('sel');
+    if(G.turnPhase==='play'&&!playable&&card.type!=='shan'&&card.type!=='wuxie')el.classList.add('no-play');
+
+    el.innerHTML=`<div class="cn ${isRed?'red-suit':'black-suit'}">${card.num}</div>
+      <div class="cs ${isRed?'red-suit':'black-suit'}">${card.suit}</div>
+      <div class="cname">${card.name}</div>
+      <div class="csub">${card.sub||''}</div>`;
+    el.onclick=()=>onHandCardClick(i);
+    wrap.appendChild(el);
+  });
+}
+
+function updatePhaseBar(){
+  const el=document.getElementById('phase-text');
+  if(!el)return;
+  const p=G.players[G.current];
+  if(!p)return;
+  let phase='出牌';
+  if(G.turnPhase==='discard'||G.turnPhase==='discard-select')phase='弃牌';
+  else if(G.turnPhase==='draw')phase='摸牌';
+  else if(G.turnPhase==='judge')phase='判定';
+  el.textContent=`${p.hero.name}的回合 · ${phase}阶段`;
+}
+
+function updateSkillsPanel(){
+  const p=G.players[3];
+  const panel=document.getElementById('skills-inline');
+  panel.innerHTML='';
+  p.hero.skills.forEach(skill=>{
+    if(!skill.active)return;
+    const used=skill.usedThisTurn;
+    const btn=document.createElement('button');
+    btn.className='skill-inline-btn'+(used?' used':'');
+    btn.textContent=skill.name;
+    btn.title=skill.desc;
+    btn.disabled=used||G.turnPhase!=='play';
+    btn.onclick=()=>useSkill(skill.id);
+    panel.appendChild(btn);
+  });
+}
+
+function useSkill(skillId){
+  const p=G.players[3];
+  const skill=p.hero.skills.find(s=>s.id===skillId);
+  if(!skill||!skill.active)return;
+  if(skillId==='rende')skillRende(3);
+  else if(skillId==='zhiheng')skillZhiheng(3);
+}
+
+// ============ LOG ============
+function addLog(msg,cls=''){
+  const log=document.getElementById('game-log');
+  const el=document.createElement('div');
+  el.className=`log-entry ${cls}`;
+  el.textContent=msg;
+  log.appendChild(el);
+  log.scrollTop=log.scrollHeight;
+  // Show notification dot if log is hidden
+  if(!logVisible){
+    logUnread++;
+    const dot=document.getElementById('log-dot');
+    if(dot)dot.style.display='block';
+  }
+}
+
+// ============ VISUAL EFFECTS ============
+function showDamageFloat(playerIdx,amount){
+  const zone=document.getElementById('pzone-'+playerIdx);
+  if(!zone)return;
+  const r=zone.getBoundingClientRect();
+  const el=document.createElement('div');el.className='dmg-float';
+  el.textContent='-'+amount;
+  el.style.left=(r.left+r.width/2-12)+'px';
+  el.style.top=(r.top+r.height/2-10)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1400);
+}
+
+function showHealFloat(playerIdx,amount){
+  const zone=document.getElementById('pzone-'+playerIdx);
+  if(!zone)return;
+  const r=zone.getBoundingClientRect();
+  const el=document.createElement('div');el.className='heal-float';
+  el.textContent='+'+amount;
+  el.style.left=(r.left+r.width/2-12)+'px';
+  el.style.top=(r.top+r.height/2-10)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1400);
+}
+
+// ============ INIT ============
+initHeroGrid();
+</script>
+</body>
+</html>
