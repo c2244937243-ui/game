@@ -35,9 +35,9 @@
         }
 
         #score-container {
-            padding: 20px;
+            padding: 10px 15px; /* 缩小手机端内边距 */
             color: #00ffff;
-            font-size: 24px;
+            font-size: 16px; /* 缩小手机端字体 */
             font-weight: bold;
             text-shadow: 0 0 10px #00ffff;
             display: flex;
@@ -64,7 +64,7 @@
 
         #top-center-ui {
             position: absolute;
-            top: 20px;
+            top: 15px; /* 稍微上移 */
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -73,7 +73,7 @@
         }
 
         #timer {
-            font-size: 28px;
+            font-size: 20px; /* 缩小计时器字体 */
             color: #fff;
             font-weight: bold;
             font-family: monospace;
@@ -82,20 +82,20 @@
         }
 
         #level-display {
-            font-size: 18px;
+            font-size: 14px; /* 缩小等级字体 */
             color: #ff9900;
             font-weight: bold;
             text-shadow: 0 0 8px #ff9900;
-            margin-top: 5px;
+            margin-top: 2px;
         }
         
         #weapon-display {
-            font-size: 14px;
+            font-size: 12px; /* 缩小武器显示字体 */
             color: #fff;
             background: rgba(0,0,0,0.5);
-            padding: 4px 10px;
-            border-radius: 10px;
-            margin-top: 5px;
+            padding: 2px 8px; /* 缩小内边距 */
+            border-radius: 8px;
+            margin-top: 4px;
             border: 1px solid #00ffff;
         }
 
@@ -256,11 +256,13 @@
             background: rgba(0, 255, 255, 0.1);
         }
 
+        /* 修复重叠问题，将退出按钮移至左下角 */
         #exit-btn {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            padding: 8px 15px;
+            bottom: 20px; 
+            left: 20px; 
+            padding: 8px 15px; 
+            font-size: 14px; 
             background: rgba(255, 50, 50, 0.6);
             border: 1px solid #ff3366;
             color: white;
@@ -282,7 +284,7 @@
     <canvas id="gameCanvas"></canvas>
 
     <div id="ui-layer">
-        <button id="exit-btn">退出战局</button>
+        <button id="exit-btn">结束对局</button>
         <div id="exp-container"><div id="exp-bar"></div></div>
         <div id="top-center-ui">
             <div id="timer">00:00</div>
@@ -302,13 +304,15 @@
             <div class="lb-tabs">
                 <button id="tab-endless" class="lb-tab active">无尽模式</button>
                 <button id="tab-timed" class="lb-tab">限时模式</button>
+                <button id="tab-berserk" class="lb-tab" style="color: #ff3366; border-color: #ff3366;">狂暴模式</button>
             </div>
             <div id="leaderboard-list"></div>
         </div>
         <div class="instruction">滑动屏幕或移动鼠标控制战机</div>
-        <div class="mode-buttons">
-            <button id="start-endless-btn" class="action-btn" style="padding: 15px 30px; font-size: 20px; border-radius: 30px;">无尽模式</button>
-            <button id="start-timed-btn" class="action-btn" style="padding: 15px 30px; font-size: 20px; border-radius: 30px; background: linear-gradient(45deg, #ff9900, #ff3300);">限时模式</button>
+        <div class="mode-buttons" style="flex-wrap: wrap; justify-content: center;">
+            <button id="start-endless-btn" class="action-btn" style="padding: 15px 25px; font-size: 18px; border-radius: 30px;">无尽模式</button>
+            <button id="start-timed-btn" class="action-btn" style="padding: 15px 25px; font-size: 18px; border-radius: 30px; background: linear-gradient(45deg, #ff9900, #ff3300);">限时模式</button>
+            <button id="start-berserk-btn" class="action-btn" style="padding: 15px 25px; font-size: 18px; border-radius: 30px; background: linear-gradient(45deg, #cc0000, #660000); box-shadow: 0 0 15px rgba(255,0,0,0.8);">狂暴模式</button>
         </div>
     </div>
 
@@ -339,9 +343,11 @@
             const restartBtn = document.getElementById('restart-btn');
             const startEndlessBtn = document.getElementById('start-endless-btn');
             const startTimedBtn = document.getElementById('start-timed-btn');
+            const startBerserkBtn = document.getElementById('start-berserk-btn');
             const leaderboardList = document.getElementById('leaderboard-list');
             const tabEndless = document.getElementById('tab-endless');
             const tabTimed = document.getElementById('tab-timed');
+            const tabBerserk = document.getElementById('tab-berserk');
             const gameOverTitle = document.getElementById('game-over-title');
             const playerNameInput = document.getElementById('player-name');
             const saveScoreBtn = document.getElementById('save-score-btn');
@@ -416,8 +422,9 @@
                     this.speed = this.size * 1.5;
                     this.brightness = Math.random();
                 }
-                update() {
-                    this.y += this.speed;
+                update(isBerserk = false) {
+                    // 狂暴模式下星星背景飞速倒退，营造极速折跃感
+                    this.y += this.speed * (isBerserk ? 5 : 1);
                     if (this.y > canvas.height) {
                         this.y = 0;
                         this.x = Math.random() * canvas.width;
@@ -431,7 +438,7 @@
                 }
             }
 
-            const LB_KEYS = { endless: 'thunder_fighter_lb_endless', timed: 'thunder_fighter_lb_timed' };
+            const LB_KEYS = { endless: 'thunder_fighter_lb_endless', timed: 'thunder_fighter_lb_timed', berserk: 'thunder_fighter_lb_berserk' };
             let currentLbTab = 'endless';
             let currentGameMode = 'endless';
 
@@ -463,18 +470,27 @@
                 });
             }
 
-            tabEndless.addEventListener('click', () => {
-                currentLbTab = 'endless';
-                tabEndless.classList.add('active');
-                tabTimed.classList.remove('active');
-                updateLeaderboardUI();
-            });
-            tabTimed.addEventListener('click', () => {
-                currentLbTab = 'timed';
-                tabTimed.classList.add('active');
+            function switchTab(tabName) {
+                currentLbTab = tabName;
                 tabEndless.classList.remove('active');
+                tabTimed.classList.remove('active');
+                tabBerserk.classList.remove('active');
+                tabEndless.style.background = 'transparent';
+                tabTimed.style.background = 'transparent';
+                tabBerserk.style.background = 'transparent';
+                
+                if (tabName === 'endless') tabEndless.classList.add('active');
+                if (tabName === 'timed') tabTimed.classList.add('active');
+                if (tabName === 'berserk') {
+                    tabBerserk.classList.add('active');
+                    tabBerserk.style.background = 'rgba(255, 51, 102, 0.1)';
+                }
                 updateLeaderboardUI();
-            });
+            }
+
+            tabEndless.addEventListener('click', () => switchTab('endless'));
+            tabTimed.addEventListener('click', () => switchTab('timed'));
+            tabBerserk.addEventListener('click', () => switchTab('berserk'));
             updateLeaderboardUI();
 
             // 玩家战机
@@ -523,8 +539,10 @@
                 }
 
                 update() {
-                    this.x += (this.targetX - this.x) * 0.25;
-                    this.y += (this.targetY - this.y) * 0.25;
+                    // 狂暴模式下战机操控更加灵敏
+                    let lerpFactor = currentGameMode === 'berserk' ? 0.4 : 0.25;
+                    this.x += (this.targetX - this.x) * lerpFactor;
+                    this.y += (this.targetY - this.y) * lerpFactor;
                     this.x = Math.max(this.width/2, Math.min(canvas.width - this.width/2, this.x));
                     this.y = Math.max(this.height/2, Math.min(canvas.height - this.height/2, this.y));
                     this.dronePhase += 0.1;
@@ -579,93 +597,117 @@
 
                     // 引擎火焰
                     if (this.level >= 8) {
-                        // Lv 8+: 双管重型核聚变尾焰
+                        // Lv 8+: 双管重型核聚变尾焰 (更长更猛烈)
                         ctx.fillStyle = '#00ffff';
-                        ctx.beginPath(); ctx.moveTo(-20, this.height/4); ctx.lineTo(-5, this.height/4); ctx.lineTo(-12, this.height/2 + Math.random()*40 + 30); ctx.fill();
-                        ctx.beginPath(); ctx.moveTo(5, this.height/4); ctx.lineTo(20, this.height/4); ctx.lineTo(12, this.height/2 + Math.random()*40 + 30); ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(-20, this.height/4); ctx.lineTo(-5, this.height/4); ctx.lineTo(-12, this.height/2 + Math.random()*50 + 40); ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(5, this.height/4); ctx.lineTo(20, this.height/4); ctx.lineTo(12, this.height/2 + Math.random()*50 + 40); ctx.fill();
                     } else {
-                        // 基础单尾焰
+                        // 基础尾焰
                         ctx.beginPath();
                         ctx.moveTo(-10, this.height / 4);
                         ctx.lineTo(10, this.height / 4);
-                        let flameLength = this.height / 2 + Math.random() * 15 + (this.level * 5);
+                        let flameLength = this.height / 2 + Math.random() * 20 + (this.level * 6);
                         ctx.lineTo(0, flameLength); 
                         ctx.closePath();
                         ctx.fillStyle = this.level >= 3 ? '#00ffff' : '#ff9900';
                         ctx.fill();
                     }
 
-                    // Lv 6+: 展开深绿/青色外侧巨翼
+                    // Lv 6+: 展开能量巨翼 (半透明霓虹质感)
                     if (this.level >= 6) {
+                        ctx.fillStyle = 'rgba(0, 255, 150, 0.8)';
+                        ctx.shadowBlur = 20;
+                        ctx.shadowColor = '#00ff99';
                         ctx.beginPath();
-                        ctx.moveTo(0, 10);
-                        ctx.lineTo(-this.width - 35, 15);
-                        ctx.lineTo(-this.width - 10, 35);
-                        ctx.lineTo(0, 25);
+                        ctx.moveTo(10, 0);
+                        ctx.lineTo(-this.width - 45, -15); // 超宽霸气延展
+                        ctx.lineTo(-this.width - 15, 45);
+                        ctx.lineTo(0, 20);
                         
-                        ctx.moveTo(0, 10);
-                        ctx.lineTo(this.width + 35, 15);
-                        ctx.lineTo(this.width + 10, 35);
-                        ctx.lineTo(0, 25);
-                        ctx.fillStyle = '#00ff66';
+                        ctx.moveTo(10, 0);
+                        ctx.lineTo(this.width + 45, -15);
+                        ctx.lineTo(this.width + 15, 45);
+                        ctx.lineTo(0, 20);
                         ctx.fill();
+                        ctx.shadowBlur = 0;
                     }
 
-                    // Lv 3+: 黄金重型装甲
+                    // Lv 9+: 破甲突击双枪 (最前端的能量长枪)
+                    if (this.level >= 9) {
+                        ctx.fillStyle = '#00ffff';
+                        ctx.shadowBlur = 15;
+                        ctx.shadowColor = '#00ffff';
+                        ctx.fillRect(12, -this.height/2 - 45, 4, 35);
+                        ctx.fillRect(-16, -this.height/2 - 45, 4, 35);
+                        ctx.shadowBlur = 0;
+                    }
+
+                    // Lv 3+: 黄金重型叠加装甲 (立体切割感)
                     if (this.level >= 3) {
                         ctx.beginPath();
-                        ctx.moveTo(0, -this.height/2 - 15);
-                        ctx.lineTo(this.width/2 + 25, this.height/4 + 10);
-                        ctx.lineTo(-this.width/2 - 25, this.height/4 + 10);
+                        ctx.moveTo(0, -this.height/4);
+                        ctx.lineTo(this.width/2 + 15, 10);
+                        ctx.lineTo(this.width/2, 25);
+                        ctx.lineTo(0, 15);
+                        ctx.lineTo(-this.width/2, 25);
+                        ctx.lineTo(-this.width/2 - 15, 10);
+                        ctx.closePath();
                         ctx.fillStyle = '#ffcc00';
+                        ctx.fill();
+                        // 装甲反光层
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.beginPath();
+                        ctx.moveTo(0, -this.height/4);
+                        ctx.lineTo(this.width/2 + 15, 10);
+                        ctx.lineTo(0, 15);
                         ctx.fill();
                     }
 
-                    // Lv 2+: 前掠翼
+                    // Lv 2+: 极度前掠的血色刀锋翼
                     if (this.level >= 2) {
                         ctx.beginPath();
-                        ctx.moveTo(0, -10);
-                        ctx.lineTo(-this.width - 15, -25);
-                        ctx.lineTo(-this.width + 10, 25);
-                        ctx.lineTo(0, 15);
-                        ctx.moveTo(0, -10);
-                        ctx.lineTo(this.width + 15, -25);
-                        ctx.lineTo(this.width - 10, 25);
-                        ctx.lineTo(0, 15);
+                        ctx.moveTo(this.width/4, 0);
+                        ctx.lineTo(this.width + 25, -20); // 激进前掠角
+                        ctx.lineTo(this.width + 5, 20);
+                        ctx.lineTo(this.width/3, 25);
+                        
+                        ctx.moveTo(-this.width/4, 0);
+                        ctx.lineTo(-this.width - 25, -20);
+                        ctx.lineTo(-this.width - 5, 20);
+                        ctx.lineTo(-this.width/3, 25);
                         ctx.fillStyle = '#ff00ff';
                         ctx.fill();
                     }
 
-                    // 基础机身 (科技感三角形)
+                    // 基础机身：全新设计的凌厉破甲梭镖形态
                     ctx.beginPath();
-                    ctx.moveTo(0, -this.height / 2 - (this.level >= 9 ? 20 : 0)); // Lv9 突击破甲长机头
-                    ctx.lineTo(this.width / 2, this.height / 2 - 10); 
-                    ctx.lineTo(0, this.height / 4 - 10); 
-                    ctx.lineTo(-this.width / 2, this.height / 2 - 10); 
+                    ctx.moveTo(0, -this.height / 2 - 15); // 极尖锐的机头
+                    ctx.lineTo(this.width / 2 + 5, this.height / 2 - 5); // 宽大的后掠角
+                    ctx.lineTo(this.width / 4, this.height / 2 + 5); 
+                    ctx.lineTo(0, this.height / 4); // 尾部引擎深槽
+                    ctx.lineTo(-this.width / 4, this.height / 2 + 5); 
+                    ctx.lineTo(-this.width / 2 - 5, this.height / 2 - 5); 
                     ctx.closePath();
                     
                     let gradient = ctx.createLinearGradient(0, -this.height/2, 0, this.height/2);
                     gradient.addColorStop(0, '#ffffff');
-                    gradient.addColorStop(0.5, '#00bfff');
-                    gradient.addColorStop(1, '#000033');
+                    gradient.addColorStop(0.4, '#00bfff');
+                    gradient.addColorStop(1, '#000044');
                     ctx.fillStyle = gradient;
                     ctx.fill();
 
-                    // Lv 3+ 能量核心
-                    if (this.level >= 3) {
-                        ctx.beginPath();
-                        ctx.arc(0, 0, this.level >= 9 ? 12 : 8, 0, Math.PI * 2);
-                        ctx.fillStyle = '#00ffff';
-                        ctx.shadowBlur = this.level >= 9 ? 25 : 15;
-                        ctx.shadowColor = '#00ffff';
-                        ctx.fill();
-                        if (this.level >= 9) {
-                            ctx.fillStyle = '#ffffff';
-                            ctx.arc(0,0, 5, 0, Math.PI*2);
-                            ctx.fill();
-                        }
-                        ctx.shadowBlur = 0;
-                    }
+                    // 高科技全息座舱 (居中发光体)
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.height/4);
+                    ctx.lineTo(8, 5);
+                    ctx.lineTo(0, 15);
+                    ctx.lineTo(-8, 5);
+                    ctx.fillStyle = 'rgba(0, 255, 255, 0.9)';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#00ffff';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    
                     ctx.restore();
                 }
 
@@ -814,9 +856,16 @@
                         this.type = 'tank';
                         this.width = Math.random() * 40 + 50;
                         this.speed = Math.random() * 1 + 0.5 + (score / 2500);
-                        this.hp = Math.floor(this.width / 4) + 5; // 坦克更肉了
+                        this.hp = Math.floor(this.width / 4) + 5;
                         this.color = '#cc33ff';
                     }
+                    
+                    // 狂暴模式敌机史诗级强化：速度翻倍，血量翻三倍
+                    if (currentGameMode === 'berserk') {
+                        this.speed *= 2.2;
+                        this.hp = Math.max(1, this.hp * 3); 
+                    }
+
                     this.height = this.width * 0.8;
                     this.x = Math.random() * (canvas.width - this.width) + this.width/2;
                     this.y = -this.height;
@@ -1009,7 +1058,7 @@
                     displaySeconds = 300 - elapsedSeconds;
                     if (displaySeconds <= 0) {
                         displaySeconds = 0;
-                        gameOver(true); // 触发时间到的结算
+                        gameOver('timeup'); // 触发时间到的结算
                     }
                 } else {
                     displaySeconds = elapsedSeconds;
@@ -1021,10 +1070,17 @@
 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                stars.forEach(star => { star.update(); star.draw(); });
+                // 狂暴模式下星星背景飞速倒退
+                stars.forEach(star => { star.update(currentGameMode === 'berserk'); star.draw(); });
 
                 enemySpawnTimer += deltaTime;
                 let currentInterval = Math.max(300, enemySpawnInterval - (score * 0.5));
+                
+                // 狂暴模式下满屏暴兵
+                if (currentGameMode === 'berserk') {
+                    currentInterval = Math.max(80, 200 - (score * 0.2)); 
+                }
+
                 if (enemySpawnTimer > currentInterval) {
                     enemies.push(new Enemy());
                     enemySpawnTimer = 0;
@@ -1049,7 +1105,7 @@
                         player.health--;
                         healthEl.innerText = player.health;
                         if (navigator.vibrate) navigator.vibrate(200);
-                        if (player.health <= 0) gameOver();
+                        if (player.health <= 0) gameOver('crash');
                     }
                 });
 
@@ -1138,15 +1194,19 @@
                 }
             }
 
-            function gameOver(isTimeUp = false) {
+            function gameOver(reason = 'crash') {
                 isGameOver = true;
                 exitBtn.style.display = 'none'; // 隐藏退出按钮
                 gameOverScreen.style.display = 'flex';
                 
-                if (isTimeUp) {
+                if (reason === 'timeup') {
                     gameOverTitle.innerText = '时间到！';
                     gameOverTitle.style.color = '#ffcc00';
                     gameOverTitle.style.textShadow = '0 0 20px #ffcc00';
+                } else if (reason === 'manual') {
+                    gameOverTitle.innerText = '主动撤退';
+                    gameOverTitle.style.color = '#00ffff';
+                    gameOverTitle.style.textShadow = '0 0 20px #00ffff';
                 } else {
                     gameOverTitle.innerText = '战机坠毁';
                     gameOverTitle.style.color = '#ff3366';
@@ -1172,8 +1232,27 @@
 
             function initGame(mode) {
                 currentGameMode = mode || 'endless';
-                exitBtn.style.display = 'block'; // 显示退出按钮
+                exitBtn.style.display = 'block'; 
                 player = new Player();
+                
+                // 狂暴模式特殊加成：开局直接拉满！
+                if (currentGameMode === 'berserk') {
+                    player.level = 10;
+                    player.weaponLevel = 10;
+                    player.fireRate = 40; // 极限鬼畜射速
+                    levelEl.innerText = 'Lv. 10 (MAX)';
+                    levelEl.style.color = '#ff0000';
+                    levelEl.style.textShadow = '0 0 15px #ff0000';
+                    expBar.style.width = '100%';
+                    expBar.style.background = 'linear-gradient(90deg, #ff0000, #ffcc00)';
+                } else {
+                    levelEl.innerText = 'Lv. 1';
+                    levelEl.style.color = '#ff9900';
+                    levelEl.style.textShadow = '0 0 8px #ff9900';
+                    expBar.style.width = '0%';
+                    expBar.style.background = 'linear-gradient(90deg, #00ffff, #ff00ff, #ffcc00)';
+                }
+
                 player.updateWeaponDisplay();
                 bullets = [];
                 enemies = [];
@@ -1203,9 +1282,10 @@
 
             startEndlessBtn.addEventListener('click', () => initGame('endless'));
             startTimedBtn.addEventListener('click', () => initGame('timed'));
+            startBerserkBtn.addEventListener('click', () => initGame('berserk'));
             restartBtn.addEventListener('click', () => initGame(currentGameMode));
             homeBtn.addEventListener('click', goHome);
-            exitBtn.addEventListener('click', goHome); // 绑定退出事件
+            exitBtn.addEventListener('click', () => gameOver('manual')); // 改为触发结算并传递'manual'参数
             
             saveScoreBtn.addEventListener('click', () => {
                 if (saveScoreBtn.disabled) return;
