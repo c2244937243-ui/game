@@ -332,7 +332,7 @@
             setTimeout(() => soundManager.playTone(600, 'square', 0.2, 0.1), 100);
             setTimeout(() => soundManager.playTone(800, 'square', 0.4, 0.1), 200);
         },
-        playAwaken: () => { // 满级觉醒神圣音效
+        playAwaken: () => { 
             soundManager.playTone(800, 'sine', 0.8, 0.2);
             setTimeout(() => soundManager.playTone(1200, 'sine', 1.0, 0.2), 200);
         },
@@ -350,7 +350,7 @@
     class Effect {
         constructor(x1, y1, x2, y2, isAwakened = false) {
             this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2;
-            this.life = isAwakened ? 0.4 : 0.2; // 觉醒神雷存在更久
+            this.life = isAwakened ? 0.4 : 0.2; 
             this.isAwakened = isAwakened;
         }
         update(dt) { this.life -= dt; }
@@ -360,7 +360,6 @@
             const midY = (this.y1 + this.y2) / 2 + (Math.random() * 40 - 20);
             ctx.lineTo(midX, midY); ctx.lineTo(this.x2, this.y2);
             
-            // 觉醒天劫神雷：粗壮猩红
             if(this.isAwakened) {
                 ctx.strokeStyle = `rgba(217, 4, 41, ${this.life * 3})`; ctx.lineWidth = 8; ctx.stroke();
                 ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 3; ctx.stroke();
@@ -374,11 +373,12 @@
         }
     }
 
-    // 🌪️ 地面伤害区域特效 (天劫留下的雷火阵)
+    // 🌪️ 燃烧瓶/天劫的地板伤害区域
     class DamageZone {
-        constructor(x, y, radius, damage) {
+        constructor(x, y, radius, damage, type = 'fire') {
             this.x = x; this.y = y; this.radius = radius;
-            this.lifeTime = 2.0; // 存活2秒
+            this.type = type;
+            this.lifeTime = (type === 'blueFire') ? 4.0 : 2.0; 
             this.damage = damage;
             this.tickTimer = 0;
         }
@@ -388,20 +388,104 @@
                 this.tickTimer = 0.2; // 每0.2秒烧一次
                 for(let e of enemies) {
                     if(Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) {
-                        e.takeDamage(this.damage * 0.2); // 持续伤害
+                        e.takeDamage(this.damage * 0.2); 
                     }
                 }
             }
         }
         draw() {
             ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 92, 119, ${this.lifeTime * 0.3})`; ctx.fill();
-            ctx.strokeStyle = `rgba(217, 4, 41, ${this.lifeTime})`; ctx.lineWidth = 2; ctx.stroke();
+            const alphaTime = Math.max(0, this.lifeTime);
+            if (this.type === 'blueFire') {
+                // 幽冥地火：蓝冰色
+                ctx.fillStyle = `rgba(67, 97, 238, ${alphaTime * 0.3})`; ctx.fill();
+                ctx.strokeStyle = `rgba(76, 201, 240, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'lightning') {
+                // 天劫神雷残炎：猩红色
+                ctx.fillStyle = `rgba(255, 92, 119, ${alphaTime * 0.3})`; ctx.fill();
+                ctx.strokeStyle = `rgba(217, 4, 41, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else { 
+                // 普通燃烧瓶：橘红色
+                ctx.fillStyle = `rgba(255, 153, 0, ${alphaTime * 0.3})`; ctx.fill();
+                ctx.strokeStyle = `rgba(255, 60, 0, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            }
+        }
+    }
+
+    // 🪃 回旋镖实体类
+    class Boomerang {
+        constructor(x, y, angle, speed, damage, radius, isAwakened = false) {
+            this.x = x; this.y = y;
+            this.vx = Math.cos(angle) * speed; 
+            this.vy = Math.sin(angle) * speed;
+            this.baseSpeed = speed;
+            this.damage = damage;
+            this.radius = isAwakened ? radius * 2.5 : radius;
+            this.isAwakened = isAwakened;
+            this.lifeTime = 3; // 存活最大3秒
+            this.state = 'outward'; // outward: 飞出, returning: 返回
+            this.hitEnemies = new Set();
+            this.markedForDeletion = false;
+        }
+        update(dt) {
+            this.lifeTime -= dt;
+            if (this.lifeTime <= 0) { this.markedForDeletion = true; return; }
+
+            if (this.state === 'outward') {
+                this.x += this.vx * dt; this.y += this.vy * dt;
+                // 模拟空气阻力减速
+                this.vx *= 0.95; this.vy *= 0.95; 
+                // 速度降下来后开始返回
+                if (Math.hypot(this.vx, this.vy) < 80) { 
+                    this.state = 'returning';
+                    this.hitEnemies.clear(); // 清空受击列表，返回时可造成二段伤害
+                }
+            } else {
+                // 朝着玩家强力飞回
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.vx += Math.cos(angle) * 1500 * dt; 
+                this.vy += Math.sin(angle) * 1500 * dt;
+                const speed = Math.hypot(this.vx, this.vy);
+                if (speed > this.baseSpeed * 2) { // 最高限速
+                    this.vx = (this.vx / speed) * this.baseSpeed * 2;
+                    this.vy = (this.vy / speed) * this.baseSpeed * 2;
+                }
+                this.x += this.vx * dt; this.y += this.vy * dt;
+
+                // 回到玩家身边接住消失
+                if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
+                    this.markedForDeletion = true;
+                }
+            }
+        }
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(gameTime * 20); // 极速自转
+            ctx.beginPath();
+            if (this.isAwakened) {
+                // 觉醒：红黑色月牙刃
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 1.5, false);
+                ctx.lineTo(0, 0);
+                ctx.fillStyle = '#d90429'; ctx.fill();
+                ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 3; ctx.stroke();
+            } else {
+                // 普通回旋镖：蓝白十字形/飞鸟形
+                ctx.moveTo(-this.radius, -this.radius/2);
+                ctx.lineTo(this.radius, 0);
+                ctx.lineTo(-this.radius, this.radius/2);
+                ctx.lineTo(-this.radius/2, 0);
+                ctx.fillStyle = '#4cc9f0'; ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+            }
+            ctx.restore();
         }
     }
 
     // 所有可能的升级选项配置库
     const possibleUpgrades = [
+        { id: 'molotov', name: '燃烧瓶', desc: '在地面留下持续伤害的火区。满级：觉醒【幽冥地火】！', icon: '🍾' },
+        { id: 'boomerang', name: '回旋镖', desc: '飞出并返回，造成两段伤害。满级：觉醒【磁爆回旋刃】！', icon: '🪃' },
         { id: 'dmg', name: '肌肉强化', desc: '增加伤害。满级：伤害爆炸翻倍！', icon: '💪' },
         { id: 'speed', name: '快手', desc: '提高射速。满级：变身加特林射速极快！', icon: '⚡' },
         { id: 'pierce', name: '穿甲弹', desc: '增加穿透。满级：额外+5次穿透！', icon: '🏹' },
@@ -420,14 +504,28 @@
             this.x = 0; this.y = 0; this.radius = 15; this.speed = 250; this.color = '#4ea8de';
             this.maxHp = 100; this.hp = 100; this.level = 1; this.xp = 0; this.xpNeeded = 50;
             this.damageMultiplier = 1; this.fireRateMultiplier = 1;
+            
+            // 主武器：子弹
             this.baseFireCooldown = 0.8; this.fireTimer = 0; this.bulletSpeed = 400; this.bulletDamage = 25; this.bulletPierce = 1;
+            this.projectileCount = 1;
+            
+            // 武器：能量光环
             this.hasAura = false; this.auraRadius = 80; this.auraDamage = 10; this.auraTickRate = 0.5; this.auraTimer = 0;
-            this.pickupRange = 80; this.projectileCount = 1;
+            
+            // 武器：闪电
             this.hasLightning = false; this.lightningTimer = 0; this.lightningDamage = 50; this.lightningBaseCooldown = 1.2; this.lightningTargets = 1;
+            
+            // 武器：守卫者
             this.guardianCount = 0; this.guardianAngle = 0;
+            
+            // 🌟新武器：燃烧瓶
+            this.hasMolotov = false; this.molotovTimer = 0; this.molotovBaseCooldown = 3.0; this.molotovRadius = 60; this.molotovDamage = 15; this.molotovCount = 1;
+            
+            // 🌟新武器：回旋镖
+            this.hasBoomerang = false; this.boomerangTimer = 0; this.boomerangBaseCooldown = 2.5; this.boomerangDamage = 40; this.boomerangCount = 1;
+            
+            this.pickupRange = 80; 
             this.upgrades = {};
-
-            // 移动残影特效数组
             this.trail = [];
 
             if (currentMode === 'rampage') {
@@ -446,13 +544,10 @@
 
             this.x += dx * this.speed * dt; this.y += dy * this.speed * dt;
 
-            // 记录残影 (20级超级觉醒)
             if (this.level >= 20 && (dx !== 0 || dy !== 0)) {
                 this.trail.push({ x: this.x, y: this.y, life: 1.0 });
                 if (this.trail.length > 15) this.trail.shift();
             }
-
-            // 更新残影生命值
             this.trail.forEach(t => t.life -= dt * 3);
             this.trail = this.trail.filter(t => t.life > 0);
 
@@ -463,7 +558,41 @@
                 this.fireTimer = this.baseFireCooldown / this.fireRateMultiplier;
             }
 
-            // 光环伤害判定
+            // 🍾 燃烧瓶发射逻辑
+            if (this.hasMolotov) {
+                this.molotovTimer -= dt;
+                if (this.molotovTimer <= 0) {
+                    this.molotovTimer = this.molotovBaseCooldown;
+                    if (enemies.length > 0) {
+                        const isAwakened = (this.upgrades['molotov'] || 0) >= 5;
+                        let throwCount = isAwakened ? this.molotovCount : Math.min(this.molotovCount, enemies.length);
+                        for(let i=0; i<throwCount; i++) {
+                            const target = enemies[Math.floor(Math.random() * enemies.length)];
+                            const zoneType = isAwakened ? 'blueFire' : 'fire';
+                            // 在目标脚下直接爆开火区
+                            damageZones.push(new DamageZone(target.x + (Math.random()*60-30), target.y + (Math.random()*60-30), this.molotovRadius, this.molotovDamage * this.damageMultiplier, zoneType));
+                        }
+                        soundManager.playShoot();
+                    }
+                }
+            }
+
+            // 🪃 回旋镖发射逻辑
+            if (this.hasBoomerang) {
+                this.boomerangTimer -= dt;
+                if (this.boomerangTimer <= 0) {
+                    this.boomerangTimer = this.boomerangBaseCooldown;
+                    const isAwakened = (this.upgrades['boomerang'] || 0) >= 5;
+                    const bCount = isAwakened ? 6 : this.boomerangCount;
+                    // 朝四周发射
+                    for(let i=0; i<bCount; i++) {
+                        const angle = (Math.PI * 2 / bCount) * i + gameTime;
+                        boomerangs.push(new Boomerang(this.x, this.y, angle, 600, this.boomerangDamage * this.damageMultiplier, 12, isAwakened));
+                    }
+                    soundManager.playShoot();
+                }
+            }
+
             if (this.hasAura) {
                 this.auraTimer -= dt;
                 if (this.auraTimer <= 0) {
@@ -472,7 +601,6 @@
                 }
             }
 
-            // 雷电逻辑
             if (this.hasLightning) {
                 this.lightningTimer -= dt;
                 if (this.lightningTimer <= 0) {
@@ -484,10 +612,8 @@
                             const target = enemies[Math.floor(Math.random() * enemies.length)];
                             target.takeDamage(this.lightningDamage * this.damageMultiplier);
                             effects.push(new Effect(this.x, this.y - 300, target.x, target.y, isAwakened));
-                            
-                            // 满级天劫神雷：地上留火圈
                             if (isAwakened) {
-                                damageZones.push(new DamageZone(target.x, target.y, 80, this.lightningDamage * this.damageMultiplier));
+                                damageZones.push(new DamageZone(target.x, target.y, 80, this.lightningDamage * this.damageMultiplier, 'lightning'));
                             }
                         }
                         soundManager.playShoot();
@@ -495,20 +621,16 @@
                 }
             }
 
-            // 飞刃逻辑
             if (this.guardianCount > 0) {
-                // 满级黄金轮锯转速更快
                 const isAwakened = (this.upgrades['guardian'] || 0) >= 5;
                 const rotSpeed = isAwakened ? 6 : 3; 
                 this.guardianAngle += rotSpeed * dt;
-                
-                const distRadius = isAwakened ? 110 : 70; // 满级齿轮扩圈
+                const distRadius = isAwakened ? 110 : 70; 
                 for (let i = 0; i < this.guardianCount; i++) {
                     const angle = this.guardianAngle + (Math.PI * 2 / this.guardianCount) * i;
                     const gx = this.x + Math.cos(angle) * distRadius;
                     const gy = this.y + Math.sin(angle) * distRadius;
                     const hitRadius = isAwakened ? 25 : 10;
-                    
                     for (let e of enemies) {
                         if (Math.hypot(e.x - gx, e.y - gy) < e.radius + hitRadius) {
                             e.takeDamage((isAwakened ? 30 : 15) * this.damageMultiplier * dt * 30);
@@ -519,24 +641,20 @@
         }
 
         draw() {
-            // 画残影特效 (20级)
             if (this.level >= 20) {
                 this.trail.forEach((t, i) => {
                     ctx.beginPath(); ctx.arc(t.x, t.y, this.radius - 2, 0, Math.PI * 2);
-                    // 渐变RGB色
                     const hue = (gameTime * 200 + i * 20) % 360;
                     ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${t.life * 0.4})`;
                     ctx.fill();
                 });
             }
 
-            // 画光环
             if (this.hasAura) {
                 const isAwakened = (this.upgrades['aura'] || 0) >= 5;
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.auraRadius, 0, Math.PI * 2);
                 if (isAwakened) {
-                    // 地狱火领域，附带心跳缩放呼吸特效
                     const pulse = 1 + Math.sin(gameTime * 15) * 0.05;
                     ctx.arc(this.x, this.y, this.auraRadius * pulse, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(217, 4, 41, 0.3)';
@@ -550,7 +668,6 @@
                 ctx.fill(); ctx.stroke();
             }
 
-            // 画飞刃/黄金轮锯
             if (this.guardianCount > 0) {
                 const isAwakened = (this.upgrades['guardian'] || 0) >= 5;
                 const distRadius = isAwakened ? 110 : 70;
@@ -558,13 +675,10 @@
                     const angle = this.guardianAngle + (Math.PI * 2 / this.guardianCount) * i;
                     const gx = this.x + Math.cos(angle) * distRadius;
                     const gy = this.y + Math.sin(angle) * distRadius;
-                    
                     ctx.save();
                     ctx.translate(gx, gy);
-                    
                     if (isAwakened) {
-                        // 满级：黄金锯齿轮
-                        ctx.rotate(gameTime * 15); // 自转
+                        ctx.rotate(gameTime * 15);
                         ctx.beginPath();
                         for(let j=0; j<8; j++) {
                             ctx.lineTo(20 * Math.cos(j * Math.PI/4), 20 * Math.sin(j * Math.PI/4));
@@ -573,10 +687,8 @@
                         ctx.closePath();
                         ctx.fillStyle = '#ffd166'; ctx.fill();
                         ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-                        // 齿轮轴心
                         ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fillStyle = '#ef233c'; ctx.fill();
                     } else {
-                        // 普通飞刃
                         ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2);
                         ctx.fillStyle = '#f15bb5'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
                     }
@@ -584,15 +696,11 @@
                 }
             }
 
-            // 画主角模型
             ctx.save();
             ctx.translate(this.x, this.y);
             
             if (this.level >= 20) {
-                // 🌟 20级超神炫酷形态：RGB流光六芒星阵 + 核心发光
                 ctx.rotate(gameTime * 3);
-                
-                // 外层旋转炫彩圈
                 for (let i = 0; i < 3; i++) {
                     ctx.beginPath();
                     ctx.ellipse(0, 0, this.radius + 15, this.radius + 5, (i * Math.PI) / 3, 0, Math.PI * 2);
@@ -601,8 +709,6 @@
                     ctx.lineWidth = 3;
                     ctx.stroke();
                 }
-                
-                // 核心
                 ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = '#fff'; ctx.fill();
                 ctx.shadowBlur = 20; ctx.shadowColor = '#00f5d4';
@@ -640,7 +746,6 @@
             if (nearestEnemy && minDistance < 600) {
                 const baseAngle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
                 const spread = 0.2; 
-                // 判断是否虚空等离子觉醒
                 const isAwakened = (this.upgrades['multishot'] || 0) >= 5;
 
                 for(let i = 0; i < this.projectileCount; i++) {
@@ -649,7 +754,7 @@
                                             isAwakened ? this.bulletSpeed * 1.5 : this.bulletSpeed, 
                                             isAwakened ? this.bulletDamage * this.damageMultiplier * 2 : this.bulletDamage * this.damageMultiplier, 
                                             isAwakened ? 999 : this.bulletPierce, 
-                                            isAwakened)); // 传入是否等离子的Flag
+                                            isAwakened));
                 }
                 soundManager.playShoot();
             }
@@ -671,7 +776,6 @@
                 if (currentMode === 'rampage') { this.xpNeeded = Math.floor(this.xpNeeded * 1.15) + 50; } 
                 else { this.xpNeeded = Math.floor(this.xpNeeded * 1.3) + 20; }
                 
-                // 20级超级觉醒播放神圣音效
                 if (this.level === 20) soundManager.playAwaken();
                 else soundManager.playLevelUp();
                 
@@ -689,7 +793,6 @@
     class Enemy {
         constructor(x, y, type = 'normal') {
             this.x = x; this.y = y;
-            // 📈 后期强化：血量随时间增长更夸张，攻击力也开始随时间变强
             const timeScaling = 1 + (gameTime / 60) * 1.5; 
             const dmgScaling = 1 + (gameTime / 120);
 
@@ -701,11 +804,9 @@
             } else if (type === 'tank') {
                 this.radius = 25; this.speed = 60; this.hp = 150 * timeScaling; this.color = '#7209b7'; this.damage = 20 * dmgScaling; this.xpValue = 50;
             } else if (type === 'elite') {
-                // 🗡️ 精英怪：体型稍大，橙色，高血量
                 this.radius = 20; this.speed = 110; this.hp = 300 * timeScaling; this.color = '#fca311'; this.damage = 25 * dmgScaling; this.xpValue = 100;
                 this.isElite = true;
             } else if (type === 'boss') {
-                // 👹 大BOSS：巨大，血牛，秒杀级伤害
                 this.radius = 50; this.speed = 70; this.hp = 2500 * timeScaling; this.color = '#d90429'; this.damage = 40 * dmgScaling; this.xpValue = 500;
                 this.isBoss = true;
             } else { 
@@ -736,7 +837,6 @@
             floatingTexts.push(new FloatingText(this.x, this.y, Math.round(amount), '#fff'));
             soundManager.playHit();
             
-            // Boss 免疫大部分击退效果，精英怪轻微击退
             const knockback = this.isBoss ? 0.5 : (this.isElite ? 2 : 5);
             const angle = Math.atan2(this.y - player.y, this.x - player.x);
             this.x += Math.cos(angle) * knockback; this.y += Math.sin(angle) * knockback;
@@ -744,10 +844,8 @@
             if (this.hp <= 0 && !this.markedForDeletion) {
                 this.markedForDeletion = true; killCount++;
                 
-                // 🎁 掉落逻辑：精英和Boss会掉落宝箱
                 if (this.isElite || this.isBoss) {
                     chests.push(new Chest(this.x, this.y));
-                    // Boss额外大爆特爆经验宝石
                     if (this.isBoss) {
                         for(let i=0; i<10; i++) gems.push(new Gem(this.x + Math.random()*60-30, this.y + Math.random()*60-30, 50));
                     }
@@ -758,7 +856,6 @@
         }
     }
 
-    // 🎁 新增宝箱类 (吃掉直接给Buff)
     class Chest {
         constructor(x, y) {
             this.x = x; this.y = y; this.radius = 15;
@@ -768,39 +865,29 @@
         update(dt) {
             this.pulseTime += dt * 5;
             const dist = Math.hypot(player.x - this.x, player.y - this.y);
-            // 宝箱稍微有点磁吸效果
             if (dist < player.pickupRange) {
                 const angle = Math.atan2(player.y - this.y, player.x - this.x);
                 this.x += Math.cos(angle) * 300 * dt; this.y += Math.sin(angle) * 300 * dt;
                 
-                // 吃掉宝箱
                 if (dist < player.radius + this.radius) {
                     this.markedForDeletion = true;
                     soundManager.playLevelUp();
-                    triggerLevelUp(); // 直接呼出选Buff界面
+                    triggerLevelUp(); 
                 }
             }
         }
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
-            const scale = 1 + Math.sin(this.pulseTime) * 0.1; // 呼吸跳动效果
+            const scale = 1 + Math.sin(this.pulseTime) * 0.1;
             ctx.scale(scale, scale);
+            ctx.fillStyle = '#ffb703'; ctx.fillRect(-10, -8, 20, 16);
+            ctx.strokeStyle = '#fb8500'; ctx.lineWidth = 2; ctx.strokeRect(-10, -8, 20, 16);
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
             
-            // 画个金光闪闪的小箱子
-            ctx.fillStyle = '#ffb703';
-            ctx.fillRect(-10, -8, 20, 16);
-            ctx.strokeStyle = '#fb8500';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-10, -8, 20, 16);
-            ctx.fillStyle = '#fff'; // 锁孔
-            ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
-            
-            // 外圈发光
             ctx.shadowBlur = 15; ctx.shadowColor = '#ffd166';
             ctx.strokeStyle = `rgba(255, 209, 102, ${0.5 + Math.sin(this.pulseTime)*0.5})`;
             ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.stroke();
-            
             ctx.restore();
         }
     }
@@ -811,8 +898,7 @@
             this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
             this.radius = isPlasma ? 18 : 6; 
             this.damage = damage; this.pierce = pierce;
-            this.isPlasma = isPlasma; // 满级虚空等离子标记
-            
+            this.isPlasma = isPlasma; 
             this.hitEnemies = new Set(); this.lifeTime = 2; this.markedForDeletion = false;
         }
         update(dt) {
@@ -822,7 +908,6 @@
         draw() {
             ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             if (this.isPlasma) {
-                // 等离子炫酷特效
                 ctx.fillStyle = '#4cc9f0'; ctx.shadowBlur = 20; ctx.shadowColor = '#4361ee';
                 ctx.fill();
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2);
@@ -875,15 +960,16 @@
     let player;
     let enemies = [];
     let bullets = [];
+    let boomerangs = []; // 新增回旋镖数组
     let gems = [];
-    let chests = []; // 新增宝箱数组
+    let chests = []; 
     let floatingTexts = [];
     let effects = []; 
     let damageZones = []; 
     let spawnTimer = 0;
     let spawnInterval = 1.5; 
-    let eliteTimer = 20; // 首次精英怪刷新倒计时
-    let lastBossMinute = 0; // 记录上次刷Boss的分钟数
+    let eliteTimer = 20; 
+    let lastBossMinute = 0; 
 
     function saveScore() {
         let scores = JSON.parse(localStorage.getItem('survivor_leaderboard')) || [];
@@ -940,7 +1026,7 @@
 
     function startGame(mode = 'classic') {
         currentMode = mode; resetInput(); player = new Player();
-        enemies = []; bullets = []; gems = []; chests = []; floatingTexts = []; effects = []; damageZones = [];
+        enemies = []; bullets = []; boomerangs = []; gems = []; chests = []; floatingTexts = []; effects = []; damageZones = [];
         gameTime = 0; killCount = 0; spawnInterval = 1.5; 
         eliteTimer = 20; lastBossMinute = 0;
         
@@ -971,7 +1057,6 @@
     function handleSpawning(dt) {
         spawnTimer -= dt; spawnInterval = Math.max(0.2, 1.5 - (gameTime / 60) * 0.4);
         
-        // 🗡️ 精英怪刷新逻辑 (每20~40秒随机刷一只)
         eliteTimer -= dt;
         if (eliteTimer <= 0) {
             eliteTimer = 20 + Math.random() * 20;
@@ -981,7 +1066,6 @@
             enemies.push(new Enemy(ex, ey, 'elite'));
         }
 
-        // 👹 大Boss刷新逻辑 (每满1分钟刷一只)
         const currentMinute = Math.floor(gameTime / 60);
         if (currentMinute > lastBossMinute) {
             lastBossMinute = currentMinute;
@@ -989,8 +1073,6 @@
             const dist = Math.max(canvas.width, canvas.height) / 2 + 200; 
             const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist;
             enemies.push(new Enemy(ex, ey, 'boss'));
-            
-            // Boss出场给个全屏文字提示(利用伤害数字的类凑合一下效果)
             floatingTexts.push(new FloatingText(player.x, player.y - 100, "⚠️ BOSS 降临！⚠️", '#ef233c'));
         }
 
@@ -1019,12 +1101,10 @@
     function triggerLevelUp() {
         gameState = 'levelup'; joystickZone.style.display = 'none'; resetInput();
         
-        // 过滤出还没达到满级(5级)的Buff
         const availableUpgrades = possibleUpgrades.filter(u => (player.upgrades[u.id] || 0) < 5);
         let choices = [];
         
         if (availableUpgrades.length === 0) {
-            // 所有全满，提供一个保底恢复道具
             choices = [{ id: 'fallback_meat', name: '美味烤肉', desc: '已经神功大成！恢复 100 点生命值。', icon: '🍖' }];
         } else {
             const shuffled = [...availableUpgrades].sort(() => 0.5 - Math.random());
@@ -1035,7 +1115,7 @@
         choices.forEach(choice => {
             const btn = document.createElement('button');
             const currentLvl = player.upgrades[choice.id] || 0;
-            const isNextMax = currentLvl === 4; // 如果点下去就是5级满级了
+            const isNextMax = currentLvl === 4; 
             
             btn.className = `upgrade-btn ${isNextMax ? 'max-level-btn' : ''}`;
             
@@ -1062,25 +1142,52 @@
 
         if(!player.upgrades[id]) player.upgrades[id] = 0;
         player.upgrades[id]++;
-        const isMaxLevel = player.upgrades[id] === 5; // 是否在这次达到满级
+        const isMaxLevel = player.upgrades[id] === 5; 
 
-        // 升至满级产生质变
         switch(id) {
-            case 'dmg': player.damageMultiplier += isMaxLevel ? 1.0 : 0.35; break; // 满级伤害直接多加一倍
-            case 'speed': player.fireRateMultiplier += isMaxLevel ? 0.8 : 0.25; break; // 满级变加特林
+            case 'molotov': // 新增：燃烧瓶
+                if (!player.hasMolotov) player.hasMolotov = true;
+                else {
+                    player.molotovBaseCooldown = Math.max(0.5, player.molotovBaseCooldown - 0.4);
+                    player.molotovRadius += 15;
+                    player.molotovDamage += 10;
+                    player.molotovCount += 1;
+                }
+                if (isMaxLevel) {
+                    player.molotovCount = 5;
+                    player.molotovRadius += 50;
+                    player.molotovDamage *= 2;
+                    soundManager.playAwaken();
+                }
+                break;
+            case 'boomerang': // 新增：回旋镖
+                if (!player.hasBoomerang) player.hasBoomerang = true;
+                else {
+                    player.boomerangBaseCooldown = Math.max(0.8, player.boomerangBaseCooldown - 0.3);
+                    player.boomerangCount += 1;
+                    player.boomerangDamage += 15;
+                }
+                if (isMaxLevel) {
+                    player.boomerangCount = 6;
+                    player.boomerangDamage *= 2;
+                    soundManager.playAwaken();
+                }
+                break;
+            case 'dmg': player.damageMultiplier += isMaxLevel ? 1.0 : 0.35; break; 
+            case 'speed': player.fireRateMultiplier += isMaxLevel ? 0.8 : 0.25; break; 
             case 'pierce': player.bulletPierce += isMaxLevel ? 5 : 3; break; 
             case 'aura':
                 if (!player.hasAura) player.hasAura = true;
                 player.auraRadius += isMaxLevel ? 60 : 30; 
                 player.auraDamage += isMaxLevel ? 50 : 20; 
-                player.auraTickRate = Math.max(0.05, player.auraTickRate - 0.05); // 满级疯狂灼烧
+                player.auraTickRate = Math.max(0.05, player.auraTickRate - 0.05); 
                 break;
             case 'heal':
                 player.hp = Math.min(player.maxHp, player.hp + 100);
-                if(isMaxLevel) { player.maxHp += 200; player.hp = player.maxHp; } // 春哥附体
+                if(isMaxLevel) { player.maxHp += 200; player.hp = player.maxHp; } 
                 break;
             case 'multishot':
-                if(isMaxLevel) { soundManager.playAwaken(); } // 觉醒虚空等离子特效在shoot逻辑里判断
+                if(isMaxLevel) { soundManager.playAwaken(); } 
                 else player.projectileCount += 2; 
                 break;
             case 'lightning':
@@ -1088,13 +1195,13 @@
                 player.lightningDamage += isMaxLevel ? 100 : 30; 
                 player.lightningBaseCooldown = Math.max(0.2, player.lightningBaseCooldown - 0.15); 
                 player.lightningTargets += isMaxLevel ? 3 : 1;
-                if(isMaxLevel) soundManager.playAwaken(); // 天劫特效在update里触发
+                if(isMaxLevel) soundManager.playAwaken(); 
                 break;
             case 'guardian':
-                player.guardianCount += isMaxLevel ? 4 : 2; // 满级直接给4个大轮锯
+                player.guardianCount += isMaxLevel ? 4 : 2; 
                 if(isMaxLevel) soundManager.playAwaken();
                 break;
-            case 'magnet': player.pickupRange += isMaxLevel ? 400 : 100; break; // 全屏吸
+            case 'magnet': player.pickupRange += isMaxLevel ? 400 : 100; break; 
             case 'movespeed': player.speed *= isMaxLevel ? 1.5 : 1.2; break; 
             case 'maxhp':
                 player.maxHp += isMaxLevel ? 200 : 50; 
@@ -1127,11 +1234,14 @@
 
         player.update(dt); handleSpawning(dt);
 
-        bullets.forEach(b => b.update(dt)); enemies.forEach(e => e.update(dt));
+        bullets.forEach(b => b.update(dt)); 
+        boomerangs.forEach(b => b.update(dt)); // 🪃 更新回旋镖
+        enemies.forEach(e => e.update(dt));
         gems.forEach(g => g.update(dt)); chests.forEach(c => c.update(dt)); 
         floatingTexts.forEach(ft => ft.update(dt));
         effects.forEach(eff => eff.update(dt)); damageZones.forEach(dz => dz.update(dt));
 
+        // 碰撞：子弹 -> 敌人
         for (let b of bullets) {
             if (b.markedForDeletion) continue;
             for (let e of enemies) {
@@ -1143,7 +1253,21 @@
             }
         }
 
-        bullets = bullets.filter(b => !b.markedForDeletion); enemies = enemies.filter(e => !e.markedForDeletion);
+        // 碰撞：回旋镖 -> 敌人
+        for (let b of boomerangs) {
+            if (b.markedForDeletion) continue;
+            for (let e of enemies) {
+                if (e.markedForDeletion || b.hitEnemies.has(e)) continue; 
+                if (Math.hypot(b.x - e.x, b.y - e.y) < b.radius + e.radius) {
+                    e.takeDamage(b.damage); 
+                    b.hitEnemies.add(e); // 防止一帧内重复扣血，折返后会清空重新计算
+                }
+            }
+        }
+
+        bullets = bullets.filter(b => !b.markedForDeletion); 
+        boomerangs = boomerangs.filter(b => !b.markedForDeletion); // 🪃 过滤回旋镖
+        enemies = enemies.filter(e => !e.markedForDeletion);
         gems = gems.filter(g => !g.markedForDeletion); chests = chests.filter(c => !c.markedForDeletion);
         floatingTexts = floatingTexts.filter(ft => ft.life > 0);
         effects = effects.filter(eff => eff.life > 0); damageZones = damageZones.filter(dz => dz.lifeTime > 0);
@@ -1157,7 +1281,9 @@
         damageZones.forEach(dz => dz.draw());
         gems.forEach(g => g.draw()); chests.forEach(c => c.draw());
         enemies.forEach(e => e.draw()); player.draw();
-        bullets.forEach(b => b.draw()); effects.forEach(eff => eff.draw()); floatingTexts.forEach(ft => ft.draw());
+        bullets.forEach(b => b.draw()); 
+        boomerangs.forEach(b => b.draw()); // 🪃 绘制回旋镖
+        effects.forEach(eff => eff.draw()); floatingTexts.forEach(ft => ft.draw());
 
         ctx.restore(); 
         if (gameState === 'playing') requestAnimationFrame(gameLoop);
