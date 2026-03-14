@@ -28,10 +28,10 @@
         }
         #xp-bar-container {
             position: absolute;
-            top: 10px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            width: 70%;
+            width: 50%; 
             height: 20px;
             background-color: rgba(0, 0, 0, 0.5);
             border: 2px solid #4a4e69;
@@ -46,7 +46,7 @@
         }
         #level-text {
             position: absolute;
-            top: 35px;
+            top: 40px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 18px;
@@ -55,14 +55,15 @@
         }
         #timer-text {
             position: absolute;
-            top: 40px;
-            right: 20px;
+            top: 12px;
+            left: 20px;
             font-size: 24px;
             font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
         #settings-btn {
             position: absolute;
-            top: 10px;
+            top: 12px;
             right: 20px;
             background-color: #4a4e69;
             color: white;
@@ -73,8 +74,38 @@
             cursor: pointer;
             pointer-events: auto;
             display: none;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         }
         #settings-btn:hover { background-color: #e94560; }
+
+        /* GM 按钮和面板样式 */
+        #gm-btn {
+            position: absolute;
+            top: 55px;
+            right: 20px;
+            background-color: #fca311;
+            color: #1a1a2e;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            padding: 5px 15px;
+            font-size: 18px;
+            cursor: pointer;
+            pointer-events: auto;
+            display: none;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+        #gm-btn:hover { background-color: #ffb703; }
+        
+        .gm-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.3); padding: 5px 10px; margin-bottom: 5px; border-radius: 5px;
+        }
+        .gm-actions button {
+            background: #4cc9f0; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px; color: #1a1a2e;
+        }
+        .gm-actions button.max { background: #ff5c77; color: white; }
+        .gm-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         #joystick-zone {
             position: absolute;
@@ -186,8 +217,8 @@
         </div>
         <div id="level-text" style="display: none;">Lv. 1</div>
         <div id="timer-text" style="display: none;">00:00</div>
-        
         <button id="settings-btn" onclick="openSettings()">⚙️ 设置</button>
+        <button id="gm-btn" onclick="openGM()">🛠️ GM</button>
 
         <div id="joystick-zone">
             <div id="joystick-knob"></div>
@@ -196,9 +227,10 @@
         <div id="start-panel" class="panel">
             <h2>🌿 割草特工队 🌿<br><span style="font-size:16px; color:#ffd166;">觉醒降临版</span></h2>
             <p>屏幕左下角 <strong>虚拟摇杆</strong> 拖动<br>或 键盘 W A S D 移动</p>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
                 <button class="action-btn" onclick="startGame('classic')">经典模式</button>
                 <button class="action-btn" style="background-color: #d00000;" onclick="startGame('rampage')">狂暴模式 🩸</button>
+                <button class="action-btn" style="background-color: #fca311; color: #1a1a2e;" onclick="startGame('debug')">🐛 调试模式</button>
             </div>
             <br>
             <button class="action-btn" style="background-color: #4a4e69; font-size: 16px;" onclick="showLeaderboard()">🏆 排行榜</button>
@@ -213,6 +245,21 @@
                 <button class="action-btn" style="background-color: #4a4e69;" onclick="startGame(currentMode)">🔄 重新开始</button>
                 <button class="action-btn" onclick="forceEndGame()">💀 结束并保存战绩</button>
             </div>
+        </div>
+
+        <div id="gm-panel" class="panel" style="min-width: 360px; max-width: 90vw;">
+            <h2>🛠️ GM 控制台</h2>
+            <div style="margin-bottom: 15px;">
+                <span style="color: #aaa; font-weight: bold;">一键直升：</span>
+                <button class="action-btn" style="padding: 5px 10px; font-size: 14px;" onclick="gmSetLevel(10)">Lv.10</button>
+                <button class="action-btn" style="padding: 5px 10px; font-size: 14px;" onclick="gmSetLevel(20)">Lv.20</button>
+                <button class="action-btn" style="padding: 5px 10px; font-size: 14px;" onclick="gmSetLevel(30)">Lv.30</button>
+                <button class="action-btn" style="padding: 5px 10px; font-size: 14px; background-color: #ffb703; color: #1a1a2e;" onclick="gmSetLevel(40)">Lv.40</button>
+            </div>
+            <div id="gm-buff-list" style="max-height: 280px; overflow-y: auto; text-align: left; margin-bottom: 15px; border: 1px solid #4a4e69; padding: 10px; border-radius: 8px;">
+                <!-- 动态生成 -->
+            </div>
+            <button class="action-btn" style="background-color: #4a4e69; width: 100%;" onclick="closeGM()">✅ 完成配置并继续</button>
         </div>
 
         <div id="leaderboard-panel" class="panel">
@@ -254,6 +301,9 @@
     const leaderboardPanel = document.getElementById('leaderboard-panel');
     const settingsPanel = document.getElementById('settings-panel');
     const settingsBtn = document.getElementById('settings-btn');
+    const gmBtn = document.getElementById('gm-btn');
+    const gmPanel = document.getElementById('gm-panel');
+    const gmBuffList = document.getElementById('gm-buff-list');
     const upgradeOptions = document.getElementById('upgrade-options');
     const currentBuffsList = document.getElementById('current-buffs-list');
     const finalStats = document.getElementById('final-stats');
@@ -311,47 +361,51 @@
     window.addEventListener('mousemove', handleJoystickMove);
     window.addEventListener('mouseup', handleJoystickEnd);
 
+    // 🎧 音效系统
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const soundManager = {
         bgmInterval: null,
-        playTone: function(freq, type, duration, vol=0.1) {
+        playTone: function(freqStart, freqEnd, type, duration, vol=0.05) {
             try {
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-                osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.type = type; osc.frequency.setValueAtTime(freqStart, audioCtx.currentTime);
+                if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, audioCtx.currentTime + duration);
                 gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
                 osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
             } catch(e) {}
         },
-        playShoot: () => soundManager.playTone(600, 'square', 0.1, 0.02),
-        playHit: () => soundManager.playTone(150, 'sawtooth', 0.1, 0.02),
-        playExp: () => soundManager.playTone(1200, 'sine', 0.05, 0.01),
+        playShoot: () => soundManager.playTone(600, 200, 'sine', 0.08, 0.015),
+        playHit: () => soundManager.playTone(200, 50, 'triangle', 0.05, 0.02),
+        playExp: () => soundManager.playTone(1200, 1600, 'sine', 0.06, 0.015),
+        playCrit: () => soundManager.playTone(1000, 200, 'square', 0.08, 0.015), 
         playLevelUp: () => {
-            soundManager.playTone(400, 'square', 0.1, 0.1);
-            setTimeout(() => soundManager.playTone(600, 'square', 0.2, 0.1), 100);
-            setTimeout(() => soundManager.playTone(800, 'square', 0.4, 0.1), 200);
+            soundManager.playTone(440, null, 'sine', 0.2, 0.05); 
+            setTimeout(() => soundManager.playTone(554, null, 'sine', 0.2, 0.05), 100); 
+            setTimeout(() => soundManager.playTone(659, null, 'sine', 0.2, 0.05), 200); 
+            setTimeout(() => soundManager.playTone(880, null, 'sine', 0.4, 0.05), 300); 
         },
         playAwaken: () => { 
-            soundManager.playTone(800, 'sine', 0.8, 0.2);
-            setTimeout(() => soundManager.playTone(1200, 'sine', 1.0, 0.2), 200);
+            soundManager.playTone(440, null, 'sine', 1.0, 0.05);
+            soundManager.playTone(554, null, 'sine', 1.0, 0.05);
+            setTimeout(() => soundManager.playTone(880, null, 'sine', 1.5, 0.06), 150);
         },
         startBGM: function() {
             if(this.bgmInterval) return;
-            const notes = [220, 220, 330, 220, 440, 330, 220, 165]; let i = 0;
+            const notes = [130.81, 155.56, 130.81, 103.83]; let i = 0;
             this.bgmInterval = setInterval(() => {
-                if(gameState === 'playing') { this.playTone(notes[i], 'triangle', 0.2, 0.03); i = (i + 1) % notes.length; }
-            }, 300);
+                if(gameState === 'playing') { this.playTone(notes[i], null, 'triangle', 0.4, 0.02); i = (i + 1) % notes.length; }
+            }, 600);
         },
         stopBGM: function() { if(this.bgmInterval) { clearInterval(this.bgmInterval); this.bgmInterval = null; } }
     };
 
-    // ⚡ 屏幕落雷特效 (普通 & 天劫觉醒)
+    // --- 视觉特效类群 ---
     class Effect {
         constructor(x1, y1, x2, y2, isAwakened = false) {
             this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2;
-            this.life = isAwakened ? 0.4 : 0.2; 
-            this.isAwakened = isAwakened;
+            this.life = isAwakened ? 0.4 : 0.2; this.isAwakened = isAwakened;
         }
         update(dt) { this.life -= dt; }
         draw() {
@@ -373,22 +427,40 @@
         }
     }
 
-    // 🌪️ 燃烧瓶/天劫的地板伤害区域
+    class LaserLine {
+        constructor(pts, isAwakened) {
+            this.pts = pts; this.life = isAwakened ? 0.4 : 0.2; this.isAwakened = isAwakened;
+        }
+        update(dt) { this.life -= dt; }
+        draw() {
+            if(this.pts.length < 2) return;
+            ctx.beginPath(); ctx.moveTo(this.pts[0].x, this.pts[0].y);
+            for(let i=1; i<this.pts.length; i++) ctx.lineTo(this.pts[i].x, this.pts[i].y);
+            
+            if (this.isAwakened) {
+                ctx.strokeStyle = `rgba(217, 4, 41, ${this.life * 3})`; ctx.lineWidth = 10; ctx.stroke();
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 4; ctx.stroke();
+            } else {
+                ctx.strokeStyle = `rgba(67, 97, 238, ${this.life * 4})`; ctx.lineWidth = 6; ctx.stroke();
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 2; ctx.stroke();
+            }
+        }
+    }
+
     class DamageZone {
         constructor(x, y, radius, damage, type = 'fire') {
-            this.x = x; this.y = y; this.radius = radius;
-            this.type = type;
-            this.lifeTime = (type === 'blueFire') ? 4.0 : 2.0; 
-            this.damage = damage;
-            this.tickTimer = 0;
+            this.x = x; this.y = y; this.radius = radius; this.type = type;
+            this.lifeTime = (type === 'blueFire' || type === 'nuke' || type === 'plague') ? 4.0 : 2.0; 
+            this.damage = damage; this.tickTimer = 0;
         }
         update(dt) {
             this.lifeTime -= dt; this.tickTimer -= dt;
             if(this.tickTimer <= 0) {
-                this.tickTimer = 0.2; // 每0.2秒烧一次
+                this.tickTimer = 0.2; 
                 for(let e of enemies) {
                     if(Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) {
-                        e.takeDamage(this.damage * 0.2); 
+                        e.takeDamage(this.damage * 0.2, false); 
+                        if(this.type === 'plague') e.isPlagued = true;
                     }
                 }
             }
@@ -397,543 +469,317 @@
             ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             const alphaTime = Math.max(0, this.lifeTime);
             if (this.type === 'blueFire') {
-                // 幽冥地火：蓝冰色
                 ctx.fillStyle = `rgba(67, 97, 238, ${alphaTime * 0.3})`; ctx.fill();
                 ctx.strokeStyle = `rgba(76, 201, 240, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'plague') {
+                ctx.fillStyle = `rgba(114, 9, 183, ${alphaTime * 0.4})`; ctx.fill();
+                ctx.strokeStyle = `rgba(181, 23, 158, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'poison') {
+                ctx.fillStyle = `rgba(128, 237, 153, ${alphaTime * 0.3})`; ctx.fill();
+                ctx.strokeStyle = `rgba(87, 204, 153, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'nuke') {
+                ctx.fillStyle = `rgba(57, 255, 20, ${alphaTime * 0.1})`; ctx.strokeStyle = `rgba(0, 255, 0, ${alphaTime * 0.4})`; ctx.lineWidth = 2; ctx.stroke();
             } else if (this.type === 'lightning') {
-                // 天劫神雷残炎：猩红色
-                ctx.fillStyle = `rgba(255, 92, 119, ${alphaTime * 0.3})`; ctx.fill();
-                ctx.strokeStyle = `rgba(217, 4, 41, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = `rgba(255, 92, 119, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(217, 4, 41, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
             } else { 
-                // 普通燃烧瓶：橘红色
-                ctx.fillStyle = `rgba(255, 153, 0, ${alphaTime * 0.3})`; ctx.fill();
-                ctx.strokeStyle = `rgba(255, 60, 0, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = `rgba(255, 153, 0, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(255, 60, 0, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
             }
         }
     }
 
-    // 🪃 回旋镖实体类
-    class Boomerang {
-        constructor(x, y, angle, speed, damage, radius, isAwakened = false) {
-            this.x = x; this.y = y;
-            this.vx = Math.cos(angle) * speed; 
-            this.vy = Math.sin(angle) * speed;
-            this.baseSpeed = speed;
-            this.damage = damage;
-            this.radius = isAwakened ? radius * 2.5 : radius;
-            this.isAwakened = isAwakened;
-            this.lifeTime = 3; // 存活最大3秒
-            this.state = 'outward'; // outward: 飞出, returning: 返回
-            this.hitEnemies = new Set();
-            this.markedForDeletion = false;
+    class Explosion {
+        constructor(x, y, radius, isAwakened, type = 'normal') {
+            this.x = x; this.y = y; this.maxRadius = radius; 
+            this.radius = 0.1; // 避免为负数
+            this.life = 0.3; this.isAwakened = isAwakened; this.type = type;
+        }
+        update(dt) { 
+            this.life -= dt; 
+            // 保证半径不会小于等于0
+            this.radius += (this.maxRadius - this.radius) * 10 * dt; 
+            if(this.radius < 0.1) this.radius = 0.1;
+        }
+        draw() {
+            if(this.radius <= 0) return;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            if (this.type === 'nuke') ctx.fillStyle = `rgba(57, 255, 20, ${this.life * 3})`;
+            else if (this.type === 'ice') ctx.fillStyle = `rgba(0, 191, 255, ${this.life * 3})`;
+            else if (this.type === 'poison') ctx.fillStyle = `rgba(181, 23, 158, ${this.life * 3})`;
+            else ctx.fillStyle = `rgba(255, 92, 119, ${this.life * 3})`;
+            ctx.fill();
+        }
+    }
+
+    // --- 实体武器类 ---
+    class Missile {
+        constructor(x, y, damage, blastRadius, isAwakened = false) {
+            this.x = x; this.y = y; this.damage = damage; this.blastRadius = isAwakened ? blastRadius * 2.5 : blastRadius;
+            this.isAwakened = isAwakened; this.speed = 300;
+            const initAngle = Math.random() * Math.PI * 2;
+            this.vx = Math.cos(initAngle) * this.speed; this.vy = Math.sin(initAngle) * this.speed;
+            this.lifeTime = 4; this.target = null; this.markedForDeletion = false;
+        }
+        update(dt) {
+            this.lifeTime -= dt; if (this.lifeTime <= 0) { this.explode(); return; }
+            if (!this.target || this.target.markedForDeletion) {
+                let minDist = Infinity;
+                for (let e of enemies) { const dist = Math.hypot(e.x - this.x, e.y - this.y); if (dist < minDist) { minDist = dist; this.target = e; } }
+            }
+            if (this.target) {
+                const desiredAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
+                const currentAngle = Math.atan2(this.vy, this.vx);
+                let angleDiff = desiredAngle - currentAngle;
+                while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                const newAngle = currentAngle + angleDiff * 3.0 * dt;
+                this.speed += 200 * dt; this.vx = Math.cos(newAngle) * this.speed; this.vy = Math.sin(newAngle) * this.speed;
+            }
+            this.x += this.vx * dt; this.y += this.vy * dt;
+            for (let e of enemies) { if (Math.hypot(e.x - this.x, e.y - this.y) < e.radius + 10) { this.explode(); break; } }
+        }
+        explode() {
+            this.markedForDeletion = true; soundManager.playShoot();
+            const dmgInfo = player.calcDamage(this.damage);
+            for (let e of enemies) { if (Math.hypot(e.x - this.x, e.y - this.y) < this.blastRadius + e.radius) { e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); } }
+            if (this.isAwakened) damageZones.push(new DamageZone(this.x, this.y, this.blastRadius, this.damage * 0.5, 'nuke'));
+            effects.push(new Explosion(this.x, this.y, this.blastRadius, this.isAwakened, this.isAwakened ? 'nuke' : 'normal'));
+        }
+        draw() {
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(Math.atan2(this.vy, this.vx));
+            if (this.isAwakened) {
+                ctx.fillStyle = '#2b2d42'; ctx.fillRect(-15, -6, 30, 12); ctx.fillStyle = '#55a630'; ctx.beginPath(); ctx.arc(15, 0, 6, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#ff5c77'; ctx.beginPath(); ctx.arc(-18, 0, 4 + Math.random()*3, 0, Math.PI*2); ctx.fill();
+            } else {
+                ctx.fillStyle = '#fff'; ctx.fillRect(-10, -4, 20, 8); ctx.fillStyle = '#d90429'; ctx.beginPath(); ctx.arc(10, 0, 4, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#ffb703'; ctx.beginPath(); ctx.arc(-12, 0, 3 + Math.random()*2, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.restore();
+        }
+    }
+
+    class Axe {
+        constructor(x, y, vx, vy, damage, isAwakened) {
+            this.x = x; this.y = y; this.vx = vx; this.vy = vy; this.damage = damage; this.isAwakened = isAwakened;
+            this.radius = isAwakened ? 25 : 15; this.lifeTime = 3; this.hitEnemies = new Set();
+            this.markedForDeletion = false; this.angle = 0;
+        }
+        update(dt) {
+            this.vy += 1200 * dt; this.x += this.vx * dt; this.y += this.vy * dt; this.angle += 15 * dt;
+            this.lifeTime -= dt; if(this.lifeTime<=0) this.markedForDeletion = true;
+        }
+        draw() {
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+            if(this.isAwakened) {
+                ctx.fillStyle = '#d90429'; ctx.fillRect(-4, -25, 8, 50); ctx.fillStyle = '#ffb703';
+                ctx.beginPath(); ctx.arc(10, 0, 15, -Math.PI/2, Math.PI/2); ctx.fill(); ctx.beginPath(); ctx.arc(-10, 0, 15, Math.PI/2, Math.PI*1.5); ctx.fill();
+            } else {
+                ctx.fillStyle = '#8d99ae'; ctx.fillRect(-3, -15, 6, 30); ctx.fillStyle = '#edf2f4';
+                ctx.beginPath(); ctx.arc(8, 0, 10, -Math.PI/2, Math.PI/2); ctx.fill();
+            }
+            ctx.restore();
+        }
+    }
+
+    class Slash {
+        constructor(x, y, angle, radius, damage, isAwakened) {
+            this.x = x; this.y = y; this.angle = angle; this.radius = radius; this.damage = damage; this.isAwakened = isAwakened;
+            this.life = isAwakened ? 0.6 : 0.2; 
+            this.markedForDeletion = false; this.hitEnemies = new Set();
+            
+            const dmgInfo = player.calcDamage(this.damage);
+            for(let e of enemies) {
+                const dist = Math.hypot(e.x - this.x, e.y - this.y);
+                if (dist < this.radius) {
+                    let angleToEnemy = Math.atan2(e.y - this.y, e.x - this.x);
+                    let angleDiff = angleToEnemy - this.angle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                    if (Math.abs(angleDiff) < Math.PI / 2.5) { 
+                        e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                        this.hitEnemies.add(e);
+                    }
+                }
+            }
+        }
+        update(dt) {
+            this.life -= dt; if (this.life <= 0) this.markedForDeletion = true;
+            if (this.isAwakened && this.life > 0) {
+                const dmgInfo = player.calcDamage(this.damage * dt * 5); 
+                for(let e of enemies) {
+                    if (this.hitEnemies.has(e)) continue; 
+                    const dist = Math.hypot(e.x - this.x, e.y - this.y);
+                    if (dist < this.radius) {
+                        let angleDiff = Math.atan2(e.y - this.y, e.x - this.x) - this.angle;
+                        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                        if (Math.abs(angleDiff) < Math.PI / 2.5) e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                    }
+                }
+            }
+        }
+        draw() {
+            if(this.radius <= 0) return;
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+            ctx.beginPath(); ctx.arc(0, 0, this.radius, -Math.PI / 2.5, Math.PI / 2.5);
+            if (this.isAwakened) {
+                ctx.strokeStyle = `rgba(114, 9, 183, ${this.life * 2})`; ctx.lineWidth = 40; ctx.stroke();
+                ctx.strokeStyle = `rgba(0, 0, 0, ${this.life * 3})`; ctx.lineWidth = 15; ctx.stroke();
+            } else {
+                ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 20; ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    class OrbitalWarning {
+        constructor(x, y, radius, damage, isAwakened) {
+            this.x = x; this.y = y; this.radius = radius; this.damage = damage; this.isAwakened = isAwakened;
+            this.delay = 1.0; this.markedForDeletion = false;
+        }
+        update(dt) {
+            this.delay -= dt;
+            if (this.delay <= 0) {
+                this.markedForDeletion = true; soundManager.playShoot();
+                const dmgInfo = player.calcDamage(this.damage);
+                for (let e of enemies) { if (Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); }
+                effects.push(new Explosion(this.x, this.y, this.radius, true, 'nuke'));
+                if (this.isAwakened) {
+                    effects.push(new Explosion(this.x + this.radius, this.y, this.radius, true, 'nuke'));
+                    effects.push(new Explosion(this.x - this.radius, this.y, this.radius, true, 'nuke'));
+                    effects.push(new Explosion(this.x, this.y + this.radius, this.radius, true, 'nuke'));
+                    effects.push(new Explosion(this.x, this.y - this.radius, this.radius, true, 'nuke'));
+                }
+            }
+        }
+        draw() {
+            if(this.radius <= 0) return;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(217, 4, 41, ${Math.sin(this.delay * 20)})`; 
+            ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = 'rgba(217, 4, 41, 0.2)'; ctx.fill();
+            ctx.beginPath(); ctx.moveTo(this.x - 20, this.y); ctx.lineTo(this.x + 20, this.y); ctx.moveTo(this.x, this.y - 20); ctx.lineTo(this.x, this.y + 20);
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+        }
+    }
+
+    class BlackHole {
+        constructor(x, y, radius, damage, isAwakened) {
+            this.x = x; this.y = y; this.radius = radius; this.pullRadius = isAwakened ? radius * 4 : radius * 3; 
+            this.damage = damage; this.isAwakened = isAwakened; this.lifeTime = isAwakened ? 5.0 : 3.0;
+            this.tickTimer = 0; this.markedForDeletion = false;
         }
         update(dt) {
             this.lifeTime -= dt;
-            if (this.lifeTime <= 0) { this.markedForDeletion = true; return; }
+            if (this.lifeTime <= 0) { 
+                if(this.isAwakened) {
+                    const dmgInfo = player.calcDamage(this.damage * 5);
+                    for(let e of enemies) { if(Math.hypot(e.x - this.x, e.y - this.y) < this.pullRadius) e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); }
+                    effects.push(new Explosion(this.x, this.y, this.pullRadius, true, 'normal')); soundManager.playAwaken();
+                }
+                this.markedForDeletion = true; return; 
+            }
+            this.tickTimer -= dt; const pullForce = this.isAwakened ? 300 : 150;
+            for(let e of enemies) {
+                const dist = Math.hypot(e.x - this.x, e.y - this.y);
+                if (dist < this.pullRadius) {
+                    const angle = Math.atan2(this.y - e.y, this.x - e.x); e.x += Math.cos(angle) * pullForce * dt; e.y += Math.sin(angle) * pullForce * dt;
+                }
+                if (dist < this.radius && this.tickTimer <= 0) { const dmgInfo = player.calcDamage(this.damage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); }
+            }
+            if(this.tickTimer <= 0) this.tickTimer = 0.5; 
+        }
+        draw() {
+            if(this.radius <= 0) return;
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(gameTime * (this.isAwakened ? -5 : 3)); 
+            ctx.beginPath(); ctx.arc(0, 0, this.radius * 0.5, 0, Math.PI*2); ctx.fillStyle = '#000'; ctx.fill();
+            ctx.beginPath(); ctx.ellipse(0, 0, this.radius, this.radius * 0.4, 0, 0, Math.PI*2);
+            ctx.strokeStyle = this.isAwakened ? '#7209b7' : '#4cc9f0'; ctx.lineWidth = this.isAwakened ? 6 : 3;
+            ctx.shadowBlur = 20; ctx.shadowColor = this.isAwakened ? '#f72585' : '#4cc9f0'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, this.pullRadius, 0, Math.PI*2);
+            ctx.strokeStyle = `rgba(114, 9, 183, ${Math.max(0, this.lifeTime)*0.1})`; ctx.lineWidth = 1; ctx.stroke();
+            ctx.restore();
+        }
+    }
 
+    class Boomerang {
+        constructor(x, y, angle, speed, damage, radius, isAwakened = false) {
+            this.x = x; this.y = y; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+            this.baseSpeed = speed; this.damage = damage; this.radius = isAwakened ? radius * 2.5 : radius;
+            this.isAwakened = isAwakened; this.lifeTime = 3; this.state = 'outward'; this.hitEnemies = new Set();
+            this.markedForDeletion = false;
+        }
+        update(dt) {
+            this.lifeTime -= dt; if (this.lifeTime <= 0) { this.markedForDeletion = true; return; }
             if (this.state === 'outward') {
-                this.x += this.vx * dt; this.y += this.vy * dt;
-                // 模拟空气阻力减速
-                this.vx *= 0.95; this.vy *= 0.95; 
-                // 速度降下来后开始返回
-                if (Math.hypot(this.vx, this.vy) < 80) { 
-                    this.state = 'returning';
-                    this.hitEnemies.clear(); // 清空受击列表，返回时可造成二段伤害
-                }
+                this.x += this.vx * dt; this.y += this.vy * dt; this.vx *= 0.95; this.vy *= 0.95; 
+                if (Math.hypot(this.vx, this.vy) < 80) { this.state = 'returning'; this.hitEnemies.clear(); }
             } else {
-                // 朝着玩家强力飞回
                 const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                this.vx += Math.cos(angle) * 1500 * dt; 
-                this.vy += Math.sin(angle) * 1500 * dt;
+                this.vx += Math.cos(angle) * 1500 * dt; this.vy += Math.sin(angle) * 1500 * dt;
                 const speed = Math.hypot(this.vx, this.vy);
-                if (speed > this.baseSpeed * 2) { // 最高限速
-                    this.vx = (this.vx / speed) * this.baseSpeed * 2;
-                    this.vy = (this.vy / speed) * this.baseSpeed * 2;
-                }
+                if (speed > this.baseSpeed * 2) { this.vx = (this.vx / speed) * this.baseSpeed * 2; this.vy = (this.vy / speed) * this.baseSpeed * 2; }
                 this.x += this.vx * dt; this.y += this.vy * dt;
-
-                // 回到玩家身边接住消失
-                if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) {
-                    this.markedForDeletion = true;
-                }
+                if (Math.hypot(player.x - this.x, player.y - this.y) < player.radius + this.radius) { this.markedForDeletion = true; }
             }
         }
         draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(gameTime * 20); // 极速自转
-            ctx.beginPath();
+            if(this.radius <= 0) return;
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(gameTime * 20); ctx.beginPath();
             if (this.isAwakened) {
-                // 觉醒：红黑色月牙刃
-                ctx.arc(0, 0, this.radius, 0, Math.PI * 1.5, false);
-                ctx.lineTo(0, 0);
-                ctx.fillStyle = '#d90429'; ctx.fill();
-                ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 1.5, false); ctx.lineTo(0, 0);
+                ctx.fillStyle = '#d90429'; ctx.fill(); ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 3; ctx.stroke();
             } else {
-                // 普通回旋镖：蓝白十字形/飞鸟形
-                ctx.moveTo(-this.radius, -this.radius/2);
-                ctx.lineTo(this.radius, 0);
-                ctx.lineTo(-this.radius, this.radius/2);
-                ctx.lineTo(-this.radius/2, 0);
-                ctx.fillStyle = '#4cc9f0'; ctx.fill();
-                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.moveTo(-this.radius, -this.radius/2); ctx.lineTo(this.radius, 0); ctx.lineTo(-this.radius, this.radius/2); ctx.lineTo(-this.radius/2, 0);
+                ctx.fillStyle = '#4cc9f0'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
             }
-            ctx.restore();
-        }
-    }
-
-    // 所有可能的升级选项配置库
-    const possibleUpgrades = [
-        { id: 'molotov', name: '燃烧瓶', desc: '在地面留下持续伤害的火区。满级：觉醒【幽冥地火】！', icon: '🍾' },
-        { id: 'boomerang', name: '回旋镖', desc: '飞出并返回，造成两段伤害。满级：觉醒【磁爆回旋刃】！', icon: '🪃' },
-        { id: 'dmg', name: '肌肉强化', desc: '增加伤害。满级：伤害爆炸翻倍！', icon: '💪' },
-        { id: 'speed', name: '快手', desc: '提高射速。满级：变身加特林射速极快！', icon: '⚡' },
-        { id: 'pierce', name: '穿甲弹', desc: '增加穿透。满级：额外+5次穿透！', icon: '🏹' },
-        { id: 'aura', name: '能量光环', desc: '护体光环。满级：觉醒【地狱火领域】！', icon: '🛡️' },
-        { id: 'heal', name: '急救包', desc: '恢复100生命。满级：春哥附体，血量上限大增并回满！', icon: '❤️' },
-        { id: 'multishot', name: '散弹枪', desc: '增加多重射击。满级：觉醒【虚空等离子】！', icon: '🔫' },
-        { id: 'lightning', name: '雷电发射器', desc: '降下落雷。满级：觉醒【天劫神雷】！', icon: '🌩️' },
-        { id: 'guardian', name: '守卫者', desc: '召唤旋转飞刃。满级：觉醒【黄金轮锯】！', icon: '⚙️' },
-        { id: 'magnet', name: '强力磁铁', desc: '增加拾取范围。满级：几乎全屏吸收！', icon: '🧲' },
-        { id: 'movespeed', name: '运动鞋', desc: '提升移速。满级：移速飙升，凌波微步！', icon: '👟' },
-        { id: 'maxhp', name: '健身指南', desc: '增加最大生命。满级：血牛降世！', icon: '📘' }
-    ];
-
-    class Player {
-        constructor() {
-            this.x = 0; this.y = 0; this.radius = 15; this.speed = 250; this.color = '#4ea8de';
-            this.maxHp = 100; this.hp = 100; this.level = 1; this.xp = 0; this.xpNeeded = 50;
-            this.damageMultiplier = 1; this.fireRateMultiplier = 1;
-            
-            // 主武器：子弹
-            this.baseFireCooldown = 0.8; this.fireTimer = 0; this.bulletSpeed = 400; this.bulletDamage = 25; this.bulletPierce = 1;
-            this.projectileCount = 1;
-            
-            // 武器：能量光环
-            this.hasAura = false; this.auraRadius = 80; this.auraDamage = 10; this.auraTickRate = 0.5; this.auraTimer = 0;
-            
-            // 武器：闪电
-            this.hasLightning = false; this.lightningTimer = 0; this.lightningDamage = 50; this.lightningBaseCooldown = 1.2; this.lightningTargets = 1;
-            
-            // 武器：守卫者
-            this.guardianCount = 0; this.guardianAngle = 0;
-            
-            // 🌟新武器：燃烧瓶
-            this.hasMolotov = false; this.molotovTimer = 0; this.molotovBaseCooldown = 3.0; this.molotovRadius = 60; this.molotovDamage = 15; this.molotovCount = 1;
-            
-            // 🌟新武器：回旋镖
-            this.hasBoomerang = false; this.boomerangTimer = 0; this.boomerangBaseCooldown = 2.5; this.boomerangDamage = 40; this.boomerangCount = 1;
-            
-            this.pickupRange = 80; 
-            this.upgrades = {};
-            this.trail = [];
-
-            if (currentMode === 'rampage') {
-                this.speed = 350; this.fireRateMultiplier = 2; this.pickupRange = 150;
-            }
-        }
-
-        update(dt) {
-            let dx = 0, dy = 0;
-            if (joyActive) { dx = joyDx; dy = joyDy; } 
-            else {
-                if (keys.w || keys.ArrowUp) dy -= 1; if (keys.s || keys.ArrowDown) dy += 1;
-                if (keys.a || keys.ArrowLeft) dx -= 1; if (keys.d || keys.ArrowRight) dx += 1;
-                if (dx !== 0 && dy !== 0) { const len = Math.sqrt(dx * dx + dy * dy); dx /= len; dy /= len; }
-            }
-
-            this.x += dx * this.speed * dt; this.y += dy * this.speed * dt;
-
-            if (this.level >= 20 && (dx !== 0 || dy !== 0)) {
-                this.trail.push({ x: this.x, y: this.y, life: 1.0 });
-                if (this.trail.length > 15) this.trail.shift();
-            }
-            this.trail.forEach(t => t.life -= dt * 3);
-            this.trail = this.trail.filter(t => t.life > 0);
-
-            // 自动射击
-            this.fireTimer -= dt;
-            if (this.fireTimer <= 0) {
-                this.shootNearest();
-                this.fireTimer = this.baseFireCooldown / this.fireRateMultiplier;
-            }
-
-            // 🍾 燃烧瓶发射逻辑
-            if (this.hasMolotov) {
-                this.molotovTimer -= dt;
-                if (this.molotovTimer <= 0) {
-                    this.molotovTimer = this.molotovBaseCooldown;
-                    if (enemies.length > 0) {
-                        const isAwakened = (this.upgrades['molotov'] || 0) >= 5;
-                        let throwCount = isAwakened ? this.molotovCount : Math.min(this.molotovCount, enemies.length);
-                        for(let i=0; i<throwCount; i++) {
-                            const target = enemies[Math.floor(Math.random() * enemies.length)];
-                            const zoneType = isAwakened ? 'blueFire' : 'fire';
-                            // 在目标脚下直接爆开火区
-                            damageZones.push(new DamageZone(target.x + (Math.random()*60-30), target.y + (Math.random()*60-30), this.molotovRadius, this.molotovDamage * this.damageMultiplier, zoneType));
-                        }
-                        soundManager.playShoot();
-                    }
-                }
-            }
-
-            // 🪃 回旋镖发射逻辑
-            if (this.hasBoomerang) {
-                this.boomerangTimer -= dt;
-                if (this.boomerangTimer <= 0) {
-                    this.boomerangTimer = this.boomerangBaseCooldown;
-                    const isAwakened = (this.upgrades['boomerang'] || 0) >= 5;
-                    const bCount = isAwakened ? 6 : this.boomerangCount;
-                    // 朝四周发射
-                    for(let i=0; i<bCount; i++) {
-                        const angle = (Math.PI * 2 / bCount) * i + gameTime;
-                        boomerangs.push(new Boomerang(this.x, this.y, angle, 600, this.boomerangDamage * this.damageMultiplier, 12, isAwakened));
-                    }
-                    soundManager.playShoot();
-                }
-            }
-
-            if (this.hasAura) {
-                this.auraTimer -= dt;
-                if (this.auraTimer <= 0) {
-                    this.applyAuraDamage();
-                    this.auraTimer = this.auraTickRate;
-                }
-            }
-
-            if (this.hasLightning) {
-                this.lightningTimer -= dt;
-                if (this.lightningTimer <= 0) {
-                    this.lightningTimer = this.lightningBaseCooldown;
-                    if (enemies.length > 0) {
-                        const isAwakened = (this.upgrades['lightning'] || 0) >= 5;
-                        let targetsToHit = Math.min(this.lightningTargets, enemies.length);
-                        for(let i = 0; i < targetsToHit; i++) {
-                            const target = enemies[Math.floor(Math.random() * enemies.length)];
-                            target.takeDamage(this.lightningDamage * this.damageMultiplier);
-                            effects.push(new Effect(this.x, this.y - 300, target.x, target.y, isAwakened));
-                            if (isAwakened) {
-                                damageZones.push(new DamageZone(target.x, target.y, 80, this.lightningDamage * this.damageMultiplier, 'lightning'));
-                            }
-                        }
-                        soundManager.playShoot();
-                    }
-                }
-            }
-
-            if (this.guardianCount > 0) {
-                const isAwakened = (this.upgrades['guardian'] || 0) >= 5;
-                const rotSpeed = isAwakened ? 6 : 3; 
-                this.guardianAngle += rotSpeed * dt;
-                const distRadius = isAwakened ? 110 : 70; 
-                for (let i = 0; i < this.guardianCount; i++) {
-                    const angle = this.guardianAngle + (Math.PI * 2 / this.guardianCount) * i;
-                    const gx = this.x + Math.cos(angle) * distRadius;
-                    const gy = this.y + Math.sin(angle) * distRadius;
-                    const hitRadius = isAwakened ? 25 : 10;
-                    for (let e of enemies) {
-                        if (Math.hypot(e.x - gx, e.y - gy) < e.radius + hitRadius) {
-                            e.takeDamage((isAwakened ? 30 : 15) * this.damageMultiplier * dt * 30);
-                        }
-                    }
-                }
-            }
-        }
-
-        draw() {
-            if (this.level >= 20) {
-                this.trail.forEach((t, i) => {
-                    ctx.beginPath(); ctx.arc(t.x, t.y, this.radius - 2, 0, Math.PI * 2);
-                    const hue = (gameTime * 200 + i * 20) % 360;
-                    ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${t.life * 0.4})`;
-                    ctx.fill();
-                });
-            }
-
-            if (this.hasAura) {
-                const isAwakened = (this.upgrades['aura'] || 0) >= 5;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.auraRadius, 0, Math.PI * 2);
-                if (isAwakened) {
-                    const pulse = 1 + Math.sin(gameTime * 15) * 0.05;
-                    ctx.arc(this.x, this.y, this.auraRadius * pulse, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(217, 4, 41, 0.3)';
-                    ctx.strokeStyle = 'rgba(239, 35, 60, 0.8)';
-                    ctx.lineWidth = 4;
-                } else {
-                    ctx.fillStyle = 'rgba(255, 200, 0, 0.2)';
-                    ctx.strokeStyle = 'rgba(255, 200, 0, 0.5)';
-                    ctx.lineWidth = 2;
-                }
-                ctx.fill(); ctx.stroke();
-            }
-
-            if (this.guardianCount > 0) {
-                const isAwakened = (this.upgrades['guardian'] || 0) >= 5;
-                const distRadius = isAwakened ? 110 : 70;
-                for (let i = 0; i < this.guardianCount; i++) {
-                    const angle = this.guardianAngle + (Math.PI * 2 / this.guardianCount) * i;
-                    const gx = this.x + Math.cos(angle) * distRadius;
-                    const gy = this.y + Math.sin(angle) * distRadius;
-                    ctx.save();
-                    ctx.translate(gx, gy);
-                    if (isAwakened) {
-                        ctx.rotate(gameTime * 15);
-                        ctx.beginPath();
-                        for(let j=0; j<8; j++) {
-                            ctx.lineTo(20 * Math.cos(j * Math.PI/4), 20 * Math.sin(j * Math.PI/4));
-                            ctx.lineTo(12 * Math.cos((j+0.5) * Math.PI/4), 12 * Math.sin((j+0.5) * Math.PI/4));
-                        }
-                        ctx.closePath();
-                        ctx.fillStyle = '#ffd166'; ctx.fill();
-                        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-                        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fillStyle = '#ef233c'; ctx.fill();
-                    } else {
-                        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2);
-                        ctx.fillStyle = '#f15bb5'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-                    }
-                    ctx.restore();
-                }
-            }
-
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            
-            if (this.level >= 20) {
-                ctx.rotate(gameTime * 3);
-                for (let i = 0; i < 3; i++) {
-                    ctx.beginPath();
-                    ctx.ellipse(0, 0, this.radius + 15, this.radius + 5, (i * Math.PI) / 3, 0, Math.PI * 2);
-                    const hue = (gameTime * 150 + i * 40) % 360;
-                    ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
-                }
-                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff'; ctx.fill();
-                ctx.shadowBlur = 20; ctx.shadowColor = '#00f5d4';
-            } else if (this.level >= 10) {
-                ctx.rotate(gameTime * 2);
-                ctx.beginPath();
-                for (let i = 0; i < 6; i++) { ctx.moveTo(0, 0); ctx.lineTo(28, 0); ctx.rotate(Math.PI / 3); }
-                ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 4; ctx.stroke();
-                ctx.beginPath(); ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffd166'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.stroke();
-            } else if (this.level >= 5) {
-                ctx.beginPath(); ctx.arc(0, 0, this.radius + 3, 0, Math.PI * 2);
-                ctx.fillStyle = '#9b5de5'; ctx.fill(); ctx.strokeStyle = '#00f5d4';
-                ctx.lineWidth = 3; ctx.stroke();
-            } else {
-                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-            }
-            ctx.restore();
-
-            const hpWidth = 40; const hpRatio = this.hp / this.maxHp;
-            ctx.fillStyle = 'red'; ctx.fillRect(this.x - hpWidth/2, this.y - this.radius - 20, hpWidth, 5);
-            ctx.fillStyle = '#0f0'; ctx.fillRect(this.x - hpWidth/2, this.y - this.radius - 20, hpWidth * hpRatio, 5);
-        }
-
-        shootNearest() {
-            if (enemies.length === 0) return;
-            let nearestEnemy = null, minDistance = Infinity;
-
-            for (let enemy of enemies) {
-                const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y);
-                if (dist < minDistance) { minDistance = dist; nearestEnemy = enemy; }
-            }
-
-            if (nearestEnemy && minDistance < 600) {
-                const baseAngle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
-                const spread = 0.2; 
-                const isAwakened = (this.upgrades['multishot'] || 0) >= 5;
-
-                for(let i = 0; i < this.projectileCount; i++) {
-                    const angleOffset = (i - (this.projectileCount - 1) / 2) * spread;
-                    bullets.push(new Bullet(this.x, this.y, baseAngle + angleOffset, 
-                                            isAwakened ? this.bulletSpeed * 1.5 : this.bulletSpeed, 
-                                            isAwakened ? this.bulletDamage * this.damageMultiplier * 2 : this.bulletDamage * this.damageMultiplier, 
-                                            isAwakened ? 999 : this.bulletPierce, 
-                                            isAwakened));
-                }
-                soundManager.playShoot();
-            }
-        }
-
-        applyAuraDamage() {
-            for (let enemy of enemies) {
-                if (Math.hypot(enemy.x - this.x, enemy.y - this.y) < this.auraRadius + enemy.radius) {
-                    enemy.takeDamage(this.auraDamage * this.damageMultiplier);
-                }
-            }
-        }
-
-        gainXp(amount) {
-            this.xp += amount;
-            while (this.xp >= this.xpNeeded) {
-                this.xp -= this.xpNeeded;
-                this.level++;
-                if (currentMode === 'rampage') { this.xpNeeded = Math.floor(this.xpNeeded * 1.15) + 50; } 
-                else { this.xpNeeded = Math.floor(this.xpNeeded * 1.3) + 20; }
-                
-                if (this.level === 20) soundManager.playAwaken();
-                else soundManager.playLevelUp();
-                
-                triggerLevelUp();
-            }
-            updateHUD();
-        }
-
-        takeDamage(amount) {
-            this.hp -= amount;
-            if (this.hp <= 0) { this.hp = 0; gameOver(); }
-        }
-    }
-
-    class Enemy {
-        constructor(x, y, type = 'normal') {
-            this.x = x; this.y = y;
-            const timeScaling = 1 + (gameTime / 60) * 1.5; 
-            const dmgScaling = 1 + (gameTime / 120);
-
-            this.isElite = false;
-            this.isBoss = false;
-
-            if (type === 'fast') {
-                this.radius = 10; this.speed = 180; this.hp = 20 * timeScaling; this.color = '#f72585'; this.damage = 5 * dmgScaling; this.xpValue = 15;
-            } else if (type === 'tank') {
-                this.radius = 25; this.speed = 60; this.hp = 150 * timeScaling; this.color = '#7209b7'; this.damage = 20 * dmgScaling; this.xpValue = 50;
-            } else if (type === 'elite') {
-                this.radius = 20; this.speed = 110; this.hp = 300 * timeScaling; this.color = '#fca311'; this.damage = 25 * dmgScaling; this.xpValue = 100;
-                this.isElite = true;
-            } else if (type === 'boss') {
-                this.radius = 50; this.speed = 70; this.hp = 2500 * timeScaling; this.color = '#d90429'; this.damage = 40 * dmgScaling; this.xpValue = 500;
-                this.isBoss = true;
-            } else { 
-                this.radius = 14; this.speed = 100; this.hp = 40 * timeScaling; this.color = '#e63946'; this.damage = 10 * dmgScaling; this.xpValue = 10;
-            }
-
-            if (currentMode === 'rampage') { this.speed *= 1.4; this.damage *= 1.5; this.hp *= 1.2; this.xpValue = Math.floor(this.xpValue * 1.5); }
-            this.markedForDeletion = false;
-        }
-
-        update(dt) {
-            const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            this.x += Math.cos(angle) * this.speed * dt; this.y += Math.sin(angle) * this.speed * dt;
-
-            if (Math.hypot(player.x - this.x, player.y - this.y) < this.radius + player.radius) {
-                player.takeDamage(this.damage * dt);
-                this.x -= Math.cos(angle) * 2; this.y -= Math.sin(angle) * 2;
-            }
-        }
-
-        draw() {
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = this.color; ctx.fill(); ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 2; ctx.stroke();
-        }
-
-        takeDamage(amount) {
-            this.hp -= amount;
-            floatingTexts.push(new FloatingText(this.x, this.y, Math.round(amount), '#fff'));
-            soundManager.playHit();
-            
-            const knockback = this.isBoss ? 0.5 : (this.isElite ? 2 : 5);
-            const angle = Math.atan2(this.y - player.y, this.x - player.x);
-            this.x += Math.cos(angle) * knockback; this.y += Math.sin(angle) * knockback;
-
-            if (this.hp <= 0 && !this.markedForDeletion) {
-                this.markedForDeletion = true; killCount++;
-                
-                if (this.isElite || this.isBoss) {
-                    chests.push(new Chest(this.x, this.y));
-                    if (this.isBoss) {
-                        for(let i=0; i<10; i++) gems.push(new Gem(this.x + Math.random()*60-30, this.y + Math.random()*60-30, 50));
-                    }
-                } else {
-                    gems.push(new Gem(this.x, this.y, this.xpValue));
-                }
-            }
-        }
-    }
-
-    class Chest {
-        constructor(x, y) {
-            this.x = x; this.y = y; this.radius = 15;
-            this.markedForDeletion = false;
-            this.pulseTime = 0;
-        }
-        update(dt) {
-            this.pulseTime += dt * 5;
-            const dist = Math.hypot(player.x - this.x, player.y - this.y);
-            if (dist < player.pickupRange) {
-                const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                this.x += Math.cos(angle) * 300 * dt; this.y += Math.sin(angle) * 300 * dt;
-                
-                if (dist < player.radius + this.radius) {
-                    this.markedForDeletion = true;
-                    soundManager.playLevelUp();
-                    triggerLevelUp(); 
-                }
-            }
-        }
-        draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            const scale = 1 + Math.sin(this.pulseTime) * 0.1;
-            ctx.scale(scale, scale);
-            ctx.fillStyle = '#ffb703'; ctx.fillRect(-10, -8, 20, 16);
-            ctx.strokeStyle = '#fb8500'; ctx.lineWidth = 2; ctx.strokeRect(-10, -8, 20, 16);
-            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
-            
-            ctx.shadowBlur = 15; ctx.shadowColor = '#ffd166';
-            ctx.strokeStyle = `rgba(255, 209, 102, ${0.5 + Math.sin(this.pulseTime)*0.5})`;
-            ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.stroke();
             ctx.restore();
         }
     }
 
     class Bullet {
-        constructor(x, y, angle, speed, damage, pierce, isPlasma = false) {
-            this.x = x; this.y = y;
-            this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
-            this.radius = isPlasma ? 18 : 6; 
-            this.damage = damage; this.pierce = pierce;
-            this.isPlasma = isPlasma; 
+        constructor(x, y, angle, speed, baseDamage, pierce, isPlasma = false) {
+            this.x = x; this.y = y; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+            this.radius = isPlasma ? 18 : 6; this.baseDamage = baseDamage; this.pierce = pierce; this.isPlasma = isPlasma; 
             this.hitEnemies = new Set(); this.lifeTime = 2; this.markedForDeletion = false;
         }
-        update(dt) {
-            this.x += this.vx * dt; this.y += this.vy * dt; this.lifeTime -= dt;
-            if (this.lifeTime <= 0) this.markedForDeletion = true;
-        }
+        update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.lifeTime -= dt; if (this.lifeTime <= 0) this.markedForDeletion = true; }
         draw() {
+            if(this.radius <= 0) return;
             ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             if (this.isPlasma) {
-                ctx.fillStyle = '#4cc9f0'; ctx.shadowBlur = 20; ctx.shadowColor = '#4361ee';
-                ctx.fill();
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2);
-                ctx.fillStyle = '#fff'; ctx.fill();
-            } else {
-                ctx.fillStyle = '#fee440'; ctx.fill(); ctx.shadowBlur = 10; ctx.shadowColor = '#fee440';
+                ctx.fillStyle = '#4cc9f0'; ctx.shadowBlur = 20; ctx.shadowColor = '#4361ee'; ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 0;
+            } else { ctx.fillStyle = '#fee440'; ctx.fill(); ctx.shadowBlur = 10; ctx.shadowColor = '#fee440'; ctx.shadowBlur = 0; }
+        }
+    }
+
+    class Chest {
+        constructor(x, y) { this.x = x; this.y = y; this.radius = 15; this.markedForDeletion = false; this.pulseTime = 0; }
+        update(dt) {
+            this.pulseTime += dt * 5; const dist = Math.hypot(player.x - this.x, player.y - this.y);
+            if (dist < player.pickupRange) {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.x += Math.cos(angle) * 300 * dt; this.y += Math.sin(angle) * 300 * dt;
+                if (dist < player.radius + this.radius) { this.markedForDeletion = true; soundManager.playLevelUp(); triggerLevelUp(); }
             }
+        }
+        draw() {
+            ctx.save(); ctx.translate(this.x, this.y); const scale = 1 + Math.sin(this.pulseTime) * 0.1; ctx.scale(scale, scale);
+            ctx.fillStyle = '#ffb703'; ctx.fillRect(-10, -8, 20, 16); ctx.strokeStyle = '#fb8500'; ctx.lineWidth = 2; ctx.strokeRect(-10, -8, 20, 16);
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI*2); ctx.fill();
+            ctx.shadowBlur = 15; ctx.shadowColor = '#ffd166'; ctx.strokeStyle = `rgba(255, 209, 102, ${0.5 + Math.sin(this.pulseTime)*0.5})`;
+            ctx.beginPath(); ctx.arc(0, 0, 20, 0, Math.PI*2); ctx.stroke(); ctx.restore();
         }
     }
 
     class Gem {
         constructor(x, y, value) {
             this.x = x + (Math.random() * 20 - 10); this.y = y + (Math.random() * 20 - 10);
-            this.value = value; this.radius = value > 20 ? 8 : 5;
-            this.color = value > 20 ? '#06d6a0' : '#80ed99';
+            this.value = value; this.radius = value > 20 ? 8 : 5; this.color = value > 20 ? '#06d6a0' : '#80ed99';
             this.markedForDeletion = false; this.isMagnetic = false; 
         }
         update(dt) {
             const dist = Math.hypot(player.x - this.x, player.y - this.y);
             if (dist < player.pickupRange || this.isMagnetic) {
-                this.isMagnetic = true; 
-                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                this.isMagnetic = true; const angle = Math.atan2(player.y - this.y, player.x - this.x);
                 this.x += Math.cos(angle) * 500 * dt; this.y += Math.sin(angle) * 500 * dt;
-                if (dist < player.radius + this.radius) {
-                    soundManager.playExp(); player.gainXp(this.value); this.markedForDeletion = true;
-                }
+                if (dist < player.radius + this.radius) { soundManager.playExp(); player.gainXp(this.value); this.markedForDeletion = true; }
             }
         }
         draw() {
@@ -944,45 +790,552 @@
     }
 
     class FloatingText {
-        constructor(x, y, text, color) {
-            this.x = x + (Math.random() * 20 - 10); this.y = y - 10;
-            this.text = text; this.color = color; this.life = 0.8; this.vy = -30;
+        constructor(x, y, text, color, isCrit = false) {
+            this.x = x + (Math.random() * 20 - 10); this.y = y - 10; this.text = text; this.color = color; 
+            this.isCrit = isCrit; this.life = isCrit ? 1.2 : 0.8; this.vy = isCrit ? -40 : -30;
         }
         update(dt) { this.y += this.vy * dt; this.life -= dt; }
         draw() {
-            ctx.globalAlpha = Math.max(0, this.life / 0.8);
-            ctx.font = 'bold 16px Arial'; ctx.fillStyle = this.color;
-            ctx.textAlign = 'center'; ctx.fillText(this.text, this.x, this.y); ctx.globalAlpha = 1.0;
+            ctx.globalAlpha = Math.max(0, this.life / (this.isCrit ? 1.2 : 0.8));
+            ctx.font = this.isCrit ? 'bold 24px Arial' : 'bold 16px Arial'; ctx.fillStyle = this.color; ctx.textAlign = 'center'; 
+            if (this.isCrit) { ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeText(this.text, this.x, this.y); }
+            ctx.fillText(this.text, this.x, this.y); ctx.globalAlpha = 1.0;
         }
     }
 
+    // --- 核心配置库 ---
+    const possibleUpgrades = [
+        { id: 'katana', name: '居合武士刀', desc: '朝面向挥出剑气。满级：觉醒【次元斩】！', icon: '🗡️' },
+        { id: 'poison', name: '剧毒药剂', desc: '投掷毒瓶留下毒沼。满级：觉醒【瘟疫之源】！', icon: '🧪' },
+        { id: 'shield', name: '纳米护盾', desc: '生成抵挡伤害的护盾。满级：觉醒【绝对神盾】！', icon: '🛡️' },
+        { id: 'laser', name: '棱镜射线', desc: '发射在敌人间弹跳的激光。满级：觉醒【虚空死光】！', icon: '⚡' },
+        { id: 'orbital', name: '天基轨道炮', desc: '延迟轰炸标记区域。满级：觉醒【歼星巨炮】！', icon: '🛰️' },
+        { id: 'xp_scroll', name: '经验卷轴', desc: '获得更多经验。满级：升级狂魔！', icon: '✨' },
+        { id: 'vampire', name: '吸血鬼牙齿', desc: '打怪概率回血。满级：化身德古拉！', icon: '🧛' },
+        { id: 'frost', name: '冰霜法杖', desc: '爆出冰环减速敌人。满级：绝对零度！', icon: '🧊' },
+        { id: 'drone', name: '战斗无人机', desc: '召唤僚机自动攻击。满级：天启机甲！', icon: '🚁' },
+        { id: 'axe', name: '斩骨斧', desc: '抛出高伤害斧头。满级：刑天战斧！', icon: '🪓' },
+        { id: 'molotov', name: '燃烧瓶', desc: '留下火区。满级：觉醒【幽冥地火】！', icon: '🍾' },
+        { id: 'boomerang', name: '回旋镖', desc: '飞出并返回伤害。满级：觉醒【磁爆回旋刃】！', icon: '🪃' },
+        { id: 'missile', name: '追踪导弹', desc: '自动寻找敌人。满级：觉醒【末日核弹】！', icon: '🚀' },
+        { id: 'blackhole', name: '引力发生器', desc: '微型黑洞聚怪。满级：觉醒【湮灭奇点】！', icon: '🌌' },
+        { id: 'crit', name: '暴击眼镜', desc: '增加暴击率与暴伤。满级：招招致命！', icon: '👓' },
+        { id: 'dmg', name: '肌肉强化', desc: '增加伤害。满级：伤害爆炸翻倍！', icon: '💪' },
+        { id: 'speed', name: '快手', desc: '提高射速。满级：加特林射速！', icon: '⚡' },
+        { id: 'pierce', name: '穿甲弹', desc: '增加穿透。满级：额外+5次穿透！', icon: '🏹' },
+        { id: 'aura', name: '能量光环', desc: '护体光环。满级：觉醒【地狱火领域】！', icon: '☀️' },
+        { id: 'heal', name: '急救包', desc: '恢复生命。满级：血量大增并回满！', icon: '❤️' },
+        { id: 'multishot', name: '散弹枪', desc: '增加多重射击。满级：觉醒【虚空等离子】！', icon: '🔫' },
+        { id: 'lightning', name: '雷电发射器', desc: '降下落雷。满级：觉醒【天劫神雷】！', icon: '🌩️' },
+        { id: 'guardian', name: '守卫者', desc: '召唤旋转飞刃。满级：觉醒【黄金轮锯】！', icon: '⚙️' },
+        { id: 'magnet', name: '强力磁铁', desc: '增加拾取范围。满级：全屏吸收！', icon: '🧲' },
+        { id: 'movespeed', name: '运动鞋', desc: '提升移速。满级：凌波微步！', icon: '👟' },
+        { id: 'maxhp', name: '健身指南', desc: '增加最大生命。满级：血牛降世！', icon: '📘' }
+    ];
+
+    // --- 玩家与敌人实体 ---
+    class Player {
+        constructor() {
+            this.x = 0; this.y = 0; this.radius = 15; this.speed = 250; this.color = '#4ea8de';
+            this.maxHp = 100; this.hp = 100; this.level = 1; this.xp = 0; this.xpNeeded = 50;
+            this.damageMultiplier = 1; this.fireRateMultiplier = 1;
+            
+            this.critChance = 0.0; this.critMultiplier = 1.5; 
+            this.xpMultiplier = 1.0; this.lifestealChance = 0.0; this.lifestealAmount = 1;
+            this.lastDirAngle = 0;
+
+            this.hasKatana = false; this.katanaTimer = 0; this.katanaCooldown = 2.0; this.katanaDamage = 50; this.katanaRadius = 120;
+            this.hasPoison = false; this.poisonTimer = 0; this.poisonCooldown = 3.5; this.poisonDamage = 15; this.poisonCount = 1;
+            this.hasShield = false; this.shieldCount = 0; this.shieldMax = 1; this.shieldRegenTimer = 0; this.shieldRegenRate = 15.0; 
+            this.invulTimer = 0; 
+            this.hasLaser = false; this.laserTimer = 0; this.laserCooldown = 1.5; this.laserDamage = 30; this.laserBounces = 2;
+            this.hasOrbital = false; this.orbitalTimer = 0; this.orbitalCooldown = 5.0; this.orbitalDamage = 150; this.orbitalRadius = 80;
+
+            this.baseFireCooldown = 0.8; this.fireTimer = 0; this.bulletSpeed = 400; this.bulletDamage = 25; this.bulletPierce = 1; this.projectileCount = 1;
+            this.hasAura = false; this.auraRadius = 80; this.auraDamage = 10; this.auraTickRate = 0.5; this.auraTimer = 0;
+            this.hasLightning = false; this.lightningTimer = 0; this.lightningDamage = 50; this.lightningBaseCooldown = 1.2; this.lightningTargets = 1;
+            this.guardianCount = 0; this.guardianAngle = 0;
+            this.hasMolotov = false; this.molotovTimer = 0; this.molotovBaseCooldown = 3.0; this.molotovRadius = 60; this.molotovDamage = 15; this.molotovCount = 1;
+            this.hasBoomerang = false; this.boomerangTimer = 0; this.boomerangBaseCooldown = 2.5; this.boomerangDamage = 40; this.boomerangCount = 1;
+            this.hasMissile = false; this.missileTimer = 0; this.missileBaseCooldown = 2.0; this.missileDamage = 60; this.missileRadius = 50; this.missileCount = 1;
+            this.hasBlackhole = false; this.blackholeTimer = 0; this.blackholeBaseCooldown = 8.0; this.blackholeDamage = 20; this.blackholeRadius = 80;
+            this.hasFrost = false; this.frostTimer = 0; this.frostCooldown = 4.0; this.frostRadius = 150; this.frostDamage = 20;
+            this.hasDrone = false; this.droneCount = 0; this.droneAngle = 0; this.droneFireTimer = 0; this.droneDamage = 15;
+            this.hasAxe = false; this.axeTimer = 0; this.axeCooldown = 2.0; this.axeDamage = 40; this.axeCount = 1;
+
+            this.pickupRange = 80; 
+            this.upgrades = {}; this.trail = [];
+
+            if (currentMode === 'rampage') { this.speed = 350; this.fireRateMultiplier = 2; this.pickupRange = 150; }
+        }
+
+        calcDamage(baseDamage) {
+            let dmg = baseDamage * this.damageMultiplier; let isCrit = Math.random() < this.critChance;
+            if (isCrit) dmg *= this.critMultiplier; return { dmg: dmg, isCrit: isCrit };
+        }
+
+        update(dt) {
+            if (this.invulTimer > 0) this.invulTimer -= dt;
+
+            let dx = 0, dy = 0;
+            if (joyActive) { dx = joyDx; dy = joyDy; } 
+            else {
+                if (keys.w || keys.ArrowUp) dy -= 1; if (keys.s || keys.ArrowDown) dy += 1;
+                if (keys.a || keys.ArrowLeft) dx -= 1; if (keys.d || keys.ArrowRight) dx += 1;
+                if (dx !== 0 && dy !== 0) { const len = Math.sqrt(dx * dx + dy * dy); dx /= len; dy /= len; }
+            }
+            if (dx !== 0 || dy !== 0) this.lastDirAngle = Math.atan2(dy, dx);
+
+            this.x += dx * this.speed * dt; this.y += dy * this.speed * dt;
+
+            if (this.level >= 20 && (dx !== 0 || dy !== 0)) {
+                this.trail.push({ x: this.x, y: this.y, life: 1.0 });
+                if (this.trail.length > 15) this.trail.shift();
+            }
+            this.trail.forEach(t => t.life -= dt * 3); this.trail = this.trail.filter(t => t.life > 0);
+
+            if (this.hasShield && this.shieldCount < this.shieldMax) {
+                this.shieldRegenTimer -= dt;
+                if (this.shieldRegenTimer <= 0) { this.shieldCount++; this.shieldRegenTimer = this.shieldRegenRate; }
+            }
+
+            if (this.hasKatana) {
+                this.katanaTimer -= dt;
+                if (this.katanaTimer <= 0) {
+                    this.katanaTimer = this.katanaCooldown / this.fireRateMultiplier;
+                    const isAwakened = (this.upgrades['katana'] || 0) >= 5;
+                    slashes.push(new Slash(this.x, this.y, this.lastDirAngle, this.katanaRadius, this.katanaDamage, isAwakened));
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasPoison) {
+                this.poisonTimer -= dt;
+                if (this.poisonTimer <= 0) {
+                    this.poisonTimer = this.poisonCooldown / this.fireRateMultiplier;
+                    const isAwakened = (this.upgrades['poison'] || 0) >= 5;
+                    for(let i=0; i<this.poisonCount; i++) {
+                        const px = this.x + (Math.random() * 300 - 150); const py = this.y + (Math.random() * 300 - 150);
+                        damageZones.push(new DamageZone(px, py, 70, this.poisonDamage * this.damageMultiplier, isAwakened ? 'plague' : 'poison'));
+                    }
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasLaser) {
+                this.laserTimer -= dt;
+                if (this.laserTimer <= 0) {
+                    this.laserTimer = this.laserCooldown / this.fireRateMultiplier;
+                    const isAwakened = (this.upgrades['laser'] || 0) >= 5;
+                    if (enemies.length > 0) {
+                        let pts = [{x: this.x, y: this.y}]; let currentPos = {x: this.x, y: this.y};
+                        let hitSet = new Set(); let jumps = isAwakened ? 15 : this.laserBounces; let currentDamage = this.laserDamage;
+                        for(let jump=0; jump<jumps; jump++) {
+                            let bestTarget = null; let minDist = Infinity;
+                            for(let e of enemies) {
+                                if (hitSet.has(e)) continue;
+                                const dist = Math.hypot(e.x - currentPos.x, e.y - currentPos.y);
+                                if (dist < 400 && dist < minDist) { minDist = dist; bestTarget = e; }
+                            }
+                            if (bestTarget) {
+                                pts.push({x: bestTarget.x, y: bestTarget.y});
+                                const dmgInfo = this.calcDamage(currentDamage); bestTarget.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                                hitSet.add(bestTarget); currentPos = bestTarget;
+                                if (isAwakened) currentDamage *= 1.2; 
+                            } else break;
+                        }
+                        if (pts.length > 1) { laserLines.push(new LaserLine(pts, isAwakened)); soundManager.playShoot(); }
+                    }
+                }
+            }
+
+            if (this.hasOrbital) {
+                this.orbitalTimer -= dt;
+                if (this.orbitalTimer <= 0) {
+                    this.orbitalTimer = this.orbitalCooldown;
+                    const isAwakened = (this.upgrades['orbital'] || 0) >= 5;
+                    if (enemies.length > 0) {
+                        const target = enemies[Math.floor(Math.random() * enemies.length)];
+                        orbitals.push(new OrbitalWarning(target.x, target.y, this.orbitalRadius, this.orbitalDamage, isAwakened));
+                        soundManager.playShoot();
+                    }
+                }
+            }
+
+            this.fireTimer -= dt;
+            if (this.fireTimer <= 0) { this.shootNearest(); this.fireTimer = this.baseFireCooldown / this.fireRateMultiplier; }
+
+            if (this.hasFrost) {
+                this.frostTimer -= dt;
+                if (this.frostTimer <= 0) {
+                    this.frostTimer = this.frostCooldown; const isAwakened = (this.upgrades['frost'] || 0) >= 5;
+                    const dmgInfo = this.calcDamage(this.frostDamage);
+                    for (let e of enemies) {
+                        if (Math.hypot(e.x - this.x, e.y - this.y) < this.frostRadius + e.radius) {
+                            e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); e.slowTimer = isAwakened ? 5.0 : 2.5; e.speedMultiplier = isAwakened ? 0.1 : 0.5; 
+                        }
+                    }
+                    effects.push(new Explosion(this.x, this.y, this.frostRadius, false, 'ice')); soundManager.playShoot();
+                }
+            }
+
+            if (this.hasDrone) {
+                this.droneAngle += 2 * dt; this.droneFireTimer -= dt;
+                if (this.droneFireTimer <= 0) {
+                    this.droneFireTimer = 0.5 / this.fireRateMultiplier; const isAwakened = (this.upgrades['drone'] || 0) >= 5;
+                    let nearestEnemy = null; let minDistance = Infinity;
+                    for (let enemy of enemies) { const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y); if (dist < minDistance) { minDistance = dist; nearestEnemy = enemy; } }
+                    if (nearestEnemy && minDistance < 600) {
+                        const distRadius = 60;
+                        for(let i=0; i<this.droneCount; i++) {
+                            const angle = this.droneAngle + (Math.PI * 2 / this.droneCount) * i;
+                            const dx = this.x + Math.cos(angle) * distRadius; const dy = this.y + Math.sin(angle) * distRadius;
+                            const targetAngle = Math.atan2(nearestEnemy.y - dy, nearestEnemy.x - dx);
+                            bullets.push(new Bullet(dx, dy, targetAngle, 800, this.droneDamage * this.damageMultiplier, 1, isAwakened));
+                        }
+                        soundManager.playShoot();
+                    }
+                }
+            }
+
+            if (this.hasAxe) {
+                this.axeTimer -= dt;
+                if (this.axeTimer <= 0) {
+                    this.axeTimer = this.axeCooldown / this.fireRateMultiplier; const isAwakened = (this.upgrades['axe'] || 0) >= 5;
+                    for(let i=0; i<this.axeCount; i++) {
+                        const vx = (Math.random() - 0.5) * 400; const vy = -600 - Math.random() * 200; 
+                        axes.push(new Axe(this.x, this.y, vx, vy, this.axeDamage * this.damageMultiplier, isAwakened));
+                    }
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasMissile) {
+                this.missileTimer -= dt;
+                if (this.missileTimer <= 0) {
+                    this.missileTimer = this.missileBaseCooldown / this.fireRateMultiplier; const isAwakened = (this.upgrades['missile'] || 0) >= 5;
+                    const mCount = isAwakened ? this.missileCount + 1 : this.missileCount;
+                    for(let i=0; i<mCount; i++) { missiles.push(new Missile(this.x, this.y, this.missileDamage, this.missileRadius, isAwakened)); }
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasBlackhole) {
+                this.blackholeTimer -= dt;
+                if (this.blackholeTimer <= 0) {
+                    this.blackholeTimer = this.blackholeBaseCooldown; const isAwakened = (this.upgrades['blackhole'] || 0) >= 5;
+                    const bx = this.x + (Math.random() * 400 - 200); const by = this.y + (Math.random() * 400 - 200);
+                    blackHoles.push(new BlackHole(bx, by, this.blackholeRadius, this.blackholeDamage, isAwakened)); soundManager.playShoot();
+                }
+            }
+
+            if (this.hasMolotov) {
+                this.molotovTimer -= dt;
+                if (this.molotovTimer <= 0) {
+                    this.molotovTimer = this.molotovBaseCooldown;
+                    if (enemies.length > 0) {
+                        const isAwakened = (this.upgrades['molotov'] || 0) >= 5;
+                        let throwCount = isAwakened ? this.molotovCount : Math.min(this.molotovCount, enemies.length);
+                        for(let i=0; i<throwCount; i++) {
+                            const target = enemies[Math.floor(Math.random() * enemies.length)]; const zoneType = isAwakened ? 'blueFire' : 'fire';
+                            damageZones.push(new DamageZone(target.x + (Math.random()*60-30), target.y + (Math.random()*60-30), this.molotovRadius, this.molotovDamage * this.damageMultiplier, zoneType));
+                        }
+                        soundManager.playShoot();
+                    }
+                }
+            }
+
+            if (this.hasBoomerang) {
+                this.boomerangTimer -= dt;
+                if (this.boomerangTimer <= 0) {
+                    this.boomerangTimer = this.boomerangBaseCooldown; const isAwakened = (this.upgrades['boomerang'] || 0) >= 5;
+                    const bCount = isAwakened ? 6 : this.boomerangCount;
+                    for(let i=0; i<bCount; i++) {
+                        const angle = (Math.PI * 2 / bCount) * i + gameTime;
+                        boomerangs.push(new Boomerang(this.x, this.y, angle, 600, this.boomerangDamage, 12, isAwakened));
+                    }
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasAura) {
+                this.auraTimer -= dt;
+                if (this.auraTimer <= 0) { this.applyAuraDamage(); this.auraTimer = this.auraTickRate; }
+            }
+
+            if (this.hasLightning) {
+                this.lightningTimer -= dt;
+                if (this.lightningTimer <= 0) {
+                    this.lightningTimer = this.lightningBaseCooldown;
+                    if (enemies.length > 0) {
+                        const isAwakened = (this.upgrades['lightning'] || 0) >= 5; let targetsToHit = Math.min(this.lightningTargets, enemies.length);
+                        for(let i = 0; i < targetsToHit; i++) {
+                            const target = enemies[Math.floor(Math.random() * enemies.length)]; const dmgInfo = this.calcDamage(this.lightningDamage);
+                            target.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); effects.push(new Effect(this.x, this.y - 300, target.x, target.y, isAwakened));
+                            if (isAwakened) damageZones.push(new DamageZone(target.x, target.y, 80, this.lightningDamage * this.damageMultiplier, 'lightning'));
+                        }
+                        soundManager.playShoot();
+                    }
+                }
+            }
+
+            if (this.guardianCount > 0) {
+                const isAwakened = (this.upgrades['guardian'] || 0) >= 5; const rotSpeed = isAwakened ? 6 : 3; this.guardianAngle += rotSpeed * dt;
+                const distRadius = isAwakened ? 110 : 70; 
+                for (let i = 0; i < this.guardianCount; i++) {
+                    const angle = this.guardianAngle + (Math.PI * 2 / this.guardianCount) * i;
+                    const gx = this.x + Math.cos(angle) * distRadius; const gy = this.y + Math.sin(angle) * distRadius; const hitRadius = isAwakened ? 25 : 10;
+                    for (let e of enemies) {
+                        if (Math.hypot(e.x - gx, e.y - gy) < e.radius + hitRadius) { const dmgInfo = this.calcDamage(isAwakened ? 30 : 15); e.takeDamage(dmgInfo.dmg * dt * 30, dmgInfo.isCrit); }
+                    }
+                }
+            }
+        }
+
+        draw() {
+            if (this.level >= 20) {
+                this.trail.forEach((t, i) => {
+                    ctx.beginPath(); ctx.arc(t.x, t.y, this.radius - 2, 0, Math.PI * 2);
+                    const hue = (gameTime * 200 + i * 20) % 360; ctx.fillStyle = `hsla(${hue}, 100%, 60%, ${t.life * 0.4})`; ctx.fill();
+                });
+            }
+
+            if (this.hasAura) {
+                const isAwakened = (this.upgrades['aura'] || 0) >= 5;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.auraRadius, 0, Math.PI * 2);
+                if (isAwakened) {
+                    const pulse = 1 + Math.sin(gameTime * 15) * 0.05; ctx.arc(this.x, this.y, this.auraRadius * pulse, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(217, 4, 41, 0.3)'; ctx.strokeStyle = 'rgba(239, 35, 60, 0.8)'; ctx.lineWidth = 4;
+                } else {
+                    ctx.fillStyle = 'rgba(255, 200, 0, 0.2)'; ctx.strokeStyle = 'rgba(255, 200, 0, 0.5)'; ctx.lineWidth = 2;
+                }
+                ctx.fill(); ctx.stroke();
+            }
+
+            if (this.level >= 40) {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(gameTime * -1); 
+                ctx.beginPath(); for(let i=0; i<12; i++) { const a = (Math.PI * 2 / 12) * i; ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 120, Math.sin(a) * 120); }
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.beginPath(); for(let i=0; i<8; i++) { const a = (Math.PI * 2 / 8) * i; ctx.lineTo(Math.cos(a) * 90, Math.sin(a) * 90); }
+                ctx.closePath(); ctx.strokeStyle = 'rgba(0, 245, 212, 0.5)'; ctx.lineWidth = 4; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, 100, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 1; ctx.stroke();
+                ctx.restore();
+            }
+
+            if (this.hasDrone) {
+                const distRadius = 60;
+                for(let i=0; i<this.droneCount; i++) {
+                    const angle = this.droneAngle + (Math.PI * 2 / this.droneCount) * i; const dx = this.x + Math.cos(angle) * distRadius; const dy = this.y + Math.sin(angle) * distRadius;
+                    const isAwakened = (this.upgrades['drone'] || 0) >= 5;
+                    ctx.save(); ctx.translate(dx, dy); ctx.rotate(angle);
+                    if (isAwakened) {
+                        ctx.fillStyle = '#2b2d42'; ctx.fillRect(-8, -8, 16, 16); ctx.fillStyle = (gameTime * 5 % 2 < 1) ? '#ef233c' : '#4cc9f0'; ctx.beginPath(); ctx.arc(0, -5, 3, 0, Math.PI*2); ctx.fill();
+                    } else {
+                        ctx.fillStyle = '#8d99ae'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#edf2f4'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            }
+
+            if (this.guardianCount > 0) {
+                const isAwakened = (this.upgrades['guardian'] || 0) >= 5; const distRadius = isAwakened ? 110 : 70;
+                for (let i = 0; i < this.guardianCount; i++) {
+                    const angle = this.guardianAngle + (Math.PI * 2 / this.guardianCount) * i; const gx = this.x + Math.cos(angle) * distRadius; const gy = this.y + Math.sin(angle) * distRadius;
+                    ctx.save(); ctx.translate(gx, gy);
+                    if (isAwakened) {
+                        ctx.rotate(gameTime * 15); ctx.beginPath();
+                        for(let j=0; j<8; j++) { ctx.lineTo(20 * Math.cos(j * Math.PI/4), 20 * Math.sin(j * Math.PI/4)); ctx.lineTo(12 * Math.cos((j+0.5) * Math.PI/4), 12 * Math.sin((j+0.5) * Math.PI/4)); }
+                        ctx.closePath(); ctx.fillStyle = '#ffd166'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+                        ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fillStyle = '#ef233c'; ctx.fill();
+                    } else { ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fillStyle = '#f15bb5'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
+                    ctx.restore();
+                }
+            }
+
+            if (this.level >= 30) {
+                const orbRadius = 45; const colors = ['#ff5c77', '#4cc9f0', '#fee440', '#80ed99']; 
+                for(let i=0; i<4; i++) {
+                    const angle = gameTime * 3 + (Math.PI / 2) * i; const ox = this.x + Math.cos(angle) * orbRadius; const oy = this.y + Math.sin(angle) * orbRadius;
+                    ctx.beginPath(); ctx.arc(ox, oy, 6, 0, Math.PI*2); ctx.fillStyle = colors[i]; ctx.fill();
+                }
+            }
+
+            if (this.hasShield && this.shieldCount > 0) {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI*2);
+                ctx.strokeStyle = `rgba(0, 245, 212, ${0.5 + Math.sin(gameTime*5)*0.2})`; ctx.lineWidth = 3; ctx.stroke();
+                ctx.fillStyle = 'rgba(0, 245, 212, 0.1)'; ctx.fill();
+                if (this.shieldCount > 1) { ctx.fillStyle = '#fff'; ctx.font = '12px Arial'; ctx.fillText(this.shieldCount, this.x + 15, this.y - 15); }
+            }
+
+            ctx.save(); ctx.translate(this.x, this.y);
+            if (this.invulTimer > 0 && Math.floor(gameTime * 20) % 2 === 0) {
+            } else if (this.level >= 40) {
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.shadowBlur = 30; ctx.shadowColor = '#ffffff';
+            } else if (this.level >= 20) {
+                ctx.rotate(gameTime * 3);
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath(); ctx.ellipse(0, 0, this.radius + 15, this.radius + 5, (i * Math.PI) / 3, 0, Math.PI * 2);
+                    const hue = (gameTime * 150 + i * 40) % 360; ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`; ctx.lineWidth = 3; ctx.stroke();
+                }
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 20; ctx.shadowColor = '#00f5d4';
+            } else if (this.level >= 10) {
+                ctx.rotate(gameTime * 2); ctx.beginPath();
+                for (let i = 0; i < 6; i++) { ctx.moveTo(0, 0); ctx.lineTo(28, 0); ctx.rotate(Math.PI / 3); }
+                ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 4; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2); ctx.fillStyle = '#ffd166'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.stroke();
+            } else if (this.level >= 5) {
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 3, 0, Math.PI * 2); ctx.fillStyle = '#9b5de5'; ctx.fill(); ctx.strokeStyle = '#00f5d4'; ctx.lineWidth = 3; ctx.stroke();
+            } else {
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+            }
+            ctx.restore();
+
+            const hpWidth = 40; const hpRatio = this.hp / this.maxHp;
+            ctx.fillStyle = 'red'; ctx.fillRect(this.x - hpWidth/2, this.y - this.radius - 20, hpWidth, 5);
+            ctx.fillStyle = '#0f0'; ctx.fillRect(this.x - hpWidth/2, this.y - this.radius - 20, hpWidth * hpRatio, 5);
+        }
+
+        shootNearest() {
+            if (enemies.length === 0) return; let nearestEnemy = null, minDistance = Infinity;
+            for (let enemy of enemies) { const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y); if (dist < minDistance) { minDistance = dist; nearestEnemy = enemy; } }
+            if (nearestEnemy && minDistance < 600) {
+                const baseAngle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+                const spread = 0.2; const isAwakened = (this.upgrades['multishot'] || 0) >= 5;
+                for(let i = 0; i < this.projectileCount; i++) {
+                    const angleOffset = (i - (this.projectileCount - 1) / 2) * spread;
+                    bullets.push(new Bullet(this.x, this.y, baseAngle + angleOffset, isAwakened ? this.bulletSpeed * 1.5 : this.bulletSpeed, isAwakened ? this.bulletDamage * 2 : this.bulletDamage, isAwakened ? 999 : this.bulletPierce, isAwakened));
+                }
+                soundManager.playShoot();
+            }
+        }
+
+        applyAuraDamage() {
+            for (let enemy of enemies) {
+                if (Math.hypot(enemy.x - this.x, enemy.y - this.y) < this.auraRadius + enemy.radius) {
+                    const dmgInfo = this.calcDamage(this.auraDamage); enemy.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                }
+            }
+        }
+
+        gainXp(amount) {
+            this.xp += amount * this.xpMultiplier;
+            while (this.xp >= this.xpNeeded) {
+                this.xp -= this.xpNeeded; this.level++;
+                if (currentMode === 'rampage') { this.xpNeeded = Math.floor(this.xpNeeded * 1.15) + 50; } else { this.xpNeeded = Math.floor(this.xpNeeded * 1.3) + 20; }
+                if (this.level === 20 || this.level === 30 || this.level === 40) soundManager.playAwaken(); else soundManager.playLevelUp();
+                triggerLevelUp();
+            }
+            updateHUD();
+        }
+
+        takeDamage(amount) {
+            if (this.invulTimer > 0) return; 
+            if (this.hasShield && this.shieldCount > 0) {
+                this.shieldCount--; this.invulTimer = 1.0; 
+                if ((this.upgrades['shield'] || 0) >= 5) {
+                    effects.push(new Explosion(this.x, this.y, 200, false, 'ice')); soundManager.playAwaken();
+                    const dmgInfo = this.calcDamage(100);
+                    for(let e of enemies) {
+                        if(Math.hypot(e.x-this.x, e.y-this.y) < 200) {
+                            e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                            const angle = Math.atan2(e.y - this.y, e.x - this.x); e.x += Math.cos(angle) * 100; e.y += Math.sin(angle) * 100;
+                        }
+                    }
+                }
+                return;
+            }
+            this.hp -= amount; this.invulTimer = 0.2; 
+            if (this.hp <= 0) { this.hp = 0; gameOver(); }
+        }
+    }
+
+    class Enemy {
+        constructor(x, y, type = 'normal') {
+            this.x = x; this.y = y;
+            const timeScaling = 1 + (gameTime / 60) * 1.5; const dmgScaling = 1 + (gameTime / 120);
+            this.isElite = false; this.isBoss = false;
+
+            if (type === 'fast') {
+                this.radius = 10; this.speed = 180; this.hp = 20 * timeScaling; this.color = '#f72585'; this.damage = 5 * dmgScaling; this.xpValue = 15;
+            } else if (type === 'tank') {
+                this.radius = 25; this.speed = 60; this.hp = 150 * timeScaling; this.color = '#7209b7'; this.damage = 20 * dmgScaling; this.xpValue = 50;
+            } else if (type === 'elite') {
+                this.radius = 20; this.speed = 110; this.hp = 300 * timeScaling; this.color = '#fca311'; this.damage = 25 * dmgScaling; this.xpValue = 100; this.isElite = true;
+            } else if (type === 'boss') {
+                this.radius = 50; this.speed = 70; this.hp = 2500 * timeScaling; this.color = '#d90429'; this.damage = 40 * dmgScaling; this.xpValue = 500; this.isBoss = true;
+            } else { 
+                this.radius = 14; this.speed = 100; this.hp = 40 * timeScaling; this.color = '#e63946'; this.damage = 10 * dmgScaling; this.xpValue = 10;
+            }
+
+            if (currentMode === 'rampage') { this.speed *= 1.4; this.damage *= 1.5; this.hp *= 1.2; this.xpValue = Math.floor(this.xpValue * 1.5); }
+            this.markedForDeletion = false; this.slowTimer = 0; this.speedMultiplier = 1.0; this.isPlagued = false; 
+        }
+
+        update(dt) {
+            if (this.slowTimer > 0) { this.slowTimer -= dt; } else { this.speedMultiplier = 1.0; }
+            const angle = Math.atan2(player.y - this.y, player.x - this.x); const actualSpeed = this.speed * this.speedMultiplier;
+            this.x += Math.cos(angle) * actualSpeed * dt; this.y += Math.sin(angle) * actualSpeed * dt;
+
+            if (Math.hypot(player.x - this.x, player.y - this.y) < this.radius + player.radius) {
+                player.takeDamage(this.damage * dt); this.x -= Math.cos(angle) * 2; this.y -= Math.sin(angle) * 2;
+            }
+        }
+
+        draw() {
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = this.color; ctx.fill(); ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 2; ctx.stroke();
+            if (this.slowTimer > 0) { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0, 191, 255, 0.4)'; ctx.fill(); }
+            if (this.isPlagued) { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = 'rgba(114, 9, 183, 0.4)'; ctx.fill(); }
+        }
+
+        takeDamage(amount, isCrit = false) {
+            this.hp -= amount;
+            if (isCrit) { floatingTexts.push(new FloatingText(this.x, this.y, "Crit! " + Math.round(amount), '#ff5c77', true)); soundManager.playCrit(); } 
+            else { floatingTexts.push(new FloatingText(this.x, this.y, Math.round(amount), '#fff', false)); soundManager.playHit(); }
+            
+            const knockback = this.isBoss ? 0.5 : (this.isElite ? 2 : 5); const angle = Math.atan2(this.y - player.y, this.x - player.x);
+            this.x += Math.cos(angle) * knockback; this.y += Math.sin(angle) * knockback;
+
+            if (this.hp <= 0 && !this.markedForDeletion) {
+                this.markedForDeletion = true; killCount++;
+                
+                if (player.lifestealChance > 0 && Math.random() < player.lifestealChance) {
+                    player.hp = Math.min(player.maxHp, player.hp + player.lifestealAmount);
+                    floatingTexts.push(new FloatingText(player.x, player.y - 20, "+" + player.lifestealAmount, '#80ed99'));
+                }
+
+                if (this.isPlagued) {
+                    effects.push(new Explosion(this.x, this.y, 80, true, 'poison'));
+                    const dmgInfo = player.calcDamage(player.poisonDamage * 3);
+                    for(let e of enemies) { if(Math.hypot(e.x - this.x, e.y - this.y) < 80) e.takeDamage(dmgInfo.dmg, false); }
+                }
+                
+                if (this.isElite || this.isBoss) {
+                    chests.push(new Chest(this.x, this.y));
+                    if (this.isBoss) { for(let i=0; i<10; i++) gems.push(new Gem(this.x + Math.random()*60-30, this.y + Math.random()*60-30, 50)); }
+                } else { gems.push(new Gem(this.x, this.y, this.xpValue)); }
+            }
+        }
+    }
+
+    // --- 游戏循环与系统逻辑 ---
+
     const camera = { x: 0, y: 0 };
     let player;
-    let enemies = [];
-    let bullets = [];
-    let boomerangs = []; // 新增回旋镖数组
-    let gems = [];
-    let chests = []; 
-    let floatingTexts = [];
-    let effects = []; 
-    let damageZones = []; 
-    let spawnTimer = 0;
-    let spawnInterval = 1.5; 
-    let eliteTimer = 20; 
-    let lastBossMinute = 0; 
+    let enemies = []; let bullets = []; let boomerangs = []; let missiles = []; let blackHoles = []; let axes = []; let slashes = []; let laserLines = []; let orbitals = [];
+    let gems = []; let chests = []; let floatingTexts = []; let effects = []; let damageZones = []; 
+    let spawnTimer = 0; let spawnInterval = 1.5; let eliteTimer = 20; let lastBossMinute = 0; 
 
     function saveScore() {
         let scores = JSON.parse(localStorage.getItem('survivor_leaderboard')) || [];
         scores.push({ time: gameTime, kills: killCount, mode: currentMode === 'rampage' ? '狂暴' : '经典' });
-        scores.sort((a, b) => b.time - a.time || b.kills - a.kills);
-        scores = scores.slice(0, 8);
+        scores.sort((a, b) => b.time - a.time || b.kills - a.kills); scores = scores.slice(0, 8);
         localStorage.setItem('survivor_leaderboard', JSON.stringify(scores));
     }
 
     function showLeaderboard() {
         startPanel.style.display = 'none'; gameoverPanel.style.display = 'none'; leaderboardPanel.style.display = 'block';
-        const list = document.getElementById('leaderboard-list');
-        let scores = JSON.parse(localStorage.getItem('survivor_leaderboard')) || [];
+        const list = document.getElementById('leaderboard-list'); let scores = JSON.parse(localStorage.getItem('survivor_leaderboard')) || [];
         if (scores.length === 0) { list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">暂无记录</td></tr>'; return; }
         list.innerHTML = scores.map((s, index) => `
             <tr style="border-bottom: 1px solid #4a4e69; line-height: 2.5;">
@@ -993,222 +1346,226 @@
     }
     function hideLeaderboard() { leaderboardPanel.style.display = 'none'; startPanel.style.display = 'block'; }
 
+    // --- GM 调试模式专用逻辑 ---
+    function openGM() {
+        if(gameState !== 'playing') return;
+        gameState = 'paused'; soundManager.stopBGM(); resetInput();
+        renderGMList();
+        gmPanel.style.display = 'block'; gmBtn.style.display = 'none'; settingsBtn.style.display = 'none'; joystickZone.style.display = 'none';
+    }
+
+    function closeGM() {
+        gmPanel.style.display = 'none'; gmBtn.style.display = 'block'; settingsBtn.style.display = 'block'; joystickZone.style.display = 'block';
+        gameState = 'playing'; lastTime = performance.now(); soundManager.startBGM(); requestAnimationFrame(gameLoop);
+    }
+
+    function renderGMList() {
+        gmBuffList.innerHTML = '';
+        possibleUpgrades.forEach(u => {
+            const lvl = player.upgrades[u.id] || 0;
+            const isMax = lvl >= 5;
+            gmBuffList.innerHTML += `
+                <div class="gm-row">
+                    <span>${u.icon} ${u.name} <span style="color:${isMax?'#ef233c':'#ffd166'}">Lv.${lvl}</span></span>
+                    <div class="gm-actions">
+                        <button onclick="gmUpgradeBuff('${u.id}', false)" ${isMax?'disabled':''}>+1</button>
+                        <button class="max" onclick="gmUpgradeBuff('${u.id}', true)" ${isMax?'disabled':''}>MAX</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function gmUpgradeBuff(id, toMax) {
+        const currentLvl = player.upgrades[id] || 0;
+        const times = toMax ? (5 - currentLvl) : 1;
+        for(let i=0; i<times; i++) grantBuffLogic(id);
+        renderGMList(); // 刷新GM列表展示
+        updateHUD(); 
+    }
+
+    function gmSetLevel(targetLvl) {
+        while(player.level < targetLvl) {
+            player.level++;
+            // 触发等级专属的外观觉醒音效
+            if (player.level === 20 || player.level === 30 || player.level === 40) soundManager.playAwaken();
+        }
+        updateHUD();
+    }
+
     function openSettings() {
         if(gameState !== 'playing') return;
         gameState = 'paused'; soundManager.stopBGM(); resetInput();
-        
         currentBuffsList.innerHTML = '';
-        if (Object.keys(player.upgrades).length === 0) {
-            currentBuffsList.innerHTML = '<div style="color:#aaa; font-style:italic;">目前一穷二白，啥也没捞着</div>';
-        } else {
+        if (Object.keys(player.upgrades).length === 0) { currentBuffsList.innerHTML = '<div style="color:#aaa; font-style:italic;">目前一穷二白，啥也没捞着</div>'; } 
+        else {
             for (let [id, level] of Object.entries(player.upgrades)) {
                 const buffInfo = possibleUpgrades.find(u => u.id === id);
                 if(buffInfo) {
                     const isMax = level >= 5;
-                    currentBuffsList.innerHTML += `
-                        <div class="buff-item ${isMax ? 'maxed' : ''}">
-                            <span class="buff-item-name">${buffInfo.icon} ${buffInfo.name}</span>
-                            <span class="buff-item-lvl ${isMax ? 'max-text' : ''}">${isMax ? 'MAX 👑' : `Lv.${level}`}</span>
-                        </div>
-                    `;
+                    currentBuffsList.innerHTML += `<div class="buff-item ${isMax ? 'maxed' : ''}"><span class="buff-item-name">${buffInfo.icon} ${buffInfo.name}</span><span class="buff-item-lvl ${isMax ? 'max-text' : ''}">${isMax ? 'MAX 👑' : `Lv.${level}`}</span></div>`;
                 }
             }
         }
-        
-        settingsPanel.style.display = 'block'; settingsBtn.style.display = 'none'; joystickZone.style.display = 'none';
+        settingsPanel.style.display = 'block'; settingsBtn.style.display = 'none'; gmBtn.style.display = 'none'; joystickZone.style.display = 'none';
     }
 
     function resumeGame() {
-        settingsPanel.style.display = 'none'; settingsBtn.style.display = 'block'; joystickZone.style.display = 'block';
+        settingsPanel.style.display = 'none'; settingsBtn.style.display = 'block'; 
+        if (currentMode === 'debug') gmBtn.style.display = 'block';
+        joystickZone.style.display = 'block';
         gameState = 'playing'; lastTime = performance.now(); soundManager.startBGM(); requestAnimationFrame(gameLoop);
     }
     function forceEndGame() { settingsPanel.style.display = 'none'; player.hp = 0; gameOver(); }
 
     function startGame(mode = 'classic') {
         currentMode = mode; resetInput(); player = new Player();
-        enemies = []; bullets = []; boomerangs = []; gems = []; chests = []; floatingTexts = []; effects = []; damageZones = [];
-        gameTime = 0; killCount = 0; spawnInterval = 1.5; 
-        eliteTimer = 20; lastBossMinute = 0;
+        enemies = []; bullets = []; boomerangs = []; missiles = []; blackHoles = []; axes = []; slashes = []; laserLines = []; orbitals = [];
+        gems = []; chests = []; floatingTexts = []; effects = []; damageZones = [];
+        gameTime = 0; killCount = 0; spawnInterval = 1.5; eliteTimer = 20; lastBossMinute = 0;
+        startPanel.style.display = 'none'; gameoverPanel.style.display = 'none'; levelupPanel.style.display = 'none'; leaderboardPanel.style.display = 'none'; settingsPanel.style.display = 'none'; gmPanel.style.display = 'none';
+        xpContainer.style.display = 'block'; levelText.style.display = 'block'; timerText.style.display = 'block'; settingsBtn.style.display = 'block'; joystickZone.style.display = 'block'; 
         
-        startPanel.style.display = 'none'; gameoverPanel.style.display = 'none'; 
-        levelupPanel.style.display = 'none'; leaderboardPanel.style.display = 'none'; settingsPanel.style.display = 'none';
-        
-        xpContainer.style.display = 'block'; levelText.style.display = 'block'; 
-        timerText.style.display = 'block'; settingsBtn.style.display = 'block'; joystickZone.style.display = 'block'; 
+        if (currentMode === 'debug') gmBtn.style.display = 'block'; else gmBtn.style.display = 'none';
         
         updateHUD(); gameState = 'playing'; lastTime = performance.now(); soundManager.startBGM(); requestAnimationFrame(gameLoop);
     }
 
     function gameOver() {
         gameState = 'gameover'; soundManager.stopBGM(); resetInput();
-        xpContainer.style.display = 'none'; levelText.style.display = 'none'; 
-        timerText.style.display = 'none'; settingsBtn.style.display = 'none'; joystickZone.style.display = 'none'; 
-        
+        xpContainer.style.display = 'none'; levelText.style.display = 'none'; timerText.style.display = 'none'; settingsBtn.style.display = 'none'; gmBtn.style.display = 'none'; joystickZone.style.display = 'none'; 
         saveScore(); 
-        finalStats.innerHTML = `模式: ${currentMode === 'rampage' ? '🩸 狂暴' : '🌿 经典'}<br>存活时间: ${formatTime(gameTime)} <br> 击杀数: ${killCount} <br> 最终等级: ${player.level}`;
+        
+        let modeName = '🌿 经典';
+        if(currentMode === 'rampage') modeName = '🩸 狂暴';
+        if(currentMode === 'debug') modeName = '🐛 调试';
+        finalStats.innerHTML = `模式: ${modeName}<br>存活时间: ${formatTime(gameTime)} <br> 击杀数: ${killCount} <br> 最终等级: ${player.level}`;
+        
         gameoverPanel.style.display = 'block';
     }
 
     function updateHUD() {
-        const percent = (player.xp / player.xpNeeded) * 100;
-        xpBar.style.width = `${percent}%`; levelText.innerText = `Lv. ${player.level}`; timerText.innerText = formatTime(gameTime);
+        const percent = (player.xp / player.xpNeeded) * 100; xpBar.style.width = `${percent}%`; 
+        levelText.innerText = `Lv. ${player.level}`; timerText.innerText = formatTime(gameTime);
     }
 
     function handleSpawning(dt) {
         spawnTimer -= dt; spawnInterval = Math.max(0.2, 1.5 - (gameTime / 60) * 0.4);
-        
         eliteTimer -= dt;
         if (eliteTimer <= 0) {
             eliteTimer = 20 + Math.random() * 20;
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.max(canvas.width, canvas.height) / 2 + 150; 
-            const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist;
-            enemies.push(new Enemy(ex, ey, 'elite'));
+            const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) / 2 + 150; 
+            const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist; enemies.push(new Enemy(ex, ey, 'elite'));
         }
-
         const currentMinute = Math.floor(gameTime / 60);
         if (currentMinute > lastBossMinute) {
             lastBossMinute = currentMinute;
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.max(canvas.width, canvas.height) / 2 + 200; 
-            const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist;
-            enemies.push(new Enemy(ex, ey, 'boss'));
-            floatingTexts.push(new FloatingText(player.x, player.y - 100, "⚠️ BOSS 降临！⚠️", '#ef233c'));
+            const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) / 2 + 200; 
+            const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist; enemies.push(new Enemy(ex, ey, 'boss'));
+            floatingTexts.push(new FloatingText(player.x, player.y - 100, "⚠️ BOSS 降临！⚠️", '#ef233c', true));
         }
-
         if (spawnTimer <= 0) {
             let spawnCount = Math.floor(1 + gameTime / 30); 
             if (currentMode === 'rampage') { spawnCount *= 3; spawnInterval = Math.max(0.05, spawnInterval * 0.5); }
-            
             for(let i=0; i<spawnCount; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const dist = Math.max(canvas.width, canvas.height) / 2 + 100; 
+                const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) / 2 + 100; 
                 const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist;
                 let type = 'normal'; const rand = Math.random();
-                if (gameTime > 30 && rand < 0.2) type = 'fast';
-                if (gameTime > 60 && rand > 0.9) type = 'tank';
+                if (gameTime > 30 && rand < 0.2) type = 'fast'; if (gameTime > 60 && rand > 0.9) type = 'tank';
                 enemies.push(new Enemy(ex, ey, type));
             }
             spawnTimer = spawnInterval;
         }
-
         const cleanupDistSq = (Math.max(canvas.width, canvas.height) + 500) ** 2;
-        enemies = enemies.filter(e => {
-            const dSq = (e.x - player.x)**2 + (e.y - player.y)**2; return dSq < cleanupDistSq && !e.markedForDeletion;
-        });
+        enemies = enemies.filter(e => { const dSq = (e.x - player.x)**2 + (e.y - player.y)**2; return dSq < cleanupDistSq && !e.markedForDeletion; });
     }
 
     function triggerLevelUp() {
         gameState = 'levelup'; joystickZone.style.display = 'none'; resetInput();
-        
-        const availableUpgrades = possibleUpgrades.filter(u => (player.upgrades[u.id] || 0) < 5);
-        let choices = [];
-        
-        if (availableUpgrades.length === 0) {
-            choices = [{ id: 'fallback_meat', name: '美味烤肉', desc: '已经神功大成！恢复 100 点生命值。', icon: '🍖' }];
-        } else {
-            const shuffled = [...availableUpgrades].sort(() => 0.5 - Math.random());
-            choices = shuffled.slice(0, Math.min(3, shuffled.length));
-        }
+        const availableUpgrades = possibleUpgrades.filter(u => (player.upgrades[u.id] || 0) < 5); let choices = [];
+        if (availableUpgrades.length === 0) { choices = [{ id: 'fallback_meat', name: '美味烤肉', desc: '已经神功大成！恢复 100 点生命值。', icon: '🍖' }]; } 
+        else { const shuffled = [...availableUpgrades].sort(() => 0.5 - Math.random()); choices = shuffled.slice(0, Math.min(3, shuffled.length)); }
         
         upgradeOptions.innerHTML = '';
         choices.forEach(choice => {
-            const btn = document.createElement('button');
-            const currentLvl = player.upgrades[choice.id] || 0;
-            const isNextMax = currentLvl === 4; 
-            
+            const btn = document.createElement('button'); const currentLvl = player.upgrades[choice.id] || 0; const isNextMax = currentLvl === 4; 
             btn.className = `upgrade-btn ${isNextMax ? 'max-level-btn' : ''}`;
-            
             let lvlText = `<span style="float:right; color:#00f5d4;">新!</span>`;
-            if (choice.id === 'fallback_meat') {
-                lvlText = '';
-            } else if (currentLvl > 0) {
-                lvlText = `<span style="float:right; color:${isNextMax?'#fff':'#ffd166'};">Lv.${currentLvl + 1}${isNextMax?' 满级觉醒!':''}</span>`;
-            }
-            
+            if (choice.id === 'fallback_meat') { lvlText = ''; } else if (currentLvl > 0) { lvlText = `<span style="float:right; color:${isNextMax?'#fff':'#ffd166'};">Lv.${currentLvl + 1}${isNextMax?' 满级觉醒!':''}</span>`; }
             btn.innerHTML = `<strong>${choice.icon} ${choice.name}</strong> ${lvlText}<br><span style="font-size:14px; color:${isNextMax?'#fff':'#aaa'};">${choice.desc}</span>`;
-            btn.onclick = () => applyUpgrade(choice.id);
-            upgradeOptions.appendChild(btn);
+            btn.onclick = () => applyUpgrade(choice.id); upgradeOptions.appendChild(btn);
         });
-        
         levelupPanel.style.display = 'block';
     }
 
     function applyUpgrade(id) {
-        if (id === 'fallback_meat') {
-            player.hp = Math.min(player.maxHp, player.hp + 100);
-            finishLevelUp(); return;
-        }
+        if (id === 'fallback_meat') { player.hp = Math.min(player.maxHp, player.hp + 100); finishLevelUp(); return; }
+        grantBuffLogic(id);
+        finishLevelUp();
+    }
 
+    // 核心的升星和觉醒逻辑拆分出来，以便 GM 功能直接调用
+    function grantBuffLogic(id) {
         if(!player.upgrades[id]) player.upgrades[id] = 0;
-        player.upgrades[id]++;
-        const isMaxLevel = player.upgrades[id] === 5; 
+        if(player.upgrades[id] >= 5) return; // 锁死最高5级，防止GM乱点越界
+        
+        player.upgrades[id]++; const isMaxLevel = player.upgrades[id] === 5; 
 
         switch(id) {
-            case 'molotov': // 新增：燃烧瓶
-                if (!player.hasMolotov) player.hasMolotov = true;
-                else {
-                    player.molotovBaseCooldown = Math.max(0.5, player.molotovBaseCooldown - 0.4);
-                    player.molotovRadius += 15;
-                    player.molotovDamage += 10;
-                    player.molotovCount += 1;
-                }
-                if (isMaxLevel) {
-                    player.molotovCount = 5;
-                    player.molotovRadius += 50;
-                    player.molotovDamage *= 2;
-                    soundManager.playAwaken();
-                }
-                break;
-            case 'boomerang': // 新增：回旋镖
-                if (!player.hasBoomerang) player.hasBoomerang = true;
-                else {
-                    player.boomerangBaseCooldown = Math.max(0.8, player.boomerangBaseCooldown - 0.3);
-                    player.boomerangCount += 1;
-                    player.boomerangDamage += 15;
-                }
-                if (isMaxLevel) {
-                    player.boomerangCount = 6;
-                    player.boomerangDamage *= 2;
-                    soundManager.playAwaken();
-                }
-                break;
+            case 'katana':
+                if(!player.hasKatana) player.hasKatana = true; else { player.katanaCooldown = Math.max(0.5, player.katanaCooldown - 0.3); player.katanaDamage += 30; player.katanaRadius += 20; }
+                if(isMaxLevel) { player.katanaRadius += 80; player.katanaDamage *= 2; soundManager.playAwaken(); } break;
+            case 'poison':
+                if(!player.hasPoison) player.hasPoison = true; else { player.poisonCooldown = Math.max(1.0, player.poisonCooldown - 0.5); player.poisonDamage += 10; player.poisonCount += 1; }
+                if(isMaxLevel) { player.poisonCount += 2; player.poisonDamage *= 2; soundManager.playAwaken(); } break;
+            case 'shield':
+                if(!player.hasShield) player.hasShield = true; else { player.shieldRegenRate = Math.max(5.0, player.shieldRegenRate - 2.5); }
+                if(isMaxLevel) { player.shieldMax = 3; player.shieldCount = 3; soundManager.playAwaken(); } break;
+            case 'laser':
+                if(!player.hasLaser) player.hasLaser = true; else { player.laserBounces += 2; player.laserDamage += 15; player.laserCooldown = Math.max(0.5, player.laserCooldown - 0.2); }
+                if(isMaxLevel) { player.laserBounces = 15; player.laserDamage *= 2; soundManager.playAwaken(); } break;
+            case 'orbital':
+                if(!player.hasOrbital) player.hasOrbital = true; else { player.orbitalCooldown = Math.max(2.0, player.orbitalCooldown - 0.8); player.orbitalDamage += 50; player.orbitalRadius += 20; }
+                if(isMaxLevel) { player.orbitalRadius += 50; player.orbitalDamage *= 2; soundManager.playAwaken(); } break;
+            case 'xp_scroll': player.xpMultiplier += isMaxLevel ? 0.5 : 0.15; break;
+            case 'vampire': player.lifestealChance += isMaxLevel ? 0.1 : 0.03; player.lifestealAmount += isMaxLevel ? 5 : 1; break;
+            case 'frost':
+                if(!player.hasFrost) player.hasFrost = true; else { player.frostCooldown = Math.max(1.0, player.frostCooldown - 0.5); player.frostRadius += 20; player.frostDamage += 10; }
+                if(isMaxLevel) { player.frostRadius += 100; player.frostDamage *= 2; soundManager.playAwaken(); } break;
+            case 'drone':
+                if(!player.hasDrone) player.hasDrone = true; else { player.droneCount += 1; player.droneDamage += 10; }
+                if(isMaxLevel) { player.droneCount += 2; player.droneDamage *= 2; soundManager.playAwaken(); } break;
+            case 'axe':
+                if(!player.hasAxe) player.hasAxe = true; else { player.axeCount += 1; player.axeDamage += 15; player.axeCooldown = Math.max(0.5, player.axeCooldown - 0.2); }
+                if(isMaxLevel) { player.axeCount += 3; player.axeDamage *= 2; soundManager.playAwaken(); } break;
+            case 'missile': 
+                if(!player.hasMissile) player.hasMissile = true; else { player.missileBaseCooldown = Math.max(0.5, player.missileBaseCooldown - 0.3); player.missileDamage += 20; player.missileRadius += 10; }
+                if (isMaxLevel) { player.missileCount += 2; player.missileDamage *= 2; player.missileRadius *= 1.5; soundManager.playAwaken(); } break;
+            case 'blackhole': 
+                if(!player.hasBlackhole) player.hasBlackhole = true; else { player.blackholeBaseCooldown = Math.max(4.0, player.blackholeBaseCooldown - 1.0); player.blackholeRadius += 15; player.blackholeDamage += 10; }
+                if (isMaxLevel) { player.blackholeRadius += 50; player.blackholeDamage *= 2; soundManager.playAwaken(); } break;
+            case 'crit': player.critChance += isMaxLevel ? 0.3 : 0.1; player.critMultiplier += isMaxLevel ? 1.0 : 0.3; break;
+            case 'molotov': 
+                if (!player.hasMolotov) player.hasMolotov = true; else { player.molotovBaseCooldown = Math.max(0.5, player.molotovBaseCooldown - 0.4); player.molotovRadius += 15; player.molotovDamage += 10; player.molotovCount += 1; }
+                if (isMaxLevel) { player.molotovCount = 5; player.molotovRadius += 50; player.molotovDamage *= 2; soundManager.playAwaken(); } break;
+            case 'boomerang': 
+                if (!player.hasBoomerang) player.hasBoomerang = true; else { player.boomerangBaseCooldown = Math.max(0.8, player.boomerangBaseCooldown - 0.3); player.boomerangCount += 1; player.boomerangDamage += 15; }
+                if (isMaxLevel) { player.boomerangCount = 6; player.boomerangDamage *= 2; soundManager.playAwaken(); } break;
             case 'dmg': player.damageMultiplier += isMaxLevel ? 1.0 : 0.35; break; 
             case 'speed': player.fireRateMultiplier += isMaxLevel ? 0.8 : 0.25; break; 
             case 'pierce': player.bulletPierce += isMaxLevel ? 5 : 3; break; 
             case 'aura':
-                if (!player.hasAura) player.hasAura = true;
-                player.auraRadius += isMaxLevel ? 60 : 30; 
-                player.auraDamage += isMaxLevel ? 50 : 20; 
-                player.auraTickRate = Math.max(0.05, player.auraTickRate - 0.05); 
-                break;
-            case 'heal':
-                player.hp = Math.min(player.maxHp, player.hp + 100);
-                if(isMaxLevel) { player.maxHp += 200; player.hp = player.maxHp; } 
-                break;
-            case 'multishot':
-                if(isMaxLevel) { soundManager.playAwaken(); } 
-                else player.projectileCount += 2; 
-                break;
+                if (!player.hasAura) player.hasAura = true; player.auraRadius += isMaxLevel ? 60 : 30; player.auraDamage += isMaxLevel ? 50 : 20; player.auraTickRate = Math.max(0.05, player.auraTickRate - 0.05); break;
+            case 'heal': player.hp = Math.min(player.maxHp, player.hp + 100); if(isMaxLevel) { player.maxHp += 200; player.hp = player.maxHp; } break;
+            case 'multishot': if(isMaxLevel) { soundManager.playAwaken(); } else player.projectileCount += 2; break;
             case 'lightning':
-                player.hasLightning = true;
-                player.lightningDamage += isMaxLevel ? 100 : 30; 
-                player.lightningBaseCooldown = Math.max(0.2, player.lightningBaseCooldown - 0.15); 
-                player.lightningTargets += isMaxLevel ? 3 : 1;
-                if(isMaxLevel) soundManager.playAwaken(); 
-                break;
-            case 'guardian':
-                player.guardianCount += isMaxLevel ? 4 : 2; 
-                if(isMaxLevel) soundManager.playAwaken();
-                break;
+                player.hasLightning = true; player.lightningDamage += isMaxLevel ? 100 : 30; player.lightningBaseCooldown = Math.max(0.2, player.lightningBaseCooldown - 0.15); player.lightningTargets += isMaxLevel ? 3 : 1;
+                if(isMaxLevel) soundManager.playAwaken(); break;
+            case 'guardian': player.guardianCount += isMaxLevel ? 4 : 2; if(isMaxLevel) soundManager.playAwaken(); break;
             case 'magnet': player.pickupRange += isMaxLevel ? 400 : 100; break; 
             case 'movespeed': player.speed *= isMaxLevel ? 1.5 : 1.2; break; 
-            case 'maxhp':
-                player.maxHp += isMaxLevel ? 200 : 50; 
-                player.hp += isMaxLevel ? 200 : 50;
-                break;
+            case 'maxhp': player.maxHp += isMaxLevel ? 200 : 50; player.hp += isMaxLevel ? 200 : 50; break;
         }
-        finishLevelUp();
     }
 
     function finishLevelUp() {
@@ -1234,55 +1591,60 @@
 
         player.update(dt); handleSpawning(dt);
 
-        bullets.forEach(b => b.update(dt)); 
-        boomerangs.forEach(b => b.update(dt)); // 🪃 更新回旋镖
+        bullets.forEach(b => b.update(dt)); boomerangs.forEach(b => b.update(dt)); 
+        missiles.forEach(m => m.update(dt)); blackHoles.forEach(bh => bh.update(dt)); axes.forEach(a => a.update(dt)); 
+        slashes.forEach(s => s.update(dt)); laserLines.forEach(l => l.update(dt)); orbitals.forEach(o => o.update(dt));
         enemies.forEach(e => e.update(dt));
         gems.forEach(g => g.update(dt)); chests.forEach(c => c.update(dt)); 
         floatingTexts.forEach(ft => ft.update(dt));
         effects.forEach(eff => eff.update(dt)); damageZones.forEach(dz => dz.update(dt));
 
-        // 碰撞：子弹 -> 敌人
         for (let b of bullets) {
             if (b.markedForDeletion) continue;
             for (let e of enemies) {
                 if (e.markedForDeletion || b.hitEnemies.has(e)) continue; 
                 if (Math.hypot(b.x - e.x, b.y - e.y) < b.radius + e.radius) {
-                    e.takeDamage(b.damage); b.hitEnemies.add(e); b.pierce--;
+                    const dmgInfo = player.calcDamage(b.baseDamage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); b.hitEnemies.add(e); b.pierce--;
                     if (b.pierce <= 0) { b.markedForDeletion = true; break; }
                 }
             }
         }
-
-        // 碰撞：回旋镖 -> 敌人
         for (let b of boomerangs) {
             if (b.markedForDeletion) continue;
             for (let e of enemies) {
                 if (e.markedForDeletion || b.hitEnemies.has(e)) continue; 
                 if (Math.hypot(b.x - e.x, b.y - e.y) < b.radius + e.radius) {
-                    e.takeDamage(b.damage); 
-                    b.hitEnemies.add(e); // 防止一帧内重复扣血，折返后会清空重新计算
+                    const dmgInfo = player.calcDamage(b.damage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); b.hitEnemies.add(e); 
+                }
+            }
+        }
+        for (let a of axes) {
+            if (a.markedForDeletion) continue;
+            for (let e of enemies) {
+                if (e.markedForDeletion || a.hitEnemies.has(e)) continue; 
+                if (Math.hypot(a.x - e.x, a.y - e.y) < a.radius + e.radius) {
+                    const dmgInfo = player.calcDamage(a.damage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); a.hitEnemies.add(e); 
                 }
             }
         }
 
-        bullets = bullets.filter(b => !b.markedForDeletion); 
-        boomerangs = boomerangs.filter(b => !b.markedForDeletion); // 🪃 过滤回旋镖
-        enemies = enemies.filter(e => !e.markedForDeletion);
-        gems = gems.filter(g => !g.markedForDeletion); chests = chests.filter(c => !c.markedForDeletion);
-        floatingTexts = floatingTexts.filter(ft => ft.life > 0);
-        effects = effects.filter(eff => eff.life > 0); damageZones = damageZones.filter(dz => dz.lifeTime > 0);
+        bullets = bullets.filter(b => !b.markedForDeletion); boomerangs = boomerangs.filter(b => !b.markedForDeletion); 
+        missiles = missiles.filter(m => !m.markedForDeletion); blackHoles = blackHoles.filter(bh => !bh.markedForDeletion); axes = axes.filter(a => !a.markedForDeletion);
+        slashes = slashes.filter(s => !s.markedForDeletion); laserLines = laserLines.filter(l => l.life > 0); orbitals = orbitals.filter(o => !o.markedForDeletion);
+        enemies = enemies.filter(e => !e.markedForDeletion); gems = gems.filter(g => !g.markedForDeletion); chests = chests.filter(c => !c.markedForDeletion);
+        floatingTexts = floatingTexts.filter(ft => ft.life > 0); effects = effects.filter(eff => eff.life > 0); damageZones = damageZones.filter(dz => dz.lifeTime > 0);
 
         camera.x = player.x - canvas.width / 2; camera.y = player.y - canvas.height / 2;
 
         ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.save(); ctx.translate(-camera.x, -camera.y);
 
-        drawGrid();
-        damageZones.forEach(dz => dz.draw());
+        drawGrid(); damageZones.forEach(dz => dz.draw()); orbitals.forEach(o => o.draw()); blackHoles.forEach(bh => bh.draw());
         gems.forEach(g => g.draw()); chests.forEach(c => c.draw());
         enemies.forEach(e => e.draw()); player.draw();
-        bullets.forEach(b => b.draw()); 
-        boomerangs.forEach(b => b.draw()); // 🪃 绘制回旋镖
+        slashes.forEach(s => s.draw()); laserLines.forEach(l => l.draw());
+        bullets.forEach(b => b.draw()); boomerangs.forEach(b => b.draw()); 
+        missiles.forEach(m => m.draw()); axes.forEach(a => a.draw()); 
         effects.forEach(eff => eff.draw()); floatingTexts.forEach(ft => ft.draw());
 
         ctx.restore(); 
