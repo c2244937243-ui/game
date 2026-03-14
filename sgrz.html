@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>水果忍者 - 网页复刻版</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #2c1a0f;
+            touch-action: none; 
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #5c3a21 0%, #2c1a0f 100%);
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .score-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .score-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #ff9900;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
+
+        #score {
+            color: white;
+            font-size: 48px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+
+        #timer {
+            color: #fff;
+            font-size: 48px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #settings-btn {
+            background: none;
+            border: none;
+            font-size: 40px;
+            cursor: pointer;
+            padding: 0;
+            box-shadow: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: auto;
+        }
+        #settings-btn:hover {
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .lives-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .life-x {
+            color: #444;
+            font-size: 40px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            transition: color 0.3s;
+        }
+
+        .life-x.lost {
+            color: #ff0000;
+            text-shadow: 0 0 10px red, 1px 1px 2px black;
+        }
+
+        .screen {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            pointer-events: auto;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border: 2px solid #ff9900;
+        }
+
+        h1 {
+            color: #ff9900;
+            font-size: 60px;
+            margin: 0 0 20px 0;
+            text-shadow: 3px 3px 0 #000, 0 0 20px rgba(255, 153, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        p {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            background: linear-gradient(to bottom, #ffcc00, #ff6600);
+            border: 3px solid white;
+            border-radius: 30px;
+            padding: 15px 40px;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            text-shadow: 1px 1px 2px black;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: transform 0.1s, filter 0.2s;
+            font-family: inherit;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .mode-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .leaderboard-list {
+            color: white;
+            font-size: 24px;
+            text-align: left;
+            margin: 20px auto;
+            width: 80%;
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 150px;
+        }
+        
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .leaderboard-tabs button {
+            padding: 5px 15px;
+            font-size: 18px;
+            background: #444;
+            border: 2px solid #888;
+        }
+        .leaderboard-tabs button.active {
+            background: #ff9900;
+            border-color: white;
+        }
+        
+        .pause-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+    <div id="flash"></div>
+
+    <div id="ui-layer">
+        <div class="top-bar">
+            <div class="score-container">
+                <div class="score-icon">🍉</div>
+                <div id="score">0</div>
+            </div>
+
+            <!-- 倒计时显示 -->
+            <div id="timer" class="hidden">60</div>
+
+            <div class="lives-container" id="lives">
+                <span class="life-x" id="life1">X</span>
+                <span class="life-x" id="life2">X</span>
+                <span class="life-x" id="life3">X</span>
+            </div>
+
+            <!-- 设置/暂停按钮 -->
+            <button id="settings-btn" onclick="pauseGame()" class="hidden">⚙️</button>
+        </div>
+
+        <!-- 开始屏幕 (包含模式选择和排行榜) -->
+        <div id="start-screen" class="screen">
+            <h1>水果忍者</h1>
+            <div class="mode-buttons">
+                <button onclick="startGame('classic')">🗡️ 经典模式</button>
+                <button onclick="startGame('arcade')">⏱️ 街机模式</button>
+                <button onclick="startGame('zen')">🧘 禅境模式</button>
+            </div>
+            <button onclick="showLeaderboard()" style="font-size: 20px; padding: 10px 20px; background: #444;">🏆 高分排行榜</button>
+        </div>
+
+        <!-- 游戏结束屏幕 -->
+        <div id="game-over-screen" class="screen hidden">
+            <h1 style="color: #ff3333;">游戏结束</h1>
+            <p>你的得分: <span id="final-score" style="color:#ffcc00; font-size:36px;">0</span></p>
+            <button onclick="startGame(gameMode)">再玩一次</button>
+            <button onclick="quitToMenu()" style="margin-top: 15px; background: #666; font-size: 20px;">返回主页</button>
+        </div>
+
+        <!-- 暂停/设置屏幕 -->
+        <div id="pause-screen" class="screen hidden">
+            <h1>游戏暂停</h1>
+            <div class="pause-btns">
+                <button onclick="resumeGame()">▶️ 继续游戏</button>
+                <button onclick="startGame(gameMode)">🔄 重新开始</button>
+                <button onclick="quitToMenu()" style="background: #e74c3c;">🏠 返回主页</button>
+            </div>
+        </div>
+
+        <!-- 排行榜屏幕 -->
+        <div id="leaderboard-screen" class="screen hidden">
+            <h1 style="font-size: 40px;">🏆 高分榜</h1>
+            <div class="leaderboard-tabs">
+                <button id="tab-classic" class="active" onclick="renderLeaderboard('classic')">经典</button>
+                <button id="tab-arcade" onclick="renderLeaderboard('arcade')">街机</button>
+                <button id="tab-zen" onclick="renderLeaderboard('zen')">禅境</button>
+            </div>
+            <div class="leaderboard-list" id="leaderboard-list">
+                <!-- 成绩动态插入这里 -->
+            </div>
+            <button onclick="closeLeaderboard()" style="font-size: 20px; padding: 10px 20px; background: #666;">返回</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        
+        // 游戏状态和全局变量定义
+        let gameState = 'START'; // START, PLAYING, GAMEOVER, PAUSED
+        let gameMode = 'classic'; // classic, arcade, zen
+        let score = 0;
+        let lives = 3;
+        let timeLeft = 0;
+        let timerInterval = null;
+        let spawnTimeoutId = null;
+        let lastTime = 0;
+
+        // 简易排行榜存储
+        let highScores = {
+            classic: [0, 0, 0],
+            arcade: [0, 0, 0],
+            zen: [0, 0, 0]
+        };
+
+        // 实体数组
+        let fruits = [];
+        let particles = [];
+        let splats = []; // 留在背景上的果汁
+        let bladeTrail = []; // 刀光轨迹
+
+        // 输入控制
+        let isSwiping = false;
+        let mouseX = 0;
+        let mouseY = 0;
+
+        // 设置画布大小
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 水果配置数据
+        const FRUIT_TYPES = [
+            { name: 'watermelon', color: '#ff3333', rind: '#228B22', radius: 45, type: 'fruit', juice: '#ff3333' },
+            { name: 'apple', color: '#ffddaa', rind: '#ff0000', radius: 35, type: 'fruit', juice: '#ffddaa' },
+            { name: 'orange', color: '#ffaa00', rind: '#ff8800', radius: 38, type: 'fruit', juice: '#ffaa00' },
+            { name: 'coconut', color: '#ffffff', rind: '#5c4033', radius: 40, type: 'fruit', juice: '#ffffff' },
+            { name: 'bomb', color: '#222', rind: '#111', radius: 30, type: 'bomb', juice: null }
+        ];
+
+        // --- 类定义 ---
+
+        class Fruit {
+            constructor(x, y, vx, vy, config) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.radius = config.radius;
+                this.config = config;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+                this.isSliced = false;
+                this.halves = [];
+                this.markedForDeletion = false;
+                this.offScreenTracked = false;
+            }
+
+            update() {
+                if (this.isSliced) {
+                    this.halves.forEach(half => {
+                        half.x += half.vx;
+                        half.y += half.vy;
+                        half.vy += 0.12; 
+                        half.rotation += half.rotationSpeed;
+                    });
+                    
+                    if (this.halves[0].y > canvas.height + 100 && this.halves[1].y > canvas.height + 100) {
+                        this.markedForDeletion = true;
+                    }
+                } else {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.08; 
+                    this.rotation += this.rotationSpeed;
+
+                    if (this.config.type === 'bomb' && Math.random() < 0.3) {
+                        particles.push(new Particle(
+                            this.x + Math.cos(this.rotation - Math.PI/2) * this.radius,
+                            this.y + Math.sin(this.rotation - Math.PI/2) * this.radius,
+                            (Math.random()-0.5)*2, (Math.random()-0.5)*2,
+                            '#ffaa00', 3, 20
+                        ));
+                    }
+
+                    if (this.y > canvas.height + this.radius && this.vy > 0 && !this.offScreenTracked) {
+                        this.offScreenTracked = true;
+                        this.markedForDeletion = true;
+                        // 仅经典模式漏掉扣血
+                        if (this.config.type === 'fruit' && gameState === 'PLAYING' && gameMode === 'classic') {
+                            loseLife();
+                        }
+                    }
+                }
+            }
+
+            draw(ctx) {
+                if (this.isSliced) {
+                    this.halves.forEach(half => {
+                        ctx.save();
+                        ctx.translate(half.x, half.y);
+                        ctx.rotate(half.rotation);
+                        
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.radius, 0, Math.PI, false);
+                        ctx.fillStyle = this.config.color;
+                        ctx.fill();
+                        ctx.lineWidth = 6;
+                        ctx.strokeStyle = this.config.rind;
+                        ctx.stroke();
+
+                        if (this.config.name === 'watermelon') {
+                            ctx.fillStyle = 'black';
+                            ctx.beginPath(); ctx.arc(-15, 15, 3, 0, Math.PI*2); ctx.fill();
+                            ctx.beginPath(); ctx.arc(15, 15, 3, 0, Math.PI*2); ctx.fill();
+                            ctx.beginPath(); ctx.arc(0, 25, 3, 0, Math.PI*2); ctx.fill();
+                        }
+
+                        ctx.restore();
+                    });
+                } else {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate(this.rotation);
+
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.config.color;
+                    ctx.fill();
+                    ctx.lineWidth = 6;
+                    ctx.strokeStyle = this.config.rind;
+                    ctx.stroke();
+
+                    if (this.config.name === 'watermelon') {
+                        ctx.strokeStyle = '#004400';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(30, 0); ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(0, 30); ctx.stroke();
+                    } else if (this.config.name === 'apple') {
+                        ctx.fillStyle = 'green';
+                        ctx.beginPath(); ctx.ellipse(10, -30, 15, 5, Math.PI/4, 0, Math.PI*2); ctx.fill();
+                    } else if (this.config.type === 'bomb') {
+                        ctx.strokeStyle = '#888';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath(); ctx.moveTo(0, -this.radius); ctx.lineTo(0, -this.radius - 15); ctx.stroke();
+                        ctx.fillStyle = 'red';
+                        ctx.font = '20px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('💣', 0, 0);
+                    }
+
+                    ctx.restore();
+                }
+            }
+
+            slice(cutAngle) {
+                this.isSliced = true;
+                const speed = 1.2; 
+                const perpAngle = cutAngle + Math.PI / 2;
+
+                this.halves = [
+                    {
+                        x: this.x, y: this.y,
+                        vx: this.vx + Math.cos(perpAngle) * speed,
+                        vy: this.vy + Math.sin(perpAngle) * speed,
+                        rotation: this.rotation,
+                        rotationSpeed: this.rotationSpeed - 0.1
+                    },
+                    {
+                        x: this.x, y: this.y,
+                        vx: this.vx - Math.cos(perpAngle) * speed,
+                        vy: this.vy - Math.sin(perpAngle) * speed,
+                        rotation: this.rotation + Math.PI, 
+                        rotationSpeed: this.rotationSpeed + 0.1
+                    }
+                ];
+
+                if (this.config.juice) {
+                    for (let i = 0; i < 30; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const v = Math.random() * 8 + 2;
+                        particles.push(new Particle(
+                            this.x, this.y,
+                            Math.cos(angle) * v, Math.sin(angle) * v,
+                            this.config.juice, Math.random() * 6 + 2, 40 + Math.random() * 30
+                        ));
+                    }
+                    splats.push({
+                        x: this.x, y: this.y,
+                        color: this.config.juice,
+                        radius: this.radius * (1 + Math.random()),
+                        angle: Math.random() * Math.PI * 2,
+                        life: 1.0 
+                    });
+                }
+            }
+        }
+
+        class Particle {
+            constructor(x, y, vx, vy, color, size, life) {
+                this.x = x; this.y = y;
+                this.vx = vx; this.vy = vy;
+                this.color = color;
+                this.size = size;
+                this.maxLife = life;
+                this.life = life;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.08; 
+                this.life--;
+            }
+            draw(ctx) {
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // --- 核心逻辑 ---
+
+        function spawnFruits() {
+            if (gameState !== 'PLAYING') return;
+
+            const count = Math.floor(Math.random() * 3) + 1 + Math.floor(score / 50);
+            const clampedCount = Math.min(count, 5); 
+
+            for (let i = 0; i < clampedCount; i++) {
+                let bombChance = 0;
+                if (gameMode === 'classic' || gameMode === 'arcade') {
+                    bombChance = Math.min(0.05 + (score / 1000), 0.15); 
+                }
+                const isBomb = Math.random() < bombChance;
+                
+                let config = isBomb ? FRUIT_TYPES[4] : FRUIT_TYPES[Math.floor(Math.random() * 4)];
+
+                const startX = canvas.width * 0.2 + Math.random() * (canvas.width * 0.6); 
+                const startY = canvas.height + 60;
+                const targetX = canvas.width / 2 + (Math.random() - 0.5) * 200;
+                
+                const vx = (targetX - startX) / 130; 
+                const vy = -(8 + Math.random() * 2.5 + (canvas.height / 500)); 
+
+                fruits.push(new Fruit(startX, startY, vx, vy, config));
+            }
+
+            const nextSpawn = 1500 + Math.random() * 1500 - Math.min(score * 6, 800); 
+            spawnTimeoutId = setTimeout(spawnFruits, Math.max(nextSpawn, 1200));
+        }
+
+        function addScore(points) {
+            score = Math.max(0, score + points); 
+            document.getElementById('score').innerText = score;
+        }
+
+        function loseLife() {
+            if (gameMode !== 'classic') return; 
+            lives--;
+            if(lives === 2) document.getElementById('life1').classList.add('lost');
+            if(lives === 1) document.getElementById('life2').classList.add('lost');
+            if(lives === 0) {
+                document.getElementById('life3').classList.add('lost');
+                triggerGameOver();
+            }
+        }
+
+        function triggerGameOver() {
+            if (gameState === 'GAMEOVER') return;
+            gameState = 'GAMEOVER';
+            
+            clearInterval(timerInterval);
+            clearTimeout(spawnTimeoutId);
+            
+            updateLeaderboard();
+            
+            const flash = document.getElementById('flash');
+            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '0'; }, 300);
+
+            setTimeout(() => {
+                document.getElementById('settings-btn').classList.add('hidden');
+                document.getElementById('game-over-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = score;
+            }, 800);
+        }
+
+        function startGame(mode) {
+            if (mode) gameMode = mode;
+            
+            score = 0;
+            lives = 3;
+            fruits = [];
+            particles = [];
+            splats = [];
+            bladeTrail = [];
+            gameState = 'PLAYING';
+            clearInterval(timerInterval);
+            clearTimeout(spawnTimeoutId);
+
+            document.getElementById('score').innerText = '0';
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('pause-screen').classList.add('hidden');
+            document.getElementById('settings-btn').classList.remove('hidden');
+            
+            const livesEl = document.getElementById('lives');
+            const timerEl = document.getElementById('timer');
+            
+            if (gameMode === 'classic') {
+                livesEl.classList.remove('hidden');
+                timerEl.classList.add('hidden');
+                document.getElementById('life1').classList.remove('lost');
+                document.getElementById('life2').classList.remove('lost');
+                document.getElementById('life3').classList.remove('lost');
+            } else if (gameMode === 'arcade') {
+                livesEl.classList.add('hidden');
+                timerEl.classList.remove('hidden');
+                startTimer(60); 
+            } else if (gameMode === 'zen') {
+                livesEl.classList.add('hidden');
+                timerEl.classList.remove('hidden');
+                startTimer(90); 
+            }
+
+            spawnFruits();
+        }
+
+        // --- 倒计时与菜单控制功能 ---
+        
+        function startTimer(seconds) {
+            timeLeft = seconds;
+            const timerEl = document.getElementById('timer');
+            timerEl.innerText = timeLeft;
+            
+            timerInterval = setInterval(() => {
+                if (gameState === 'PLAYING') {
+                    timeLeft--;
+                    timerEl.innerText = timeLeft;
+                    if (timeLeft <= 0) {
+                        triggerGameOver();
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseGame() {
+            if (gameState !== 'PLAYING') return;
+            gameState = 'PAUSED';
+            clearTimeout(spawnTimeoutId); 
+            document.getElementById('pause-screen').classList.remove('hidden');
+            document.getElementById('settings-btn').classList.add('hidden');
+        }
+
+        function resumeGame() {
+            if (gameState !== 'PAUSED') return;
+            gameState = 'PLAYING';
+            document.getElementById('pause-screen').classList.add('hidden');
+            document.getElementById('settings-btn').classList.remove('hidden');
+            spawnFruits(); 
+        }
+
+        function quitToMenu() {
+            gameState = 'START';
+            clearInterval(timerInterval);
+            clearTimeout(spawnTimeoutId);
+            document.getElementById('pause-screen').classList.add('hidden');
+            document.getElementById('game-over-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('settings-btn').classList.add('hidden');
+            
+            fruits = [];
+            particles = [];
+            splats = [];
+            bladeTrail = [];
+            
+            document.getElementById('timer').classList.add('hidden');
+            document.getElementById('lives').classList.add('hidden');
+            document.getElementById('score').innerText = '0';
+        }
+
+        function updateLeaderboard() {
+            highScores[gameMode].push(score);
+            highScores[gameMode].sort((a, b) => b - a);
+            highScores[gameMode] = highScores[gameMode].slice(0, 3);
+        }
+
+        function showLeaderboard() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('leaderboard-screen').classList.remove('hidden');
+            renderLeaderboard('classic');
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboard-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function renderLeaderboard(tabMode) {
+            ['classic', 'arcade', 'zen'].forEach(m => {
+                const btn = document.getElementById('tab-' + m);
+                if (m === tabMode) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            highScores[tabMode].forEach((s, i) => {
+                list.innerHTML += `<div style="padding: 10px 0; border-bottom: 1px dashed #666;">
+                    第 ${i+1} 名 - <span style="color:#ffcc00; font-weight:bold;">${s}</span> 分
+                </div>`;
+            });
+        }
+
+        function lineIntersectsCircle(p1, p2, circle, radius) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const l2 = dx*dx + dy*dy;
+            
+            if (l2 === 0) { 
+                const dist = Math.hypot(p1.x - circle.x, p1.y - circle.y);
+                return dist < radius;
+            }
+            
+            let t = ((circle.x - p1.x) * dx + (circle.y - p1.y) * dy) / l2;
+            t = Math.max(0, Math.min(1, t)); 
+            
+            const closestX = p1.x + t * dx;
+            const closestY = p1.y + t * dy;
+            
+            const dist = Math.hypot(circle.x - closestX, circle.y - closestY);
+            return dist < radius;
+        }
+
+        // --- 渲染循环 ---
+
+        function updateAndDraw() {
+            ctx.fillStyle = '#3a2010';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 100, canvas.width/2, canvas.height/2, canvas.width);
+            gradient.addColorStop(0, '#5c3a21');
+            gradient.addColorStop(1, '#2c1a0f');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            splats.forEach(splat => {
+                ctx.save();
+                ctx.translate(splat.x, splat.y);
+                ctx.rotate(splat.angle);
+                if (gameState === 'PLAYING') splat.life -= 0.0005; 
+                ctx.globalAlpha = Math.max(0, splat.life * 0.5); 
+                ctx.fillStyle = splat.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, splat.radius, splat.radius * 0.4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+            splats = splats.filter(s => s.life > 0.05);
+
+            fruits.forEach((fruit, index) => {
+                if (gameState === 'PLAYING') fruit.update(); 
+                fruit.draw(ctx);
+            });
+            fruits = fruits.filter(f => !f.markedForDeletion);
+
+            particles.forEach(p => {
+                if (gameState === 'PLAYING') p.update();
+                p.draw(ctx);
+            });
+            particles = particles.filter(p => p.life > 0);
+
+            const currentTime = Date.now();
+            
+            if (isSwiping && gameState === 'PLAYING') {
+                bladeTrail.push({ x: mouseX, y: mouseY, time: currentTime });
+            }
+            
+            bladeTrail = bladeTrail.filter(p => currentTime - p.time < 150);
+
+            if (bladeTrail.length > 1 && gameState === 'PLAYING') {
+                const p1 = bladeTrail[bladeTrail.length - 2];
+                const p2 = bladeTrail[bladeTrail.length - 1];
+                
+                const cutAngle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+
+                fruits.forEach(fruit => {
+                    if (!fruit.isSliced && lineIntersectsCircle(p1, p2, fruit, fruit.radius)) {
+                        fruit.slice(cutAngle);
+                        
+                        if (fruit.config.type === 'bomb') {
+                            if (gameMode === 'classic') {
+                                triggerGameOver();
+                            } else if (gameMode === 'arcade') {
+                                addScore(-10);
+                                const flash = document.getElementById('flash');
+                                flash.style.background = 'red';
+                                flash.style.opacity = '0.5';
+                                setTimeout(() => { 
+                                    flash.style.opacity = '0'; 
+                                    setTimeout(() => flash.style.background = 'white', 500); 
+                                }, 300);
+                            }
+                        } else {
+                            addScore(10); 
+                        }
+                    }
+                });
+            }
+
+            if (bladeTrail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(bladeTrail[0].x, bladeTrail[0].y);
+                for (let i = 1; i < bladeTrail.length; i++) {
+                    ctx.lineTo(bladeTrail[i].x, bladeTrail[i].y);
+                }
+                
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                
+                ctx.strokeStyle = 'rgba(200, 255, 255, 0.5)';
+                ctx.lineWidth = 10;
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 15;
+                ctx.stroke();
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(updateAndDraw);
+        }
+
+        // --- 以下是刚才被截断的输入控制代码 ---
+
+        function handleInputStart(x, y) {
+            isSwiping = true;
+            mouseX = x;
+            mouseY = y;
+            bladeTrail = [{ x, y, time: Date.now() }];
+        }
+
+        function handleInputMove(x, y) {
+            if (isSwiping) {
+                mouseX = x;
+                mouseY = y;
+            }
+        }
+
+        function handleInputEnd() {
+            isSwiping = false;
+        }
+
+        // 绑定鼠标事件
+        window.addEventListener('mousedown', (e) => handleInputStart(e.clientX, e.clientY));
+        window.addEventListener('mousemove', (e) => handleInputMove(e.clientX, e.clientY));
+        window.addEventListener('mouseup', handleInputEnd);
+        window.addEventListener('mouseleave', handleInputEnd);
+
+        // 绑定触摸事件 (移动端支持)
+        window.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            handleInputStart(touch.clientX, touch.clientY);
+        }, {passive: false});
+        
+        window.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // 阻止滚动屏幕
+            const touch = e.touches[0];
+            handleInputMove(touch.clientX, touch.clientY);
+        }, {passive: false});
+        
+        window.addEventListener('touchend', handleInputEnd);
+        window.addEventListener('touchcancel', handleInputEnd);
+
+        // 启动主循环，游戏开始！
+        updateAndDraw();
+
+    </script>
+</body>
+</html>
