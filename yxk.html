@@ -6,39 +6,50 @@
   <title>我的专属游戏库</title>
   <!-- 引入 Tailwind CSS 让页面变得好看 -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 隐藏一下丑丑的滚动条，让分类栏更清爽 */
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+<!-- 🌟 1. 换上梦幻渐变背景，并限制溢出 -->
+<body class="bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 min-h-screen font-sans text-slate-800 relative overflow-x-hidden">
+
+  <!-- 🌟 2. 灵魂光晕：在底层放两个巨大的模糊圆形，制造透视感 -->
+  <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-indigo-300/30 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+  <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-pink-300/30 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
 
   <!-- 游戏库主界面 -->
-  <div id="main-view" class="max-w-6xl mx-auto p-4 md:p-8">
+  <div id="main-view" class="max-w-6xl mx-auto p-4 md:p-8 relative z-10">
     
     <!-- 头部区域 -->
     <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
       <div>
         <div class="flex items-center gap-3 mb-1">
-          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 flex items-center gap-2">
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 flex items-center gap-2 drop-shadow-sm">
             🎮 我的游戏库
           </h1>
-          <button onclick="openGame({title: 'IP检测', icon: '📡', url: 'https://chanhua05.github.io/ipppp'})" class="flex items-center gap-1 bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-1 rounded-lg text-xs font-bold transition-colors shadow-sm cursor-pointer">
+          <!-- 🌟 IP按钮也变成玻璃了 -->
+          <button onclick="openGame({title: 'IP检测', icon: '📡', url: 'https://chanhua05.github.io/ipppp'})" class="flex items-center gap-1 bg-white/40 backdrop-blur-sm border border-white/50 text-blue-700 hover:bg-white/60 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer">
             📡 检测IP
           </button>
         </div>
-        <p class="text-slate-500 text-sm">欢迎回来！今天想重温哪个自己写的大作？</p>
+        <p class="text-slate-600 text-sm font-medium">欢迎回来！今天想重温哪个自己写的大作？</p>
       </div>
       
-      <!-- 搜索框 -->
+      <!-- 🌟 搜索框：半透明磨砂 -->
       <div class="relative w-full md:w-64">
         <input 
           type="text" 
           id="search-input"
           placeholder="🔍 搜索游戏名字..." 
-          class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all shadow-sm bg-white"
+          class="w-full px-4 py-2 text-sm rounded-xl border border-white/40 bg-white/40 backdrop-blur-md focus:bg-white/60 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200/50 outline-none transition-all shadow-sm placeholder-slate-500 text-slate-800"
         >
       </div>
     </header>
 
     <!-- 分类按钮区 -->
-    <div id="categories-container" class="flex gap-2 mb-6 overflow-x-auto pb-2">
+    <div id="categories-container" class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
       <!-- 按钮会用 JS 自动生成在这里 -->
     </div>
 
@@ -48,10 +59,9 @@
     </div>
   </div>
 
-  <!-- 游戏全屏弹窗 (默认隐藏) -->
+  <!-- 游戏全屏弹窗 (默认隐藏，你上一次超级满意的悬浮设计保留啦！) -->
   <div id="game-modal" class="fixed inset-0 bg-black z-50 hidden flex-col">
     
-    <!-- 🌟 全新设计：悬浮退出按钮 (左上角，半透明磨砂，完全不占屏幕空间) -->
     <button 
       onclick="closeGame()"
       class="absolute top-4 left-4 z-[60] bg-slate-900/50 hover:bg-red-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full transition-all text-xs font-bold flex items-center gap-1.5 shadow-lg border border-white/10 group"
@@ -60,18 +70,14 @@
       <span class="hidden sm:inline">退出</span>
     </button>
 
-    <!-- 🌟 全新设计：悬浮游戏信息 (顶部中间，鼠标点不透，完全不干扰游戏操作) -->
     <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[50] pointer-events-none bg-black/30 backdrop-blur-sm px-3 py-1 rounded-full text-white/70 text-xs font-medium flex items-center gap-1.5 border border-white/5 shadow-sm">
       <span id="modal-icon" class="text-sm">🎮</span>
       <span id="modal-title">加载中...</span>
     </div>
 
-    <!-- 游戏画面区 (完全满屏！) -->
     <div class="flex-1 w-full h-full relative flex items-center justify-center">
-      <!-- 真正用来装游戏的 iframe -->
       <iframe id="game-iframe" class="w-full h-full border-none hidden absolute inset-0"></iframe>
       
-      <!-- 如果没填链接，就显示这个提示 -->
       <div id="empty-url-msg" class="text-center bg-slate-800 p-8 rounded-2xl max-w-md hidden z-10 mx-4">
         <div class="text-6xl mb-4">🚧</div>
         <h3 class="text-2xl font-bold text-white mb-3">游戏链接还没填哦！</h3>
@@ -85,97 +91,41 @@
     </div>
   </div>
 
-  <!-- 👇 核心逻辑：你的游戏数据都在这里！ -->
   <script>
-    // 🌟 在这里填入你的小游戏信息！
     const myGames = [
-      { 
-        id: 1, 
-        title: '爽爽割草', 
-        category: '动作', 
-        desc: '超解压的满屏割草游戏，疯狂收割敌人，爽感直接拉满！', 
-        icon: '⚔️', 
-        url: 'https://chanhua05.github.io/game/gecao.html' 
-      },
-      { 
-        id: 2, 
-        title: '雷霆战机', 
-        category: '射击', 
-        desc: '驾驶你的王牌战机，穿梭在枪林弹雨中，保卫宇宙和平！', 
-        icon: '✈️', 
-        url: 'https://chanhua05.github.io/game/ltzj.html'
-      },
-      { 
-        id: 3, 
-        title: '斗地主', 
-        category: '棋牌', // 👈 换成棋牌分类啦
-        desc: '经典三人斗地主！叫地主、抢地主、甩出王炸，看谁才是真正的牌神！', 
-        icon: '🃏', 
-        url: 'https://chanhua05.github.io/game/doudizhu' // 👈 斗地主的链接也安排上了！
-      },
-      { 
-        id: 4, 
-        title: '三国杀', 
-        category: '策略', 
-        desc: '经典策略卡牌对战！主公、忠臣、反贼、内奸，尔虞我诈，谁能笑到最后？', 
-        icon: '🐉', 
-        url: 'https://chanhua05.github.io/game/newrealchinakill.html' 
-      },
-      { 
-        id: 5, 
-        title: '魔方', 
-        category: '益智', 
-        desc: '3D经典魔方！转动指尖，挑战你的空间思维和手速，看看你能多快还原！', 
-        icon: '🧩', 
-        url: 'https://chanhua05.github.io/game/mofang' 
-      },
-      { 
-        id: 6, 
-        title: '狼人杀', 
-        category: '推理', 
-        desc: '天黑请闭眼... 伪装、逻辑与口才的较量，找出隐藏的狼人或者消灭所有好人！', 
-        icon: '🐺', 
-        url: 'https://chanhua05.github.io/ipppp/wolf' 
-      },
-      { 
-        id: 7, 
-        title: '水果忍者', 
-        category: '动作', 
-        desc: '划动指尖，切碎满天飞舞的水果！疯狂连击，果汁四溅，千万别切到炸弹哦！', 
-        icon: '🍉', 
-        url: 'https://chanhua05.github.io/game/sgrz.html' 
-      }
+      { id: 1, title: '爽爽割草', category: '动作', desc: '超解压的满屏割草游戏，疯狂收割敌人，爽感直接拉满！', icon: '⚔️', url: 'https://chanhua05.github.io/game/gecao.html' },
+      { id: 2, title: '雷霆战机', category: '射击', desc: '驾驶你的王牌战机，穿梭在枪林弹雨中，保卫宇宙和平！', icon: '✈️', url: 'https://chanhua05.github.io/game/ltzj.html' },
+      { id: 3, title: '斗地主', category: '棋牌', desc: '经典三人斗地主！叫地主、抢地主、甩出王炸，看谁才是真正的牌神！', icon: '🃏', url: 'https://chanhua05.github.io/game/doudizhu' },
+      { id: 4, title: '三国杀', category: '策略', desc: '经典策略卡牌对战！主公、忠臣、反贼、内奸，尔虞我诈，谁能笑到最后？', icon: '🐉', url: 'https://chanhua05.github.io/game/newrealchinakill.html' },
+      { id: 5, title: '魔方', category: '益智', desc: '3D经典魔方！转动指尖，挑战你的空间思维和手速，看看你能多快还原！', icon: '🧩', url: 'https://chanhua05.github.io/game/mofang' },
+      { id: 6, title: '狼人杀', category: '推理', desc: '天黑请闭眼... 伪装、逻辑与口才的较量，找出隐藏的狼人或者消灭所有好人！', icon: '🐺', url: 'https://chanhua05.github.io/ipppp/wolf' },
+      { id: 7, title: '水果忍者', category: '动作', desc: '划动指尖，切碎满天飞舞的水果！疯狂连击，果汁四溅，千万别切到炸弹哦！', icon: '🍉', url: 'https://chanhua05.github.io/game/sgrz.html' }
     ];
 
-    // 我在这里帮你加了一个“推理”分类哦！
     const categories = ['全部', '动作', '射击', '棋牌', '策略', '推理', '休闲', '益智'];
     let currentCategory = '全部';
     let searchQuery = '';
 
-    // 获取页面上的元素
     const gamesGrid = document.getElementById('games-grid');
     const categoriesContainer = document.getElementById('categories-container');
     const searchInput = document.getElementById('search-input');
-    
     const gameModal = document.getElementById('game-modal');
     const gameIframe = document.getElementById('game-iframe');
     const emptyUrlMsg = document.getElementById('empty-url-msg');
     const modalTitle = document.getElementById('modal-title');
     const modalIcon = document.getElementById('modal-icon');
 
-    // 1️⃣ 渲染分类按钮
+    // 1️⃣ 渲染分类按钮 (全部改成毛玻璃)
     function renderCategories() {
       categoriesContainer.innerHTML = '';
       categories.forEach(cat => {
         const btn = document.createElement('button');
         btn.innerText = cat;
-        // 判断是不是当前选中的分类，给不同的颜色
         if (cat === currentCategory) {
-          btn.className = 'px-4 py-1.5 rounded-lg text-sm font-bold bg-indigo-600 text-white shadow-md whitespace-nowrap';
+          btn.className = 'px-4 py-1.5 rounded-lg text-sm font-bold bg-indigo-600/90 backdrop-blur-md text-white shadow-lg shadow-indigo-200/50 whitespace-nowrap border border-white/20 transition-all';
         } else {
-          btn.className = 'px-4 py-1.5 rounded-lg text-sm font-medium bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 whitespace-nowrap transition-colors';
+          btn.className = 'px-4 py-1.5 rounded-lg text-sm font-medium bg-white/40 backdrop-blur-md text-slate-700 hover:bg-white/60 hover:shadow-sm border border-white/40 whitespace-nowrap transition-all';
         }
-        // 点击分类时触发刷新
         btn.onclick = () => {
           currentCategory = cat;
           renderCategories();
@@ -185,11 +135,10 @@
       });
     }
 
-    // 2️⃣ 渲染游戏卡片
+    // 2️⃣ 渲染游戏卡片 (通透的高级卡片)
     function renderGames() {
       gamesGrid.innerHTML = '';
       
-      // 过滤游戏（根据分类和搜索词）
       const filteredGames = myGames.filter(game => {
         const matchCategory = currentCategory === '全部' || game.category === currentCategory;
         const matchSearch = game.title.includes(searchQuery) || game.desc.includes(searchQuery);
@@ -198,9 +147,9 @@
 
       if (filteredGames.length === 0) {
         gamesGrid.innerHTML = `
-          <div class="col-span-full text-center py-16 text-slate-500">
+          <div class="col-span-full text-center py-16 bg-white/30 backdrop-blur-md rounded-2xl border border-white/40">
             <div class="text-4xl mb-3">🕵️‍♂️</div>
-            <p class="text-sm">没有找到匹配的游戏哦...</p>
+            <p class="text-sm text-slate-600 font-medium">没有找到匹配的游戏哦...</p>
           </div>
         `;
         return;
@@ -208,21 +157,22 @@
 
       filteredGames.forEach(game => {
         const card = document.createElement('div');
-        card.className = 'bg-white rounded-xl p-4 md:p-5 shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer';
-        card.onclick = () => openGame(game); // 点击卡片打开游戏
+        // 🌟 卡片本体：毛玻璃、半透明白边、悬浮效果
+        card.className = 'bg-white/40 backdrop-blur-md rounded-2xl p-4 md:p-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-white/60 hover:shadow-xl hover:bg-white/50 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer group';
+        card.onclick = () => openGame(game); 
 
         card.innerHTML = `
           <div class="flex items-start justify-between mb-3">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-3xl bg-indigo-50 shadow-inner">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-3xl bg-white/60 backdrop-blur-sm shadow-inner border border-white/50 group-hover:scale-105 transition-transform">
               ${game.icon}
             </div>
-            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md">
+            <span class="text-[10px] font-bold px-2 py-0.5 bg-white/50 backdrop-blur-sm text-slate-600 rounded-md border border-white/30">
               ${game.category}
             </span>
           </div>
-          <h3 class="text-base font-bold text-slate-800 mb-1.5">${game.title}</h3>
-          <p class="text-slate-500 text-xs mb-4 flex-1 line-clamp-2 leading-relaxed">${game.desc}</p>
-          <button class="w-full bg-slate-800 hover:bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium transition-colors">
+          <h3 class="text-base font-extrabold text-slate-800 mb-1.5 drop-shadow-sm">${game.title}</h3>
+          <p class="text-slate-600 text-xs mb-4 flex-1 line-clamp-2 leading-relaxed font-medium">${game.desc}</p>
+          <button class="w-full bg-slate-800/80 backdrop-blur-md hover:bg-indigo-600/90 text-white py-2 rounded-lg text-sm font-bold transition-colors border border-white/20 shadow-sm">
             ▶ 开始游玩
           </button>
         `;
@@ -237,15 +187,13 @@
       gameModal.classList.remove('hidden');
       gameModal.classList.add('flex');
       
-      document.body.style.overflow = 'hidden'; // 背景禁止滚动
+      document.body.style.overflow = 'hidden'; 
 
       if (game.url) {
-        // 如果有链接，显示 iframe
         gameIframe.src = game.url;
         gameIframe.classList.remove('hidden');
         emptyUrlMsg.classList.add('hidden');
       } else {
-        // 如果没链接，显示提示文字
         gameIframe.src = '';
         gameIframe.classList.add('hidden');
         emptyUrlMsg.classList.remove('hidden');
@@ -254,31 +202,4 @@
 
     // 4️⃣ 关闭游戏逻辑
     function closeGame() {
-      gameModal.classList.add('hidden');
-      gameModal.classList.remove('flex');
-      gameIframe.src = ''; // 清空 iframe，让游戏停止运行
-      document.body.style.overflow = 'auto'; // 恢复滚动
-    }
-
-    // 5️⃣ 监听搜索框输入
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      renderGames();
-    });
-
-    // 页面加载完成后，初始化渲染
-    renderCategories();
-    renderGames();
-
-  </script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
+      gameModal
