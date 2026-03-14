@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>欢乐斗地主</title>
+<title>欢乐斗地主 - 优化版</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -36,7 +36,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e3d1a;font-family:
 .exitBtn:hover{background:#f5c84220;}
 
 /* PLAYER AREAS */
-#areaTop{position:absolute;top:36px;left:0;right:0;height:108px;display:flex;align-items:center;justify-content:center;gap:12px;z-index:30;pointer-events:none;}
+#areaRight{position:absolute;right:0;top:36px;bottom:126px;width:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:30;}
 #areaLeft{position:absolute;left:0;top:36px;bottom:126px;width:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:30;}
 #areaBottom{position:absolute;bottom:0;left:0;right:0;height:124px;display:flex;flex-direction:column;align-items:center;z-index:30;}
 #playerHand{display:flex;justify-content:center;align-items:flex-end;height:84px;overflow:visible;padding:0 8px;position:relative;}
@@ -50,18 +50,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e3d1a;font-family:
 .pCount{background:#0006;border:1px solid #f5c84240;border-radius:20px;padding:2px 8px;color:var(--gold);font-size:11px;font-weight:700;}
 
 /* CARD BACKS ROW */
-#cbTop{display:flex;flex-wrap:wrap;max-width:220px;margin-top:4px;}
-#cbLeft{display:flex;flex-direction:column;align-items:center;margin-top:6px;}
-.cb{width:18px;height:26px;border-radius:3px;background:linear-gradient(135deg,#1a4080,#0a2050);border:1.5px solid #4a70c0;box-shadow:1px 1px 3px #0006;margin-left:-5px;}
-.cb:first-child{margin-left:0;}
-.cbV{width:26px;height:16px;border-radius:3px;background:linear-gradient(135deg,#1a4080,#0a2050);border:1.5px solid #4a70c0;box-shadow:1px 1px 3px #0006;margin-top:-4px;}
+.cbContainer{display:flex;flex-direction:column;align-items:center;margin-top:6px;}
+.cbV{width:26px;height:16px;border-radius:3px;background:linear-gradient(135deg,#1a4080,#0a2050);border:1.5px solid #4a70c0;box-shadow:1px 1px 3px #0006;margin-top:-6px;}
 .cbV:first-child{margin-top:0;}
 
 /* LANDLORD CARDS */
 #landlordArea{position:absolute;top:42px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:45;transition:opacity .4s;}
 
 /* PLAY ZONES */
-#pzTop{position:absolute;top:148px;left:50%;transform:translateX(-50%);display:flex;z-index:35;justify-content:center;min-height:52px;align-items:flex-end;}
+#pzRight{position:absolute;right:128px;top:50%;transform:translateY(-60%);display:flex;z-index:35;min-height:52px;max-width:240px;flex-direction:row-reverse;flex-wrap:wrap;align-items:flex-end;justify-content:flex-start;}
 #pzLeft{position:absolute;left:128px;top:50%;transform:translateY(-60%);display:flex;z-index:35;min-height:52px;max-width:240px;flex-wrap:wrap;align-items:flex-end;}
 #pzBottom{position:absolute;bottom:130px;left:50%;transform:translateX(-50%);display:flex;z-index:35;justify-content:center;min-height:52px;align-items:flex-end;}
 .passLbl{color:#f5c84280;font-size:18px;font-weight:900;letter-spacing:2px;padding:8px 12px;align-self:center;}
@@ -69,8 +66,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e3d1a;font-family:
 /* BUBBLES */
 .bub{position:absolute;background:var(--gold);color:#3a1800;padding:5px 11px;border-radius:10px;font-size:13px;font-weight:700;pointer-events:none;z-index:60;white-space:nowrap;box-shadow:0 4px 15px rgba(0,0,0,.5);opacity:0;transition:opacity .25s;}
 .bub.show{opacity:1;}
-#bTop{top:148px;left:50%;transform:translateX(-50%);}
-#bTop::after{content:'';position:absolute;border:5px solid transparent;border-top-color:var(--gold);top:100%;left:50%;transform:translateX(-50%);}
+#bRight{right:128px;top:43%;transform:translateY(-50%);}
+#bRight::after{content:'';position:absolute;border:5px solid transparent;border-right-color:var(--gold);right:100%;top:50%;transform:translateY(-50%);}
 #bLeft{left:128px;top:43%;transform:translateY(-50%);}
 #bLeft::after{content:'';position:absolute;border:5px solid transparent;border-left-color:var(--gold);left:100%;top:50%;transform:translateY(-50%);}
 #bBottom{bottom:134px;left:50%;transform:translateX(-50%);}
@@ -79,7 +76,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e3d1a;font-family:
 /* ARROWS */
 .arr{position:absolute;font-size:20px;z-index:50;pointer-events:none;animation:blink .7s ease-in-out infinite alternate;display:none;}
 @keyframes blink{from{opacity:.3;transform:scale(.85);}to{opacity:1;transform:scale(1.1);}}
-#aTop{top:150px;left:50%;transform:translateX(-50%);}
+#aRight{right:116px;top:48%;transform:translateY(-50%);}
 #aLeft{left:116px;top:48%;transform:translateY(-50%);}
 #aBottom{bottom:134px;left:50%;transform:translateX(-50%);}
 
@@ -182,38 +179,38 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0e3d1a;font-family:
 
   <div id="landlordArea"></div>
 
-  <!-- Top AI -->
-  <div id="areaTop">
+  <!-- Right AI (Computer A) -->
+  <div id="areaRight">
     <div class="pWidget">
-      <div class="pAvatar" id="avTop">😼</div>
+      <div class="pAvatar" id="avRight">😼</div>
       <div class="pName">电脑甲</div>
-      <div class="pCount" id="ctTop">17张</div>
+      <div class="pCount" id="ctRight">17张</div>
     </div>
-    <div id="cbTop"></div>
+    <div id="cbRight" class="cbContainer"></div>
   </div>
 
-  <!-- Left AI -->
+  <!-- Left AI (Computer B) -->
   <div id="areaLeft">
     <div class="pWidget">
       <div class="pAvatar" id="avLeft">🐺</div>
       <div class="pName">电脑乙</div>
       <div class="pCount" id="ctLeft">17张</div>
     </div>
-    <div id="cbLeft"></div>
+    <div id="cbLeft" class="cbContainer"></div>
   </div>
 
   <!-- Play zones -->
-  <div id="pzTop"></div>
+  <div id="pzRight"></div>
   <div id="pzLeft"></div>
   <div id="pzBottom"></div>
 
   <!-- Bubbles -->
-  <div class="bub" id="bTop"></div>
+  <div class="bub" id="bRight"></div>
   <div class="bub" id="bLeft"></div>
   <div class="bub" id="bBottom"></div>
 
   <!-- Arrows -->
-  <div class="arr" id="aTop">⬇️</div>
+  <div class="arr" id="aRight">⬅️</div>
   <div class="arr" id="aLeft">➡️</div>
   <div class="arr" id="aBottom">⬆️</div>
 
@@ -275,7 +272,7 @@ function makeDeck(){
   d.push({suit:'',rank:'大',id:'大王',_sel:false});
   return d;
 }
-function shuf(a){for(let i=a.length-1;i>0;i--){let j=~~(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+function shuf(a){for(let i=a.length-1;i>0;i--){let j=~~(Math.random()*(i+1));[a[i],a[j]]=[a[i],a[j]]=[a[j],a[i]];}}
 function cv(c){if(G.mode==='laizi'&&c.rank===G.wildCard)return 18;return BV[c.rank]||0;}
 function isWild(c){return G.mode==='laizi'&&c.rank===G.wildCard;}
 function isRed(c){return c.suit==='♥'||c.suit==='♦';}
@@ -425,7 +422,7 @@ function doLandlord(idx){
   G.phase='playing';G.currentPlayer=idx;G.lastRealPlay=null;
   setTimeout(()=>{renderAll();startTurn(G.currentPlayer);},1300);
 }
-function bID(idx){return['bBottom','bTop','bLeft'][idx];}
+function bID(idx){return['bBottom','bRight','bLeft'][idx];}
 
 // ============================================================
 // TURNS
@@ -526,18 +523,18 @@ function mkCard(c,sm=false){
   return d;
 }
 function renderBacks(){
-  let tEl=document.getElementById('cbTop');tEl.innerHTML='';
-  for(let i=0;i<G.hands[1].length;i++){let b=document.createElement('div');b.className='cb';if(i>0)b.style.marginLeft='-5px';tEl.appendChild(b);}
+  let rEl=document.getElementById('cbRight');rEl.innerHTML='';
+  for(let i=0;i<G.hands[1].length;i++){let b=document.createElement('div');b.className='cbV';rEl.appendChild(b);}
   let lEl=document.getElementById('cbLeft');lEl.innerHTML='';
   for(let i=0;i<G.hands[2].length;i++){let b=document.createElement('div');b.className='cbV';lEl.appendChild(b);}
 }
 function updCount(idx){
-  if(idx===1){let e=document.getElementById('ctTop');if(e)e.textContent=G.hands[1].length+'张';}
+  if(idx===1){let e=document.getElementById('ctRight');if(e)e.textContent=G.hands[1].length+'张';}
   if(idx===2){let e=document.getElementById('ctLeft');if(e)e.textContent=G.hands[2].length+'张';}
   renderBacks();
 }
 function setZone(idx,cards){
-  let zId=['pzBottom','pzTop','pzLeft'][idx];let z=document.getElementById(zId);z.innerHTML='';
+  let zId=['pzBottom','pzRight','pzLeft'][idx];let z=document.getElementById(zId);z.innerHTML='';
   if(!cards||!cards.length){let l=document.createElement('div');l.className='passLbl';l.textContent='不出';z.appendChild(l);}
   else cards.forEach((c,i)=>{let d=mkCard(c,true);if(i>0)d.style.marginLeft='-8px';d.style.cursor='default';z.appendChild(d);});
 }
@@ -547,13 +544,13 @@ function showLC(){
   if(G.landlordIdx!==0){setTimeout(()=>{a.style.opacity='0';},2200);setTimeout(()=>{a.innerHTML='';a.style.opacity='1';},2700);}
 }
 function markLandlord(idx){
-  ['avTop','avLeft'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('lm');});
-  if(idx===1)document.getElementById('avTop').classList.add('lm');
+  ['avRight','avLeft'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('lm');});
+  if(idx===1)document.getElementById('avRight').classList.add('lm');
   if(idx===2)document.getElementById('avLeft').classList.add('lm');
 }
 function showArr(idx){
-  ['aTop','aLeft','aBottom'].forEach(id=>document.getElementById(id).style.display='none');
-  let map=['aBottom','aTop','aLeft'];let e=document.getElementById(map[idx]);if(e)e.style.display='block';
+  ['aRight','aLeft','aBottom'].forEach(id=>document.getElementById(id).style.display='none');
+  let map=['aBottom','aRight','aLeft'];let e=document.getElementById(map[idx]);if(e)e.style.display='block';
 }
 let bTimers={};
 function bubble(id,txt){
@@ -632,10 +629,10 @@ function startGame(){
   document.getElementById('menuScreen').style.display='none';
   document.getElementById('resultOv').classList.remove('show');
   document.getElementById('bidPanel').classList.remove('show');
-  ['pzBottom','pzTop','pzLeft','landlordArea'].forEach(id=>{let e=document.getElementById(id);if(e)e.innerHTML='';});
-  ['aTop','aLeft','aBottom'].forEach(id=>{let e=document.getElementById(id);if(e)e.style.display='none';});
-  ['bTop','bLeft','bBottom'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('show');});
-  ['avTop','avLeft'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('lm');});
+  ['pzBottom','pzRight','pzLeft','landlordArea'].forEach(id=>{let e=document.getElementById(id);if(e)e.innerHTML='';});
+  ['aRight','aLeft','aBottom'].forEach(id=>{let e=document.getElementById(id);if(e)e.style.display='none';});
+  ['bRight','bLeft','bBottom'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('show');});
+  ['avRight','avLeft'].forEach(id=>{let e=document.getElementById(id);if(e)e.classList.remove('lm');});
   const mn={classic:'经典模式',laizi:'癞子模式',noshuffle:'不洗牌'};
   document.getElementById('modeTag').textContent=mn[selMode];
   let lt=document.getElementById('lzTag');
