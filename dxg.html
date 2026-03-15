@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>合成大西瓜 - 1比1还原版</title>
+    <!-- 引入强大的 Matter.js 物理引擎 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #333; /* 外围深色背景 */
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: none; /* 防止手机端滑动页面 */
+            overflow: hidden;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 400px;
+            height: 700px;
+            background: linear-gradient(135deg, #fff0dc 0%, #ffd8a8 100%); /* 换成更高级的渐变暖色背景 */
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            /* 居中并保持比例缩放 */
+            transform-origin: center center;
+        }
+
+        .header {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+            pointer-events: none; /* 防止挡住点击事件 */
+        }
+
+        .ui-box {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            color: #775533;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            border: 2px solid #fff;
+        }
+
+        .ui-box span.label {
+            display: block;
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        #score {
+            font-size: 26px;
+            color: #ff6b6b;
+            font-family: monospace;
+        }
+
+        #next-fruit-display {
+            font-size: 32px;
+            line-height: 1;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 游戏结束弹窗 */
+        #game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.65);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(3px);
+        }
+
+        .modal {
+            background: #fff;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 4px solid #ffe8c3;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal h2 { margin: 0 0 15px 0; color: #ff6b6b; font-size: 36px; }
+        .modal p { font-size: 20px; color: #666; margin-bottom: 25px; }
+        #final-score { font-size: 28px; color: #ff6b6b; font-weight: bold; }
+
+        .modal button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .modal button:active { 
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(255, 107, 107, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <!-- 顶部 UI 区域 -->
+    <div class="header">
+        <div class="ui-box">
+            <span class="label">当前分数</span>
+            <span id="score">0</span>
+        </div>
+        <div class="ui-box">
+            <span class="label">下一个</span>
+            <div id="next-fruit-display">🍇</div>
+        </div>
+    </div>
+
+    <!-- 游戏画布 -->
+    <canvas id="game-canvas" width="400" height="700"></canvas>
+
+    <!-- 游戏结束画面 -->
+    <div id="game-over">
+        <div class="modal">
+            <h2>游戏结束! 🍉</h2>
+            <p>最终得分: <br><span id="final-score">0</span></p>
+            <button onclick="restart()">再玩一局</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 屏幕适配逻辑：确保在任何设备上都能完美缩放并居中 ---
+    function adjustScale() {
+        const wrapper = document.getElementById('game-wrapper');
+        // 游戏原生分辨率是 400x700
+        const scale = Math.min(window.innerWidth / 400, window.innerHeight / 700);
+        // 如果屏幕比较小，就缩放；如果屏幕大，就保持原样
+        if (scale < 1) {
+            wrapper.style.transform = `scale(${scale})`;
+        } else {
+            wrapper.style.transform = `scale(1)`;
+        }
+    }
+    window.addEventListener('resize', adjustScale);
+    adjustScale(); // 初始化调用一次
+
+    // --- 物理引擎及游戏逻辑 ---
+    const Engine = Matter.Engine,
+          Render = Matter.Render,
+          Runner = Matter.Runner,
+          Bodies = Matter.Bodies,
+          Composite = Matter.Composite,
+          Events = Matter.Events;
+
+    // 水果配置数据 (加入3D渐变色和高光配置，L=亮部, B=基色, D=暗部)
+    const FRUITS = [
+        { emoji: '🍇', radius: 16, score: 1,    colorL: '#d8b4fe', colorB: '#a855f7', colorD: '#7e22ce' }, // 0
+        { emoji: '🍒', radius: 24, score: 2,    colorL: '#fca5a5', colorB: '#ef4444', colorD: '#b91c1c' }, // 1
+        { emoji: '🍊', radius: 32, score: 4,    colorL: '#fdba74', colorB: '#f97316', colorD: '#c2410c' }, // 2
+        { emoji: '🍋', radius: 40, score: 8,    colorL: '#fef08a', colorB: '#eab308', colorD: '#a16207' }, // 3
+        { emoji: '🥝', radius: 48, score: 16,   colorL: '#bbf7d0', colorB: '#22c55e', colorD: '#15803d' }, // 4
+        { emoji: '🍅', radius: 56, score: 32,   colorL: '#fda4af', colorB: '#f43f5e', colorD: '#be123c' }, // 5
+        { emoji: '🍑', radius: 66, score: 64,   colorL: '#fbcfe8', colorB: '#ec4899', colorD: '#be185d' }, // 6
+        { emoji: '🍍', radius: 76, score: 128,  colorL: '#fde047', colorB: '#ca8a04', colorD: '#854d0e' }, // 7
+        { emoji: '🥥', radius: 88, score: 256,  colorL: '#f5f5f4', colorB: '#d6d3d1', colorD: '#a8a29e' }, // 8
+        { emoji: '🍈', radius: 102, score: 512, colorL: '#d9f99d', colorB: '#84cc16', colorD: '#4d7c0f' }, // 9
+        { emoji: '🍉', radius: 120, score: 1024, colorL: '#fca5a5', colorB: '#ef4444', colorD: '#991b1b', rind: '#15803d' }  // 10
+    ];
+
+    // 初始化物理引擎
+    const engine = Engine.create();
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 调整物理引擎参数使其更有弹性
+    engine.gravity.y = 1.2;
+
+    // 游戏状态
+    let score = 0;
+    let currentLevel = getRandomFruitLevel();
+    let nextLevel = getRandomFruitLevel();
+    let isDropping = false;
+    let gameOver = false;
+    let gameOverTimer = 0;
+    let previewX = canvas.width / 2; // 顶部瞄准线的X坐标
+
+    // --- 创建边界墙壁 ---
+    const wallOptions = { isStatic: true, render: { fillStyle: '#d4a373' } };
+    // 左墙、右墙、地板 (放到画面边缘之外或底部)
+    const ground = Bodies.rectangle(200, 715, 400, 50, wallOptions); 
+    const leftWall = Bodies.rectangle(-25, 350, 50, 800, wallOptions);
+    const rightWall = Bodies.rectangle(425, 350, 50, 800, wallOptions);
+    Composite.add(engine.world, [ground, leftWall, rightWall]);
+
+    // 随机生成掉落水果 (前5种: 0到4)
+    function getRandomFruitLevel() {
+        return Math.floor(Math.random() * 5); 
+    }
+
+    // 更新UI显示
+    function updateUI() {
+        document.getElementById('score').innerText = score;
+        document.getElementById('next-fruit-display').innerText = FRUITS[nextLevel].emoji;
+    }
+
+    // --- 核心：合成碰撞逻辑 ---
+    Events.on(engine, 'collisionStart', (event) => {
+        event.pairs.forEach(pair => {
+            const bodyA = pair.bodyA;
+            const bodyB = pair.bodyB;
+
+            // 检查是不是同等级的水果
+            if (bodyA.fruitLevel !== undefined && bodyA.fruitLevel === bodyB.fruitLevel) {
+                // 防止一帧内重复触发合成
+                if (bodyA.isMerging || bodyB.isMerging) return;
+                bodyA.isMerging = true;
+                bodyB.isMerging = true;
+
+                const newLevel = bodyA.fruitLevel + 1;
+                
+                // 如果还没合到大西瓜
+                if (newLevel < FRUITS.length) {
+                    // 取两者的中间点作为新水果的位置
+                    const newX = (bodyA.position.x + bodyB.position.x) / 2;
+                    const newY = (bodyA.position.y + bodyB.position.y) / 2;
+
+                    // 从物理世界移除旧水果
+                    Composite.remove(engine.world, [bodyA, bodyB]);
+
+                    // 创建升级后的新水果
+                    const fruitData = FRUITS[newLevel];
+                    const newFruit = Bodies.circle(newX, newY, fruitData.radius, {
+                        restitution: 0.2, // 弹性
+                        friction: 0.1,    // 摩擦力小一点容易滑下去
+                        fruitLevel: newLevel
+                    });
+
+                    Composite.add(engine.world, newFruit);
+                    score += fruitData.score;
+                    updateUI();
+                } else {
+                    // 如果是两个大西瓜合体 -> 终极爆开，直接消失并加超高分！
+                    Composite.remove(engine.world, [bodyA, bodyB]);
+                    score += 2048;
+                    updateUI();
+                }
+            }
+        });
+    });
+
+    // --- 死亡判定：红线逻辑 ---
+    Events.on(engine, 'afterUpdate', () => {
+        if (gameOver) return;
+        
+        let isAboveLine = false;
+        const bodies = Composite.allBodies(engine.world);
+        
+        for (let body of bodies) {
+            if (body.fruitLevel !== undefined) {
+                // 150 是危险红线的Y坐标
+                // 我们判断水果顶部是否越过红线
+                if (body.position.y - FRUITS[body.fruitLevel].radius < 150) {
+                    // 并且水果基本处于静止状态 (防止掉落途中的误判)
+                    if (Math.abs(body.velocity.y) < 0.2
