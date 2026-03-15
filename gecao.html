@@ -3,208 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>割草特工队 - 终极觉醒版</title>
+    <title>割草特工队 - 职业觉醒版</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #1a1a2e;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            user-select: none;
-            touch-action: none;
-        }
-        canvas {
-            display: block;
-        }
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        #xp-bar-container {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50%; 
-            height: 20px;
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 2px solid #4a4e69;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        #xp-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #00b4d8, #0077b6);
-            transition: width 0.2s;
-        }
-        #level-text {
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px black;
-        }
-        #timer-text {
-            position: absolute;
-            top: 12px;
-            left: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        }
-        #settings-btn {
-            position: absolute;
-            top: 12px;
-            right: 20px;
-            background-color: #4a4e69;
-            color: white;
-            border: 2px solid #fff;
-            border-radius: 8px;
-            padding: 5px 15px;
-            font-size: 18px;
-            cursor: pointer;
-            pointer-events: auto;
-            display: none;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-        }
-        #settings-btn:hover { background-color: #e94560; }
-
-        /* GM 按钮和面板样式 */
-        #gm-btn {
-            position: absolute;
-            top: 55px;
-            right: 20px;
-            background-color: #fca311;
-            color: #1a1a2e;
-            border: 2px solid #fff;
-            border-radius: 8px;
-            padding: 5px 15px;
-            font-size: 18px;
-            cursor: pointer;
-            pointer-events: auto;
-            display: none;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-            font-weight: bold;
-        }
-        #gm-btn:hover { background-color: #ffb703; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #1a1a2e; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; touch-action: none; }
+        canvas { display: block; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
         
-        .gm-row {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.3); padding: 5px 10px; margin-bottom: 5px; border-radius: 5px;
-        }
-        .gm-actions button {
-            background: #4cc9f0; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px; color: #1a1a2e;
-        }
+        #xp-bar-container { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 50%; height: 20px; background-color: rgba(0, 0, 0, 0.5); border: 2px solid #4a4e69; border-radius: 10px; overflow: hidden; }
+        #xp-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00b4d8, #0077b6); transition: width 0.2s; }
+        #level-text { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: bold; text-shadow: 1px 1px 2px black; }
+        #timer-text { position: absolute; top: 12px; left: 20px; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        #settings-btn { position: absolute; top: 12px; right: 20px; background-color: #4a4e69; color: white; border: 2px solid #fff; border-radius: 8px; padding: 5px 15px; font-size: 18px; cursor: pointer; pointer-events: auto; display: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+        #settings-btn:hover { background-color: #e94560; }
+        #gm-btn { position: absolute; top: 55px; right: 20px; background-color: #fca311; color: #1a1a2e; border: 2px solid #fff; border-radius: 8px; padding: 5px 15px; font-size: 18px; cursor: pointer; pointer-events: auto; display: none; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); font-weight: bold; }
+        #gm-btn:hover { background-color: #ffb703; }
+
+        .gm-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 5px 10px; margin-bottom: 5px; border-radius: 5px; }
+        .gm-actions button { background: #4cc9f0; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 5px; color: #1a1a2e; }
         .gm-actions button.max { background: #ff5c77; color: white; }
         .gm-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        #joystick-zone {
-            position: absolute;
-            bottom: 40px;
-            left: 40px;
-            width: 120px;
-            height: 120px;
-            background-color: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            pointer-events: auto;
-            display: none;
-        }
-        #joystick-knob {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 50px;
-            height: 50px;
-            background-color: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
+        #joystick-zone { position: absolute; bottom: 40px; left: 40px; width: 120px; height: 120px; background-color: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; pointer-events: auto; display: none; }
+        #joystick-knob { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.6); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
 
-        .panel {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(22, 33, 62, 0.95);
-            padding: 30px;
-            border-radius: 15px;
-            border: 3px solid #e94560;
-            text-align: center;
-            display: none;
-            pointer-events: auto;
-            box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            min-width: 320px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
+        .panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(22, 33, 62, 0.95); padding: 30px; border-radius: 15px; border: 3px solid #e94560; text-align: center; display: none; pointer-events: auto; box-shadow: 0 0 30px rgba(0,0,0,0.8); min-width: 320px; max-height: 85vh; overflow-y: auto; }
         .panel h2 { margin-top: 0; color: #e94560; font-size: 28px; }
-        .upgrade-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background-color: #0f3460;
-            color: white;
-            border: 2px solid #4a4e69;
-            border-radius: 8px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-        }
+        
+        .upgrade-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background-color: #0f3460; color: white; border: 2px solid #4a4e69; border-radius: 8px; font-size: 18px; cursor: pointer; transition: all 0.2s; text-align: left; position: relative; overflow: hidden; }
         .upgrade-btn:hover { background-color: #e94560; border-color: white; transform: scale(1.02); }
-        .upgrade-btn.max-level-btn {
-            background: linear-gradient(45deg, #d90429, #ff5c77);
-            border-color: #ffd166;
-            animation: pulse-glow 1.5s infinite alternate;
-        }
-        @keyframes pulse-glow {
-            from { box-shadow: 0 0 5px #ff5c77; }
-            to { box-shadow: 0 0 20px #ffd166; }
-        }
+        .upgrade-btn.max-level-btn { background: linear-gradient(45deg, #d90429, #ff5c77); border-color: #ffd166; animation: pulse-glow 1.5s infinite alternate; }
+        
+        /* 专属Buff边框 */
+        .upgrade-btn.class-exclusive { border-color: #fca311; background-color: #3b2a1a; }
+        
+        @keyframes pulse-glow { from { box-shadow: 0 0 5px #ff5c77; } to { box-shadow: 0 0 20px #ffd166; } }
 
         #start-panel { display: block; }
-        button.action-btn {
-            padding: 12px 25px;
-            font-size: 18px;
-            background-color: #e94560;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            margin: 5px;
-        }
+        button.action-btn { padding: 12px 20px; font-size: 16px; background-color: #e94560; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin: 5px; }
         button.action-btn:hover { background-color: #ff5c77; }
 
-        .buff-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background-color: rgba(0,0,0,0.3);
-            padding: 8px 15px;
-            border-radius: 5px;
-            margin-bottom: 8px;
-            border-left: 4px solid #00f5d4;
-        }
+        .buff-item { display: flex; align-items: center; justify-content: space-between; background-color: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 5px; margin-bottom: 8px; border-left: 4px solid #00f5d4; }
         .buff-item.maxed { border-left-color: #d90429; background-color: rgba(217, 4, 41, 0.1); }
         .buff-item-name { font-weight: bold; font-size: 16px; }
         .buff-item-lvl { color: #ffd166; font-weight: bold; }
         .buff-item-lvl.max-text { color: #ef233c; text-shadow: 0 0 5px #ff5c77; }
+
+        /* 职业选择UI */
+        .class-selector { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+        .class-card { background: #0f3460; border: 2px solid #4a4e69; padding: 15px; border-radius: 10px; cursor: pointer; transition: 0.2s; width: 80px; }
+        .class-card:hover { transform: translateY(-5px); background: #1a4a80; }
+        .class-card.active { border-color: #fca311; background: #2a1a3a; box-shadow: 0 0 15px #fca311; }
+        .class-icon { font-size: 30px; margin-bottom: 5px; }
+        .class-name { font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -216,7 +66,7 @@
             <div id="xp-bar"></div>
         </div>
         <div id="level-text" style="display: none;">Lv. 1</div>
-        <div id="timer-text" style="display: none;">00:00</div>
+        <div id="timer-text" style="display: none;">10:00</div>
         <button id="settings-btn" onclick="openSettings()">⚙️ 设置</button>
         <button id="gm-btn" onclick="openGM()">🛠️ GM</button>
 
@@ -225,15 +75,29 @@
         </div>
 
         <div id="start-panel" class="panel">
-            <h2>🌿 割草特工队 🌿<br><span style="font-size:16px; color:#ffd166;">觉醒降临版</span></h2>
-            <p>屏幕左下角 <strong>虚拟摇杆</strong> 拖动<br>或 键盘 W A S D 移动</p>
-            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap;">
-                <button class="action-btn" onclick="startGame('classic')">经典模式</button>
-                <button class="action-btn" style="background-color: #d00000;" onclick="startGame('rampage')">狂暴模式 🩸</button>
-                <button class="action-btn" style="background-color: #fca311; color: #1a1a2e;" onclick="startGame('debug')">🐛 调试模式</button>
+            <h2>🌿 割草特工队 🌿<br><span style="font-size:16px; color:#ffd166;">职业觉醒版</span></h2>
+            
+            <div style="margin-top: 15px; text-align: left; padding-left: 10px; font-weight: bold; color: #00f5d4;">选择特工职业：</div>
+            <div class="class-selector">
+                <div class="class-card active" id="class-warrior" onclick="selectClass('warrior')">
+                    <div class="class-icon">🗡️</div><div class="class-name">战士</div>
+                </div>
+                <div class="class-card" id="class-mage" onclick="selectClass('mage')">
+                    <div class="class-icon">🧙‍♂️</div><div class="class-name">法师</div>
+                </div>
+                <div class="class-card" id="class-archer" onclick="selectClass('archer')">
+                    <div class="class-icon">🏹</div><div class="class-name">射手</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                <button class="action-btn" onclick="startGame('classic')">经典模式(10分钟)</button>
+                <button class="action-btn" style="background-color: #7209b7;" onclick="startGame('hard')">困难模式💀</button>
+                <button class="action-btn" style="background-color: #d00000;" onclick="startGame('rampage')">狂暴模式🩸</button>
+                <button class="action-btn" style="background-color: #fca311; color: #1a1a2e;" onclick="startGame('debug')">🐛 调试</button>
             </div>
             <br>
-            <button class="action-btn" style="background-color: #4a4e69; font-size: 16px;" onclick="showLeaderboard()">🏆 排行榜</button>
+            <button class="action-btn" style="background-color: #4a4e69; font-size: 14px;" onclick="showLeaderboard()">🏆 排行榜</button>
         </div>
 
         <div id="settings-panel" class="panel">
@@ -256,16 +120,14 @@
                 <button class="action-btn" style="padding: 5px 10px; font-size: 14px;" onclick="gmSetLevel(30)">Lv.30</button>
                 <button class="action-btn" style="padding: 5px 10px; font-size: 14px; background-color: #ffb703; color: #1a1a2e;" onclick="gmSetLevel(40)">Lv.40</button>
             </div>
-            <div id="gm-buff-list" style="max-height: 280px; overflow-y: auto; text-align: left; margin-bottom: 15px; border: 1px solid #4a4e69; padding: 10px; border-radius: 8px;">
-                <!-- 动态生成 -->
-            </div>
-            <button class="action-btn" style="background-color: #4a4e69; width: 100%;" onclick="closeGM()">✅ 完成配置并继续</button>
+            <div id="gm-buff-list" style="max-height: 280px; overflow-y: auto; text-align: left; margin-bottom: 15px; border: 1px solid #4a4e69; padding: 10px; border-radius: 8px;"></div>
+            <button class="action-btn" style="background-color: #4a4e69; width: 100%;" onclick="closeGM()">✅ 完成配置</button>
         </div>
 
         <div id="leaderboard-panel" class="panel">
             <h2>🏆 英雄榜 🏆</h2>
-            <table style="width: 100%; color: white; text-align: left; border-collapse: collapse; margin-top: 15px;">
-                <thead><tr style="border-bottom: 2px solid #4a4e69;"><th>排名</th><th>模式</th><th>存活时间</th><th>击杀</th></tr></thead>
+            <table style="width: 100%; color: white; text-align: left; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
+                <thead><tr style="border-bottom: 2px solid #4a4e69;"><th>职业</th><th>模式</th><th>存活时间</th><th>击杀</th></tr></thead>
                 <tbody id="leaderboard-list"></tbody>
             </table>
             <br><button class="action-btn" onclick="hideLeaderboard()">返回主页</button>
@@ -277,8 +139,8 @@
         </div>
 
         <div id="gameover-panel" class="panel">
-            <h2>💀 游戏结束 💀</h2>
-            <p id="final-stats">存活时间: 00:00 <br> 击杀数: 0</p>
+            <h2 id="end-title">💀 游戏结束 💀</h2>
+            <p id="final-stats">职业: 战士 <br>存活时间: 00:00 <br> 击杀数: 0</p>
             <br>
             <div style="display: flex; gap: 10px; justify-content: center;">
                 <button class="action-btn" onclick="startGame(currentMode)">再来一局</button>
@@ -298,6 +160,7 @@
     const startPanel = document.getElementById('start-panel');
     const levelupPanel = document.getElementById('levelup-panel');
     const gameoverPanel = document.getElementById('gameover-panel');
+    const endTitle = document.getElementById('end-title');
     const leaderboardPanel = document.getElementById('leaderboard-panel');
     const settingsPanel = document.getElementById('settings-panel');
     const settingsBtn = document.getElementById('settings-btn');
@@ -307,19 +170,17 @@
     const upgradeOptions = document.getElementById('upgrade-options');
     const currentBuffsList = document.getElementById('current-buffs-list');
     const finalStats = document.getElementById('final-stats');
-
     const joystickZone = document.getElementById('joystick-zone');
     const joystickKnob = document.getElementById('joystick-knob');
 
     let gameState = 'start'; 
-    let lastTime = 0;
-    let gameTime = 0; 
-    let killCount = 0;
-    let currentMode = 'classic';
+    let lastTime = 0; let gameTime = 0; let killCount = 0;
+    let currentMode = 'classic'; 
+    let selectedClass = 'warrior'; // 当前选择的职业
 
-    let joyActive = false;
-    let joyDx = 0, joyDy = 0;
+    let joyActive = false; let joyDx = 0, joyDy = 0;
 
+    // --- 输入控制 ---
     function resetInput() {
         joyActive = false; joyDx = 0; joyDy = 0;
         joystickKnob.style.transform = `translate(-50%, -50%)`;
@@ -328,8 +189,8 @@
     window.addEventListener('blur', resetInput);
 
     function formatTime(totalSeconds) {
-        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-        const s = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+        const m = Math.floor(Math.max(0, totalSeconds) / 60).toString().padStart(2, '0');
+        const s = Math.floor(Math.max(0, totalSeconds) % 60).toString().padStart(2, '0');
         return `${m}:${s}`;
     }
 
@@ -344,22 +205,25 @@
     function handleJoystickMove(e) { e.preventDefault(); if(joyActive) updateJoystick(e.touches ? e.touches[0] : e); }
     function handleJoystickEnd(e) { if (e && e.type && e.type.startsWith('touch')) e.preventDefault(); resetInput(); }
     function updateJoystick(touch) {
-        const rect = joystickZone.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2, centerY = rect.top + rect.height / 2;
+        const rect = joystickZone.getBoundingClientRect(); const centerX = rect.left + rect.width / 2, centerY = rect.top + rect.height / 2;
         let dx = touch.clientX - centerX, dy = touch.clientY - centerY;
         const dist = Math.hypot(dx, dy), maxDist = rect.width / 2;
         if (dist > maxDist) { dx = (dx / dist) * maxDist; dy = (dy / dist) * maxDist; }
         joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-        if (Math.min(dist, maxDist) > 0) { joyDx = dx / maxDist; joyDy = dy / maxDist; } 
-        else { joyDx = 0; joyDy = 0; }
+        if (Math.min(dist, maxDist) > 0) { joyDx = dx / maxDist; joyDy = dy / maxDist; } else { joyDx = 0; joyDy = 0; }
     }
-    joystickZone.addEventListener('touchstart', handleJoystickStart, {passive: false});
-    joystickZone.addEventListener('touchmove', handleJoystickMove, {passive: false});
-    joystickZone.addEventListener('touchend', handleJoystickEnd, {passive: false});
-    joystickZone.addEventListener('touchcancel', handleJoystickEnd, {passive: false});
-    joystickZone.addEventListener('mousedown', handleJoystickStart);
-    window.addEventListener('mousemove', handleJoystickMove);
-    window.addEventListener('mouseup', handleJoystickEnd);
+    joystickZone.addEventListener('touchstart', handleJoystickStart, {passive: false}); joystickZone.addEventListener('touchmove', handleJoystickMove, {passive: false});
+    joystickZone.addEventListener('touchend', handleJoystickEnd, {passive: false}); joystickZone.addEventListener('touchcancel', handleJoystickEnd, {passive: false});
+    joystickZone.addEventListener('mousedown', handleJoystickStart); window.addEventListener('mousemove', handleJoystickMove); window.addEventListener('mouseup', handleJoystickEnd);
+
+    // 职业选择逻辑
+    function selectClass(c) {
+        selectedClass = c;
+        document.getElementById('class-warrior').className = 'class-card';
+        document.getElementById('class-mage').className = 'class-card';
+        document.getElementById('class-archer').className = 'class-card';
+        document.getElementById(`class-${c}`).className = 'class-card active';
+    }
 
     // 🎧 音效系统
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -371,8 +235,7 @@
                 const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
                 osc.type = type; osc.frequency.setValueAtTime(freqStart, audioCtx.currentTime);
                 if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, audioCtx.currentTime + duration);
-                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
                 osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
             } catch(e) {}
         },
@@ -380,15 +243,18 @@
         playHit: () => soundManager.playTone(200, 50, 'triangle', 0.05, 0.02),
         playExp: () => soundManager.playTone(1200, 1600, 'sine', 0.06, 0.015),
         playCrit: () => soundManager.playTone(1000, 200, 'square', 0.08, 0.015), 
+        playVictory: () => {
+            soundManager.playTone(523, null, 'sine', 0.3, 0.1); 
+            setTimeout(() => soundManager.playTone(659, null, 'sine', 0.3, 0.1), 150); 
+            setTimeout(() => soundManager.playTone(783, null, 'sine', 0.3, 0.1), 300); 
+            setTimeout(() => soundManager.playTone(1046, null, 'sine', 0.8, 0.1), 450); 
+        },
         playLevelUp: () => {
-            soundManager.playTone(440, null, 'sine', 0.2, 0.05); 
-            setTimeout(() => soundManager.playTone(554, null, 'sine', 0.2, 0.05), 100); 
-            setTimeout(() => soundManager.playTone(659, null, 'sine', 0.2, 0.05), 200); 
-            setTimeout(() => soundManager.playTone(880, null, 'sine', 0.4, 0.05), 300); 
+            soundManager.playTone(440, null, 'sine', 0.2, 0.05); setTimeout(() => soundManager.playTone(554, null, 'sine', 0.2, 0.05), 100); 
+            setTimeout(() => soundManager.playTone(659, null, 'sine', 0.2, 0.05), 200); setTimeout(() => soundManager.playTone(880, null, 'sine', 0.4, 0.05), 300); 
         },
         playAwaken: () => { 
-            soundManager.playTone(440, null, 'sine', 1.0, 0.05);
-            soundManager.playTone(554, null, 'sine', 1.0, 0.05);
+            soundManager.playTone(440, null, 'sine', 1.0, 0.05); soundManager.playTone(554, null, 'sine', 1.0, 0.05);
             setTimeout(() => soundManager.playTone(880, null, 'sine', 1.5, 0.06), 150);
         },
         startBGM: function() {
@@ -401,7 +267,7 @@
         stopBGM: function() { if(this.bgmInterval) { clearInterval(this.bgmInterval); this.bgmInterval = null; } }
     };
 
-    // --- 视觉特效类群 ---
+    // --- 视觉特效类 ---
     class Effect {
         constructor(x1, y1, x2, y2, isAwakened = false) {
             this.x1 = x1; this.y1 = y1; this.x2 = x2; this.y2 = y2;
@@ -410,40 +276,27 @@
         update(dt) { this.life -= dt; }
         draw() {
             ctx.beginPath(); ctx.moveTo(this.x1, this.y1);
-            const midX = (this.x1 + this.x2) / 2 + (Math.random() * 40 - 20);
-            const midY = (this.y1 + this.y2) / 2 + (Math.random() * 40 - 20);
+            const midX = (this.x1 + this.x2) / 2 + (Math.random() * 40 - 20); const midY = (this.y1 + this.y2) / 2 + (Math.random() * 40 - 20);
             ctx.lineTo(midX, midY); ctx.lineTo(this.x2, this.y2);
-            
             if(this.isAwakened) {
                 ctx.strokeStyle = `rgba(217, 4, 41, ${this.life * 3})`; ctx.lineWidth = 8; ctx.stroke();
                 ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 3; ctx.stroke();
-                ctx.beginPath(); ctx.arc(this.x2, this.y2, 30, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(217, 4, 41, ${this.life * 1.5})`; ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x2, this.y2, 30, 0, Math.PI * 2); ctx.fillStyle = `rgba(217, 4, 41, ${this.life * 1.5})`; ctx.fill();
             } else {
                 ctx.strokeStyle = `rgba(0, 245, 212, ${this.life * 5})`; ctx.lineWidth = 3; ctx.stroke();
-                ctx.beginPath(); ctx.arc(this.x2, this.y2, 15, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(0, 245, 212, ${this.life * 2})`; ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x2, this.y2, 15, 0, Math.PI * 2); ctx.fillStyle = `rgba(0, 245, 212, ${this.life * 2})`; ctx.fill();
             }
         }
     }
 
     class LaserLine {
-        constructor(pts, isAwakened) {
-            this.pts = pts; this.life = isAwakened ? 0.4 : 0.2; this.isAwakened = isAwakened;
-        }
+        constructor(pts, isAwakened) { this.pts = pts; this.life = isAwakened ? 0.4 : 0.2; this.isAwakened = isAwakened; }
         update(dt) { this.life -= dt; }
         draw() {
             if(this.pts.length < 2) return;
-            ctx.beginPath(); ctx.moveTo(this.pts[0].x, this.pts[0].y);
-            for(let i=1; i<this.pts.length; i++) ctx.lineTo(this.pts[i].x, this.pts[i].y);
-            
-            if (this.isAwakened) {
-                ctx.strokeStyle = `rgba(217, 4, 41, ${this.life * 3})`; ctx.lineWidth = 10; ctx.stroke();
-                ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 4; ctx.stroke();
-            } else {
-                ctx.strokeStyle = `rgba(67, 97, 238, ${this.life * 4})`; ctx.lineWidth = 6; ctx.stroke();
-                ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 2; ctx.stroke();
-            }
+            ctx.beginPath(); ctx.moveTo(this.pts[0].x, this.pts[0].y); for(let i=1; i<this.pts.length; i++) ctx.lineTo(this.pts[i].x, this.pts[i].y);
+            if (this.isAwakened) { ctx.strokeStyle = `rgba(217, 4, 41, ${this.life * 3})`; ctx.lineWidth = 10; ctx.stroke(); ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 4; ctx.stroke();
+            } else { ctx.strokeStyle = `rgba(67, 97, 238, ${this.life * 4})`; ctx.lineWidth = 6; ctx.stroke(); ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 2; ctx.stroke(); }
         }
     }
 
@@ -458,59 +311,230 @@
             if(this.tickTimer <= 0) {
                 this.tickTimer = 0.2; 
                 for(let e of enemies) {
-                    if(Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) {
+                    if(Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) { 
                         e.takeDamage(this.damage * 0.2, false); 
-                        if(this.type === 'plague') e.isPlagued = true;
+                        if(this.type === 'plague') e.isPlagued = true; 
                     }
                 }
             }
         }
         draw() {
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            const alphaTime = Math.max(0, this.lifeTime);
-            if (this.type === 'blueFire') {
-                ctx.fillStyle = `rgba(67, 97, 238, ${alphaTime * 0.3})`; ctx.fill();
-                ctx.strokeStyle = `rgba(76, 201, 240, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
-            } else if (this.type === 'plague') {
-                ctx.fillStyle = `rgba(114, 9, 183, ${alphaTime * 0.4})`; ctx.fill();
-                ctx.strokeStyle = `rgba(181, 23, 158, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
-            } else if (this.type === 'poison') {
-                ctx.fillStyle = `rgba(128, 237, 153, ${alphaTime * 0.3})`; ctx.fill();
-                ctx.strokeStyle = `rgba(87, 204, 153, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
-            } else if (this.type === 'nuke') {
-                ctx.fillStyle = `rgba(57, 255, 20, ${alphaTime * 0.1})`; ctx.strokeStyle = `rgba(0, 255, 0, ${alphaTime * 0.4})`; ctx.lineWidth = 2; ctx.stroke();
-            } else if (this.type === 'lightning') {
-                ctx.fillStyle = `rgba(255, 92, 119, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(217, 4, 41, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
-            } else { 
-                ctx.fillStyle = `rgba(255, 153, 0, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(255, 60, 0, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
-            }
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); const alphaTime = Math.max(0, this.lifeTime);
+            if (this.type === 'blueFire') { ctx.fillStyle = `rgba(67, 97, 238, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(76, 201, 240, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'plague') { ctx.fillStyle = `rgba(114, 9, 183, ${alphaTime * 0.4})`; ctx.fill(); ctx.strokeStyle = `rgba(181, 23, 158, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'nuke') { ctx.fillStyle = `rgba(57, 255, 20, ${alphaTime * 0.1})`; ctx.strokeStyle = `rgba(0, 255, 0, ${alphaTime * 0.4})`; ctx.lineWidth = 2; ctx.stroke();
+            } else if (this.type === 'lightning') { ctx.fillStyle = `rgba(255, 92, 119, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(217, 4, 41, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke();
+            } else { ctx.fillStyle = `rgba(255, 153, 0, ${alphaTime * 0.3})`; ctx.fill(); ctx.strokeStyle = `rgba(255, 60, 0, ${alphaTime})`; ctx.lineWidth = 2; ctx.stroke(); }
         }
     }
 
     class Explosion {
         constructor(x, y, radius, isAwakened, type = 'normal') {
-            this.x = x; this.y = y; this.maxRadius = radius; 
-            this.radius = 0.1; // 避免为负数
-            this.life = 0.3; this.isAwakened = isAwakened; this.type = type;
+            this.x = x; this.y = y; this.maxRadius = radius; this.radius = 0.1; this.life = 0.3; this.isAwakened = isAwakened; this.type = type;
         }
-        update(dt) { 
-            this.life -= dt; 
-            // 保证半径不会小于等于0
-            this.radius += (this.maxRadius - this.radius) * 10 * dt; 
-            if(this.radius < 0.1) this.radius = 0.1;
-        }
+        update(dt) { this.life -= dt; this.radius += (this.maxRadius - this.radius) * 10 * dt; if(this.radius < 0.1) this.radius = 0.1; }
         draw() {
             if(this.radius <= 0) return;
             ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             if (this.type === 'nuke') ctx.fillStyle = `rgba(57, 255, 20, ${this.life * 3})`;
             else if (this.type === 'ice') ctx.fillStyle = `rgba(0, 191, 255, ${this.life * 3})`;
             else if (this.type === 'poison') ctx.fillStyle = `rgba(181, 23, 158, ${this.life * 3})`;
+            else if (this.type === 'bloom') ctx.fillStyle = `rgba(114, 9, 183, ${this.life * 3})`; // 死亡爆破颜色
             else ctx.fillStyle = `rgba(255, 92, 119, ${this.life * 3})`;
             ctx.fill();
         }
     }
 
-    // --- 实体武器类 ---
+    // --- 新增致敬元气骑士的特效类 ---
+    class VoidSlash {
+        constructor(x, y, angle, radius, damage, isAwakened) {
+            this.x = x; this.y = y; this.angle = angle; this.radius = radius; this.damage = damage;
+            this.isAwakened = isAwakened; this.life = 0.3; this.maxLife = 0.3; this.hitEnemies = new Set();
+        }
+        update(dt) {
+            this.life -= dt;
+            if(this.life <= 0) { this.markedForDeletion = true; return; }
+            const dmgInfo = player.calcDamage(this.damage);
+            for (let e of enemies) {
+                if (this.hitEnemies.has(e)) continue;
+                if (Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) {
+                    e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                    this.hitEnemies.add(e);
+                }
+            }
+        }
+        draw() {
+            if (this.life <= 0) return;
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+            ctx.strokeStyle = this.isAwakened ? '#f72585' : '#b5179e';
+            ctx.lineWidth = (this.life / this.maxLife) * (this.isAwakened ? 25 : 15);
+            ctx.beginPath(); 
+            ctx.moveTo(-this.radius, 0); ctx.lineTo(this.radius, 0); 
+            ctx.stroke();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.radius * 0.8, (this.life / this.maxLife) * 5, 0, 0, Math.PI*2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    class Turret {
+        constructor(x, y, damage, isAwakened) {
+            this.x = x; this.y = y; this.damage = damage; this.isAwakened = isAwakened;
+            this.life = 5; this.fireTimer = 0; this.fireRate = isAwakened ? 0.15 : 0.4;
+            this.markedForDeletion = false;
+        }
+        update(dt) {
+            this.life -= dt; if (this.life <= 0) this.markedForDeletion = true;
+            this.fireTimer -= dt;
+            if (this.fireTimer <= 0) {
+                this.fireTimer = this.fireRate;
+                let target = null; let minDist = Infinity;
+                for (let e of enemies) { const d = Math.hypot(e.x-this.x, e.y-this.y); if(d<400 && d<minDist) {minDist=d; target=e;} }
+                if (target) {
+                    const angle = Math.atan2(target.y-this.y, target.x-this.x);
+                    bullets.push(new Bullet(this.x, this.y, angle, 600, this.damage, 1, this.isAwakened));
+                    soundManager.playShoot();
+                }
+            }
+        }
+        draw() {
+            ctx.save(); ctx.translate(this.x, this.y);
+            ctx.fillStyle = '#4a4e69'; ctx.fillRect(-10, -10, 20, 20);
+            ctx.fillStyle = this.isAwakened ? '#ffb703' : '#00f5d4';
+            ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = `rgba(255,255,255,${this.life/5})`; ctx.strokeRect(-12, -12, 24, 24);
+            ctx.restore();
+        }
+    }
+
+    class Shuriken {
+        constructor(x, y, angle, speed, damage, isAwakened) {
+            this.x = x; this.y = y; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+            this.damage = damage; this.isAwakened = isAwakened; this.radius = 12;
+            this.lifeTime = 3; this.markedForDeletion = false; this.angle = 0;
+        }
+        update(dt) {
+            this.x += this.vx * dt; this.y += this.vy * dt; this.lifeTime -= dt;
+            this.angle += 15 * dt;
+            if (this.lifeTime <= 0) this.markedForDeletion = true;
+        }
+        draw() {
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+            ctx.fillStyle = this.isAwakened ? '#fca311' : '#adb5bd';
+            ctx.beginPath();
+            for(let i=0; i<4; i++) {
+                ctx.lineTo(0, -this.radius); ctx.lineTo(3, -3);
+                ctx.rotate(Math.PI/2);
+            }
+            ctx.fill(); ctx.restore();
+        }
+    }
+
+    class Slash {
+        constructor(x, y, angle, radius, damage, isAwakened) {
+            this.x = x; this.y = y; this.angle = angle; this.radius = isAwakened ? radius * 1.5 : radius;
+            this.damage = damage; this.isAwakened = isAwakened;
+            this.life = 0.25; this.maxLife = 0.25; this.hitEnemies = new Set();
+        }
+        update(dt) {
+            this.life -= dt;
+            if (this.life <= 0) { this.markedForDeletion = true; return; }
+            const cx = player.x + Math.cos(this.angle) * 20;
+            const cy = player.y + Math.sin(this.angle) * 20;
+            this.x = cx; this.y = cy; 
+
+            const dmgInfo = player.calcDamage(this.damage);
+            for (let e of enemies) {
+                if (this.hitEnemies.has(e)) continue;
+                if (Math.hypot(e.x - cx, e.y - cy) < this.radius + e.radius) {
+                    e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                    this.hitEnemies.add(e);
+                }
+            }
+        }
+        draw() {
+            if (this.life <= 0) return;
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
+            const progress = 1 - (this.life / this.maxLife);
+            ctx.rotate(-Math.PI/2 + Math.PI * progress);
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius, -Math.PI/3, Math.PI/3);
+            ctx.strokeStyle = this.isAwakened ? `rgba(181, 23, 158, ${this.life * 4})` : `rgba(239, 35, 60, ${this.life * 4})`;
+            ctx.lineWidth = this.isAwakened ? 40 : 20;
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    // 战士专属：震荡波实体
+    class Shockwave {
+        constructor(x, y, maxRadius, damage) {
+            this.x = x; this.y = y; this.maxRadius = maxRadius; this.radius = 10; this.damage = damage;
+            this.life = 0.4; this.markedForDeletion = false; this.hitEnemies = new Set();
+        }
+        update(dt) {
+            this.life -= dt; this.radius += (this.maxRadius - this.radius) * 8 * dt;
+            if (this.life <= 0) { this.markedForDeletion = true; return; }
+            const dmgInfo = player.calcDamage(this.damage);
+            for(let e of enemies) {
+                if (this.hitEnemies.has(e)) continue;
+                if (Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) {
+                    e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); this.hitEnemies.add(e);
+                    // 击退
+                    const angle = Math.atan2(e.y - this.y, e.x - this.x); e.x += Math.cos(angle)*30; e.y += Math.sin(angle)*30;
+                }
+            }
+        }
+        draw() {
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 2.5})`; ctx.lineWidth = 10; ctx.stroke();
+        }
+    }
+
+    // 法师专属：坠落的陨石
+    class Meteor {
+        constructor(tx, ty, damage, blastRadius, isAwakened) {
+            this.tx = tx; this.ty = ty; this.x = tx + (Math.random()*200 - 100); this.y = ty - 800; // 从天上掉下来
+            this.damage = damage; this.blastRadius = isAwakened ? blastRadius * 2 : blastRadius; this.isAwakened = isAwakened;
+            this.speed = 1200; this.markedForDeletion = false;
+        }
+        update(dt) {
+            const angle = Math.atan2(this.ty - this.y, this.tx - this.x);
+            this.x += Math.cos(angle) * this.speed * dt; this.y += Math.sin(angle) * this.speed * dt;
+            if (this.y >= this.ty) {
+                this.markedForDeletion = true; soundManager.playShoot();
+                const dmgInfo = player.calcDamage(this.damage);
+                for (let e of enemies) { if (Math.hypot(e.x - this.tx, e.y - this.ty) < this.blastRadius + e.radius) { e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); } }
+                effects.push(new Explosion(this.tx, this.ty, this.blastRadius, this.isAwakened));
+                if(this.isAwakened) damageZones.push(new DamageZone(this.tx, this.ty, this.blastRadius, this.damage * 0.5, 'fire'));
+            }
+        }
+        draw() {
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.isAwakened ? 30 : 20, 0, Math.PI*2);
+            ctx.fillStyle = this.isAwakened ? '#d90429' : '#ffb703'; ctx.fill();
+            ctx.shadowBlur = 20; ctx.shadowColor = '#ff5c77';
+        }
+    }
+
+    // 射手专属：穿云重箭
+    class Arrow {
+        constructor(x, y, angle, speed, damage, isAwakened) {
+            this.x = x; this.y = y; this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+            this.damage = damage; this.isAwakened = isAwakened; this.lifeTime = 3; this.markedForDeletion = false;
+            this.hitEnemies = new Set();
+        }
+        update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.lifeTime -= dt; if (this.lifeTime <= 0) this.markedForDeletion = true; }
+        draw() {
+            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(Math.atan2(this.vy, this.vx));
+            ctx.fillStyle = this.isAwakened ? '#00f5d4' : '#fff'; ctx.fillRect(-15, -2, 30, 4); // 箭杆
+            ctx.beginPath(); ctx.moveTo(15, -6); ctx.lineTo(25, 0); ctx.lineTo(15, 6); ctx.fillStyle = this.isAwakened ? '#fee440' : '#ef233c'; ctx.fill(); // 箭头
+            ctx.restore();
+        }
+    }
+
+    // --- 其他武器实体 ---
     class Missile {
         constructor(x, y, damage, blastRadius, isAwakened = false) {
             this.x = x; this.y = y; this.damage = damage; this.blastRadius = isAwakened ? blastRadius * 2.5 : blastRadius;
@@ -526,8 +550,7 @@
                 for (let e of enemies) { const dist = Math.hypot(e.x - this.x, e.y - this.y); if (dist < minDist) { minDist = dist; this.target = e; } }
             }
             if (this.target) {
-                const desiredAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x);
-                const currentAngle = Math.atan2(this.vy, this.vx);
+                const desiredAngle = Math.atan2(this.target.y - this.y, this.target.x - this.x); const currentAngle = Math.atan2(this.vy, this.vx);
                 let angleDiff = desiredAngle - currentAngle;
                 while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
                 const newAngle = currentAngle + angleDiff * 3.0 * dt;
@@ -579,90 +602,10 @@
         }
     }
 
-    class Slash {
-        constructor(x, y, angle, radius, damage, isAwakened) {
-            this.x = x; this.y = y; this.angle = angle; this.radius = radius; this.damage = damage; this.isAwakened = isAwakened;
-            this.life = isAwakened ? 0.6 : 0.2; 
-            this.markedForDeletion = false; this.hitEnemies = new Set();
-            
-            const dmgInfo = player.calcDamage(this.damage);
-            for(let e of enemies) {
-                const dist = Math.hypot(e.x - this.x, e.y - this.y);
-                if (dist < this.radius) {
-                    let angleToEnemy = Math.atan2(e.y - this.y, e.x - this.x);
-                    let angleDiff = angleToEnemy - this.angle;
-                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                    if (Math.abs(angleDiff) < Math.PI / 2.5) { 
-                        e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
-                        this.hitEnemies.add(e);
-                    }
-                }
-            }
-        }
-        update(dt) {
-            this.life -= dt; if (this.life <= 0) this.markedForDeletion = true;
-            if (this.isAwakened && this.life > 0) {
-                const dmgInfo = player.calcDamage(this.damage * dt * 5); 
-                for(let e of enemies) {
-                    if (this.hitEnemies.has(e)) continue; 
-                    const dist = Math.hypot(e.x - this.x, e.y - this.y);
-                    if (dist < this.radius) {
-                        let angleDiff = Math.atan2(e.y - this.y, e.x - this.x) - this.angle;
-                        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2; while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
-                        if (Math.abs(angleDiff) < Math.PI / 2.5) e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
-                    }
-                }
-            }
-        }
-        draw() {
-            if(this.radius <= 0) return;
-            ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.angle);
-            ctx.beginPath(); ctx.arc(0, 0, this.radius, -Math.PI / 2.5, Math.PI / 2.5);
-            if (this.isAwakened) {
-                ctx.strokeStyle = `rgba(114, 9, 183, ${this.life * 2})`; ctx.lineWidth = 40; ctx.stroke();
-                ctx.strokeStyle = `rgba(0, 0, 0, ${this.life * 3})`; ctx.lineWidth = 15; ctx.stroke();
-            } else {
-                ctx.strokeStyle = `rgba(255, 255, 255, ${this.life * 5})`; ctx.lineWidth = 20; ctx.stroke();
-            }
-            ctx.restore();
-        }
-    }
-
-    class OrbitalWarning {
-        constructor(x, y, radius, damage, isAwakened) {
-            this.x = x; this.y = y; this.radius = radius; this.damage = damage; this.isAwakened = isAwakened;
-            this.delay = 1.0; this.markedForDeletion = false;
-        }
-        update(dt) {
-            this.delay -= dt;
-            if (this.delay <= 0) {
-                this.markedForDeletion = true; soundManager.playShoot();
-                const dmgInfo = player.calcDamage(this.damage);
-                for (let e of enemies) { if (Math.hypot(e.x - this.x, e.y - this.y) < this.radius + e.radius) e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); }
-                effects.push(new Explosion(this.x, this.y, this.radius, true, 'nuke'));
-                if (this.isAwakened) {
-                    effects.push(new Explosion(this.x + this.radius, this.y, this.radius, true, 'nuke'));
-                    effects.push(new Explosion(this.x - this.radius, this.y, this.radius, true, 'nuke'));
-                    effects.push(new Explosion(this.x, this.y + this.radius, this.radius, true, 'nuke'));
-                    effects.push(new Explosion(this.x, this.y - this.radius, this.radius, true, 'nuke'));
-                }
-            }
-        }
-        draw() {
-            if(this.radius <= 0) return;
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(217, 4, 41, ${Math.sin(this.delay * 20)})`; 
-            ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = 'rgba(217, 4, 41, 0.2)'; ctx.fill();
-            ctx.beginPath(); ctx.moveTo(this.x - 20, this.y); ctx.lineTo(this.x + 20, this.y); ctx.moveTo(this.x, this.y - 20); ctx.lineTo(this.x, this.y + 20);
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-        }
-    }
-
     class BlackHole {
         constructor(x, y, radius, damage, isAwakened) {
             this.x = x; this.y = y; this.radius = radius; this.pullRadius = isAwakened ? radius * 4 : radius * 3; 
-            this.damage = damage; this.isAwakened = isAwakened; this.lifeTime = isAwakened ? 5.0 : 3.0;
-            this.tickTimer = 0; this.markedForDeletion = false;
+            this.damage = damage; this.isAwakened = isAwakened; this.lifeTime = isAwakened ? 5.0 : 3.0; this.tickTimer = 0; this.markedForDeletion = false;
         }
         update(dt) {
             this.lifeTime -= dt;
@@ -677,9 +620,7 @@
             this.tickTimer -= dt; const pullForce = this.isAwakened ? 300 : 150;
             for(let e of enemies) {
                 const dist = Math.hypot(e.x - this.x, e.y - this.y);
-                if (dist < this.pullRadius) {
-                    const angle = Math.atan2(this.y - e.y, this.x - e.x); e.x += Math.cos(angle) * pullForce * dt; e.y += Math.sin(angle) * pullForce * dt;
-                }
+                if (dist < this.pullRadius) { const angle = Math.atan2(this.y - e.y, this.x - e.x); e.x += Math.cos(angle) * pullForce * dt; e.y += Math.sin(angle) * pullForce * dt; }
                 if (dist < this.radius && this.tickTimer <= 0) { const dmgInfo = player.calcDamage(this.damage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); }
             }
             if(this.tickTimer <= 0) this.tickTimer = 0.5; 
@@ -722,8 +663,7 @@
             if(this.radius <= 0) return;
             ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(gameTime * 20); ctx.beginPath();
             if (this.isAwakened) {
-                ctx.arc(0, 0, this.radius, 0, Math.PI * 1.5, false); ctx.lineTo(0, 0);
-                ctx.fillStyle = '#d90429'; ctx.fill(); ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.arc(0, 0, this.radius, 0, Math.PI * 1.5, false); ctx.lineTo(0, 0); ctx.fillStyle = '#d90429'; ctx.fill(); ctx.strokeStyle = '#2b2d42'; ctx.lineWidth = 3; ctx.stroke();
             } else {
                 ctx.moveTo(-this.radius, -this.radius/2); ctx.lineTo(this.radius, 0); ctx.lineTo(-this.radius, this.radius/2); ctx.lineTo(-this.radius/2, 0);
                 ctx.fillStyle = '#4cc9f0'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
@@ -754,8 +694,7 @@
         update(dt) {
             this.pulseTime += dt * 5; const dist = Math.hypot(player.x - this.x, player.y - this.y);
             if (dist < player.pickupRange) {
-                const angle = Math.atan2(player.y - this.y, player.x - this.x);
-                this.x += Math.cos(angle) * 300 * dt; this.y += Math.sin(angle) * 300 * dt;
+                const angle = Math.atan2(player.y - this.y, player.x - this.x); this.x += Math.cos(angle) * 300 * dt; this.y += Math.sin(angle) * 300 * dt;
                 if (dist < player.radius + this.radius) { this.markedForDeletion = true; soundManager.playLevelUp(); triggerLevelUp(); }
             }
         }
@@ -803,13 +742,30 @@
         }
     }
 
-    // --- 核心配置库 ---
+    // --- 核心配置库 (包含新增5个致敬元气骑士的强力Buff) ---
     const possibleUpgrades = [
-        { id: 'katana', name: '居合武士刀', desc: '朝面向挥出剑气。满级：觉醒【次元斩】！', icon: '🗡️' },
-        { id: 'poison', name: '剧毒药剂', desc: '投掷毒瓶留下毒沼。满级：觉醒【瘟疫之源】！', icon: '🧪' },
-        { id: 'shield', name: '纳米护盾', desc: '生成抵挡伤害的护盾。满级：觉醒【绝对神盾】！', icon: '🛡️' },
-        { id: 'laser', name: '棱镜射线', desc: '发射在敌人间弹跳的激光。满级：觉醒【虚空死光】！', icon: '⚡' },
-        { id: 'orbital', name: '天基轨道炮', desc: '延迟轰炸标记区域。满级：觉醒【歼星巨炮】！', icon: '🛰️' },
+        // 战士专属
+        { id: 'shockwave', name: '震荡波', desc: '[战士专属] 周期性爆开能量环。满级：地震波！', icon: '〰️', classReq: 'warrior' },
+        { id: 'berserker', name: '狂战之血', desc: '[战士专属] 血越低，伤害攻速越高。满级：不屈战神！', icon: '🩸', classReq: 'warrior' },
+        // 法师专属
+        { id: 'meteor', name: '陨石术', desc: '[法师专属] 召唤陨石轰炸。满级：群星陨落！', icon: '☄️', classReq: 'mage' },
+        { id: 'elemental', name: '元素精通', desc: '[法师专属] 大幅增加所有AoE范围。满级：禁咒使！', icon: '🔮', classReq: 'mage' },
+        // 射手专属
+        { id: 'arrow', name: '穿云箭', desc: '[射手专属] 极速高穿透巨箭。满级：贯穿天地！', icon: '🏹', classReq: 'archer' },
+        { id: 'hawkeye', name: '鹰眼', desc: '[射手专属] 大幅提升暴击和拾取范围。满级：神射手！', icon: '👁️', classReq: 'archer' },
+        
+        // --- 🔥 致敬元气骑士的新增 Buff 🔥 ---
+        { id: 'holy_shield', name: '圣骑士护盾', desc: '周期获得护盾，完全免疫一次伤害！满级：叠3层！', icon: '🛡️' },
+        { id: 'death_ray', name: '幻影死光', desc: '发射瞬间穿透全屏的极光。满级：毁灭双射线！', icon: '🔫' },
+        { id: 'death_bloom', name: '死亡爆破', desc: '击杀敌人概率引发干净的爆炸。满级：必定连爆！', icon: '💥' },
+        { id: 'void_slash', name: '虚空斩', desc: '随机在敌人身上撕开次元斩击。满级：全屏剑阵！', icon: '⚔️' },
+        { id: 'turret', name: '迷你炮台', desc: '放置一个自动射击的小炮台。满级：等离子机枪！', icon: '🤖' },
+
+        // 其他强力Buff
+        { id: 'shuriken', name: '忍者手里剑', desc: '向四周发射穿透飞镖。满级：八方手里剑！', icon: '🥷' },
+        { id: 'scythe', name: '死神镰刀', desc: '大范围近战横扫。满级：灵魂收割！', icon: '🌙' },
+        { id: 'thorns', name: '反伤刺甲', desc: '受击时反弹伤害，增加护甲。满级：刺猬真身！', icon: '🦔' },
+        { id: 'haste', name: '狂热沙漏', desc: '全面加快所有武器冷却速度！满级：无限火力！', icon: '⏳' },
         { id: 'xp_scroll', name: '经验卷轴', desc: '获得更多经验。满级：升级狂魔！', icon: '✨' },
         { id: 'vampire', name: '吸血鬼牙齿', desc: '打怪概率回血。满级：化身德古拉！', icon: '🧛' },
         { id: 'frost', name: '冰霜法杖', desc: '爆出冰环减速敌人。满级：绝对零度！', icon: '🧊' },
@@ -822,7 +778,7 @@
         { id: 'crit', name: '暴击眼镜', desc: '增加暴击率与暴伤。满级：招招致命！', icon: '👓' },
         { id: 'dmg', name: '肌肉强化', desc: '增加伤害。满级：伤害爆炸翻倍！', icon: '💪' },
         { id: 'speed', name: '快手', desc: '提高射速。满级：加特林射速！', icon: '⚡' },
-        { id: 'pierce', name: '穿甲弹', desc: '增加穿透。满级：额外+5次穿透！', icon: '🏹' },
+        { id: 'pierce', name: '穿甲弹', desc: '增加穿透。满级：额外+5次穿透！', icon: '🎯' },
         { id: 'aura', name: '能量光环', desc: '护体光环。满级：觉醒【地狱火领域】！', icon: '☀️' },
         { id: 'heal', name: '急救包', desc: '恢复生命。满级：血量大增并回满！', icon: '❤️' },
         { id: 'multishot', name: '散弹枪', desc: '增加多重射击。满级：觉醒【虚空等离子】！', icon: '🔫' },
@@ -833,25 +789,39 @@
         { id: 'maxhp', name: '健身指南', desc: '增加最大生命。满级：血牛降世！', icon: '📘' }
     ];
 
-    // --- 玩家与敌人实体 ---
     class Player {
-        constructor() {
-            this.x = 0; this.y = 0; this.radius = 15; this.speed = 250; this.color = '#4ea8de';
-            this.maxHp = 100; this.hp = 100; this.level = 1; this.xp = 0; this.xpNeeded = 50;
-            this.damageMultiplier = 1; this.fireRateMultiplier = 1;
+        constructor(pClass) {
+            this.x = 0; this.y = 0; this.radius = 15; 
+            this.playerClass = pClass; 
             
+            this.speed = 250; this.color = '#4ea8de';
+            this.maxHp = 100; this.hp = 100; this.level = 1; this.xp = 0; this.xpNeeded = 50;
+            this.damageMultiplier = 1; this.fireRateMultiplier = 1; this.cdr = 1.0; 
             this.critChance = 0.0; this.critMultiplier = 1.5; 
             this.xpMultiplier = 1.0; this.lifestealChance = 0.0; this.lifestealAmount = 1;
+            this.pickupRange = 80; 
+            this.invincibleTimer = 0; // 无敌帧时间
+
+            // 职业属性加成
+            if (pClass === 'warrior') {
+                this.maxHp = 150; this.hp = 150; this.speed = 220; this.damageMultiplier = 1.2; this.color = '#e63946';
+            } else if (pClass === 'mage') {
+                this.maxHp = 80; this.hp = 80; this.speed = 240; this.damageMultiplier = 1.5; this.color = '#9b5de5';
+            } else if (pClass === 'archer') {
+                this.maxHp = 80; this.hp = 80; this.speed = 280; this.fireRateMultiplier = 1.5; this.color = '#06d6a0';
+            }
+
             this.lastDirAngle = 0;
-
-            this.hasKatana = false; this.katanaTimer = 0; this.katanaCooldown = 2.0; this.katanaDamage = 50; this.katanaRadius = 120;
-            this.hasPoison = false; this.poisonTimer = 0; this.poisonCooldown = 3.5; this.poisonDamage = 15; this.poisonCount = 1;
-            this.hasShield = false; this.shieldCount = 0; this.shieldMax = 1; this.shieldRegenTimer = 0; this.shieldRegenRate = 15.0; 
-            this.invulTimer = 0; 
-            this.hasLaser = false; this.laserTimer = 0; this.laserCooldown = 1.5; this.laserDamage = 30; this.laserBounces = 2;
-            this.hasOrbital = false; this.orbitalTimer = 0; this.orbitalCooldown = 5.0; this.orbitalDamage = 150; this.orbitalRadius = 80;
-
             this.baseFireCooldown = 0.8; this.fireTimer = 0; this.bulletSpeed = 400; this.bulletDamage = 25; this.bulletPierce = 1; this.projectileCount = 1;
+            
+            // 元气骑士系列 Buff 状态
+            this.shieldCount = 0; this.maxShield = 0; this.shieldRegenTimer = 0; this.shieldRegenTime = 10;
+            this.hasDeathRay = false; this.deathRayTimer = 0; this.deathRayCooldown = 4; this.deathRayDamage = 150;
+            this.hasDeathBloom = false; this.deathBloomChance = 0; this.deathBloomDamage = 50;
+            this.hasVoidSlash = false; this.voidSlashTimer = 0; this.voidSlashCooldown = 2; this.voidSlashDamage = 120; this.voidSlashRadius = 60;
+            this.hasTurret = false; this.turretTimer = 0; this.turretCooldown = 6; this.turretDamage = 20;
+
+            // 其他通用/专属武器
             this.hasAura = false; this.auraRadius = 80; this.auraDamage = 10; this.auraTickRate = 0.5; this.auraTimer = 0;
             this.hasLightning = false; this.lightningTimer = 0; this.lightningDamage = 50; this.lightningBaseCooldown = 1.2; this.lightningTargets = 1;
             this.guardianCount = 0; this.guardianAngle = 0;
@@ -862,20 +832,34 @@
             this.hasFrost = false; this.frostTimer = 0; this.frostCooldown = 4.0; this.frostRadius = 150; this.frostDamage = 20;
             this.hasDrone = false; this.droneCount = 0; this.droneAngle = 0; this.droneFireTimer = 0; this.droneDamage = 15;
             this.hasAxe = false; this.axeTimer = 0; this.axeCooldown = 2.0; this.axeDamage = 40; this.axeCount = 1;
+            this.hasShuriken = false; this.shurikenTimer = 0; this.shurikenCooldown = 1.5; this.shurikenDamage = 35; this.shurikenCount = 4;
+            this.hasScythe = false; this.scytheTimer = 0; this.scytheCooldown = 1.8; this.scytheDamage = 80; this.scytheRadius = 90;
+            this.hasThorns = false; this.thornsDamage = 25;
+            this.hasShockwave = false; this.shockwaveTimer = 0; this.shockwaveCooldown = 3.0; this.shockwaveDamage = 40; this.shockwaveRadius = 200;
+            this.hasMeteor = false; this.meteorTimer = 0; this.meteorCooldown = 5.0; this.meteorDamage = 100; this.meteorRadius = 120; this.meteorCount = 1;
+            this.hasArrow = false; this.arrowTimer = 0; this.arrowCooldown = 1.5; this.arrowDamage = 50;
 
-            this.pickupRange = 80; 
             this.upgrades = {}; this.trail = [];
 
-            if (currentMode === 'rampage') { this.speed = 350; this.fireRateMultiplier = 2; this.pickupRange = 150; }
+            if (currentMode === 'rampage') { this.speed *= 1.2; this.fireRateMultiplier *= 1.5; this.pickupRange += 50; }
         }
 
         calcDamage(baseDamage) {
-            let dmg = baseDamage * this.damageMultiplier; let isCrit = Math.random() < this.critChance;
-            if (isCrit) dmg *= this.critMultiplier; return { dmg: dmg, isCrit: isCrit };
+            let actualDmgMult = this.damageMultiplier;
+            let actualFireRate = this.fireRateMultiplier;
+            if (this.upgrades['berserker']) {
+                const missingHpPercent = 1 - (this.hp / this.maxHp);
+                const boost = missingHpPercent * (this.upgrades['berserker'] >= 5 ? 2.0 : 1.0); 
+                actualDmgMult += boost; actualFireRate += boost;
+            }
+            let dmg = baseDamage * actualDmgMult; 
+            let isCrit = Math.random() < this.critChance;
+            if (isCrit) dmg *= this.critMultiplier; 
+            return { dmg: dmg, isCrit: isCrit, fireRate: actualFireRate };
         }
 
         update(dt) {
-            if (this.invulTimer > 0) this.invulTimer -= dt;
+            if (this.invincibleTimer > 0) this.invincibleTimer -= dt;
 
             let dx = 0, dy = 0;
             if (joyActive) { dx = joyDx; dy = joyDy; } 
@@ -884,105 +868,189 @@
                 if (keys.a || keys.ArrowLeft) dx -= 1; if (keys.d || keys.ArrowRight) dx += 1;
                 if (dx !== 0 && dy !== 0) { const len = Math.sqrt(dx * dx + dy * dy); dx /= len; dy /= len; }
             }
-            if (dx !== 0 || dy !== 0) this.lastDirAngle = Math.atan2(dy, dx);
+            if (dx !== 0 || dy !== 0) { this.lastDirAngle = Math.atan2(dy, dx); }
 
             this.x += dx * this.speed * dt; this.y += dy * this.speed * dt;
 
             if (this.level >= 20 && (dx !== 0 || dy !== 0)) {
-                this.trail.push({ x: this.x, y: this.y, life: 1.0 });
-                if (this.trail.length > 15) this.trail.shift();
+                this.trail.push({ x: this.x, y: this.y, life: 1.0 }); if (this.trail.length > 15) this.trail.shift();
             }
             this.trail.forEach(t => t.life -= dt * 3); this.trail = this.trail.filter(t => t.life > 0);
 
-            if (this.hasShield && this.shieldCount < this.shieldMax) {
-                this.shieldRegenTimer -= dt;
-                if (this.shieldRegenTimer <= 0) { this.shieldCount++; this.shieldRegenTimer = this.shieldRegenRate; }
-            }
+            const currentFireRate = this.calcDamage(0).fireRate;
+            const aoeBonus = (this.upgrades['elemental']) ? (this.upgrades['elemental'] >= 5 ? 2.0 : 1 + this.upgrades['elemental']*0.15) : 1.0;
 
-            if (this.hasKatana) {
-                this.katanaTimer -= dt;
-                if (this.katanaTimer <= 0) {
-                    this.katanaTimer = this.katanaCooldown / this.fireRateMultiplier;
-                    const isAwakened = (this.upgrades['katana'] || 0) >= 5;
-                    slashes.push(new Slash(this.x, this.y, this.lastDirAngle, this.katanaRadius, this.katanaDamage, isAwakened));
-                    soundManager.playShoot();
-                }
-            }
+            // --- 新增技能逻辑 ---
 
-            if (this.hasPoison) {
-                this.poisonTimer -= dt;
-                if (this.poisonTimer <= 0) {
-                    this.poisonTimer = this.poisonCooldown / this.fireRateMultiplier;
-                    const isAwakened = (this.upgrades['poison'] || 0) >= 5;
-                    for(let i=0; i<this.poisonCount; i++) {
-                        const px = this.x + (Math.random() * 300 - 150); const py = this.y + (Math.random() * 300 - 150);
-                        damageZones.push(new DamageZone(px, py, 70, this.poisonDamage * this.damageMultiplier, isAwakened ? 'plague' : 'poison'));
+            // 1. 圣骑士护盾恢复
+            if (this.maxShield > 0) {
+                if (this.shieldCount < this.maxShield) {
+                    this.shieldRegenTimer -= dt;
+                    if (this.shieldRegenTimer <= 0) {
+                        this.shieldCount++;
+                        this.shieldRegenTimer = this.shieldRegenTime;
                     }
-                    soundManager.playShoot();
+                } else {
+                    this.shieldRegenTimer = this.shieldRegenTime; 
                 }
             }
 
-            if (this.hasLaser) {
-                this.laserTimer -= dt;
-                if (this.laserTimer <= 0) {
-                    this.laserTimer = this.laserCooldown / this.fireRateMultiplier;
-                    const isAwakened = (this.upgrades['laser'] || 0) >= 5;
-                    if (enemies.length > 0) {
-                        let pts = [{x: this.x, y: this.y}]; let currentPos = {x: this.x, y: this.y};
-                        let hitSet = new Set(); let jumps = isAwakened ? 15 : this.laserBounces; let currentDamage = this.laserDamage;
-                        for(let jump=0; jump<jumps; jump++) {
-                            let bestTarget = null; let minDist = Infinity;
-                            for(let e of enemies) {
-                                if (hitSet.has(e)) continue;
-                                const dist = Math.hypot(e.x - currentPos.x, e.y - currentPos.y);
-                                if (dist < 400 && dist < minDist) { minDist = dist; bestTarget = e; }
-                            }
-                            if (bestTarget) {
-                                pts.push({x: bestTarget.x, y: bestTarget.y});
-                                const dmgInfo = this.calcDamage(currentDamage); bestTarget.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
-                                hitSet.add(bestTarget); currentPos = bestTarget;
-                                if (isAwakened) currentDamage *= 1.2; 
-                            } else break;
-                        }
-                        if (pts.length > 1) { laserLines.push(new LaserLine(pts, isAwakened)); soundManager.playShoot(); }
-                    }
-                }
-            }
-
-            if (this.hasOrbital) {
-                this.orbitalTimer -= dt;
-                if (this.orbitalTimer <= 0) {
-                    this.orbitalTimer = this.orbitalCooldown;
-                    const isAwakened = (this.upgrades['orbital'] || 0) >= 5;
-                    if (enemies.length > 0) {
+            // 2. 幻影死光 (Death Ray)
+            if (this.hasDeathRay && enemies.length > 0) {
+                this.deathRayTimer -= dt;
+                if (this.deathRayTimer <= 0) {
+                    this.deathRayTimer = this.deathRayCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['death_ray'] || 0) >= 5;
+                    const rayCount = isAwakened ? 2 : 1;
+                    
+                    for(let i=0; i<rayCount; i++) {
+                        // 找最近的或者随机敌人
                         const target = enemies[Math.floor(Math.random() * enemies.length)];
-                        orbitals.push(new OrbitalWarning(target.x, target.y, this.orbitalRadius, this.orbitalDamage, isAwakened));
+                        const baseAngle = Math.atan2(target.y - this.y, target.x - this.x);
+                        const angle = baseAngle + (i===1 ? Math.PI/6 : (i===2 ? -Math.PI/6 : 0)); // 散射
+                        
+                        const endX = this.x + Math.cos(angle) * 1500;
+                        const endY = this.y + Math.sin(angle) * 1500;
+                        
+                        laserLines.push(new LaserLine([{x:this.x, y:this.y}, {x:endX, y:endY}], isAwakened));
+                        soundManager.playShoot();
+
+                        // 激光碰撞检测
+                        const lineW = isAwakened ? 40 : 20;
+                        const dmgInfo = this.calcDamage(this.deathRayDamage);
+                        for (let e of enemies) {
+                            let l2 = (endX - this.x)**2 + (endY - this.y)**2;
+                            let t = Math.max(0, Math.min(1, ((e.x - this.x) * (endX - this.x) + (e.y - this.y) * (endY - this.y)) / l2));
+                            let projX = this.x + t * (endX - this.x);
+                            let projY = this.y + t * (endY - this.y);
+                            let distSq = (e.x - projX)**2 + (e.y - projY)**2;
+                            if (distSq < (e.radius + lineW/2)**2) {
+                                e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. 虚空斩 (Void Slash)
+            if (this.hasVoidSlash && enemies.length > 0) {
+                this.voidSlashTimer -= dt;
+                if (this.voidSlashTimer <= 0) {
+                    this.voidSlashTimer = this.voidSlashCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['void_slash'] || 0) >= 5;
+                    const count = isAwakened ? 6 : 1;
+                    for(let i=0; i<count; i++) {
+                        const target = enemies[Math.floor(Math.random() * enemies.length)];
+                        const angle = Math.random() * Math.PI * 2;
+                        voidSlashes.push(new VoidSlash(target.x, target.y, angle, this.voidSlashRadius * aoeBonus, this.voidSlashDamage, isAwakened));
+                    }
+                    soundManager.playShoot();
+                }
+            }
+
+            // 4. 迷你炮台 (Turret)
+            if (this.hasTurret) {
+                this.turretTimer -= dt;
+                if (this.turretTimer <= 0) {
+                    this.turretTimer = this.turretCooldown / this.cdr;
+                    const isAwakened = (this.upgrades['turret'] || 0) >= 5;
+                    turrets.push(new Turret(this.x, this.y, this.turretDamage, isAwakened));
+                }
+            }
+
+            // --- 原有技能逻辑 ---
+
+            this.fireTimer -= dt;
+            if (this.fireTimer <= 0) { this.shootNearest(currentFireRate); this.fireTimer = this.baseFireCooldown / (currentFireRate * this.cdr); }
+
+            if (this.hasShuriken) {
+                this.shurikenTimer -= dt;
+                if (this.shurikenTimer <= 0) {
+                    this.shurikenTimer = this.shurikenCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['shuriken'] || 0) >= 5;
+                    const count = isAwakened ? 8 : this.shurikenCount;
+                    for(let i=0; i<count; i++) {
+                        const angle = (Math.PI * 2 / count) * i + gameTime;
+                        shurikens.push(new Shuriken(this.x, this.y, angle, 400, this.shurikenDamage, isAwakened));
+                    }
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasScythe) {
+                this.scytheTimer -= dt;
+                if (this.scytheTimer <= 0) {
+                    this.scytheTimer = this.scytheCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['scythe'] || 0) >= 5;
+                    slashes.push(new Slash(this.x, this.y, this.lastDirAngle, this.scytheRadius, this.scytheDamage, isAwakened));
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasShockwave) {
+                this.shockwaveTimer -= dt;
+                if (this.shockwaveTimer <= 0) {
+                    this.shockwaveTimer = this.shockwaveCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['shockwave'] || 0) >= 5;
+                    shockwaves.push(new Shockwave(this.x, this.y, isAwakened ? this.shockwaveRadius * 1.5 : this.shockwaveRadius, this.shockwaveDamage));
+                    soundManager.playShoot();
+                }
+            }
+
+            if (this.hasMeteor) {
+                this.meteorTimer -= dt;
+                if (this.meteorTimer <= 0) {
+                    this.meteorTimer = this.meteorCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['meteor'] || 0) >= 5;
+                    const count = isAwakened ? this.meteorCount + 3 : this.meteorCount;
+                    for(let i=0; i<count; i++) {
+                        if (enemies.length > 0) {
+                            const target = enemies[Math.floor(Math.random() * enemies.length)];
+                            meteors.push(new Meteor(target.x, target.y, this.meteorDamage, this.meteorRadius, isAwakened));
+                        }
+                    }
+                }
+            }
+
+            if (this.hasArrow) {
+                this.arrowTimer -= dt;
+                if (this.arrowTimer <= 0) {
+                    this.arrowTimer = this.arrowCooldown / (currentFireRate * this.cdr);
+                    const isAwakened = (this.upgrades['arrow'] || 0) >= 5;
+                    let nearestEnemy = null, minDistance = Infinity;
+                    for (let enemy of enemies) { const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y); if (dist < minDistance) { minDistance = dist; nearestEnemy = enemy; } }
+                    if (nearestEnemy) {
+                        const angle = Math.atan2(nearestEnemy.y - this.y, nearestEnemy.x - this.x);
+                        const count = isAwakened ? 3 : 1;
+                        for(let i=0; i<count; i++) {
+                            const offset = (i - Math.floor(count/2)) * 0.15;
+                            arrows.push(new Arrow(this.x, this.y, angle + offset, 800, this.arrowDamage, isAwakened));
+                        }
                         soundManager.playShoot();
                     }
                 }
             }
 
-            this.fireTimer -= dt;
-            if (this.fireTimer <= 0) { this.shootNearest(); this.fireTimer = this.baseFireCooldown / this.fireRateMultiplier; }
-
             if (this.hasFrost) {
                 this.frostTimer -= dt;
                 if (this.frostTimer <= 0) {
-                    this.frostTimer = this.frostCooldown; const isAwakened = (this.upgrades['frost'] || 0) >= 5;
-                    const dmgInfo = this.calcDamage(this.frostDamage);
+                    this.frostTimer = this.frostCooldown / this.cdr; 
+                    const isAwakened = (this.upgrades['frost'] || 0) >= 5;
+                    const dmgInfo = this.calcDamage(this.frostDamage); const r = this.frostRadius * aoeBonus;
                     for (let e of enemies) {
-                        if (Math.hypot(e.x - this.x, e.y - this.y) < this.frostRadius + e.radius) {
+                        if (Math.hypot(e.x - this.x, e.y - this.y) < r + e.radius) {
                             e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); e.slowTimer = isAwakened ? 5.0 : 2.5; e.speedMultiplier = isAwakened ? 0.1 : 0.5; 
                         }
                     }
-                    effects.push(new Explosion(this.x, this.y, this.frostRadius, false, 'ice')); soundManager.playShoot();
+                    effects.push(new Explosion(this.x, this.y, r, false, 'ice')); soundManager.playShoot();
                 }
             }
 
             if (this.hasDrone) {
                 this.droneAngle += 2 * dt; this.droneFireTimer -= dt;
                 if (this.droneFireTimer <= 0) {
-                    this.droneFireTimer = 0.5 / this.fireRateMultiplier; const isAwakened = (this.upgrades['drone'] || 0) >= 5;
+                    this.droneFireTimer = 0.5 / (currentFireRate * this.cdr); 
+                    const isAwakened = (this.upgrades['drone'] || 0) >= 5;
                     let nearestEnemy = null; let minDistance = Infinity;
                     for (let enemy of enemies) { const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y); if (dist < minDistance) { minDistance = dist; nearestEnemy = enemy; } }
                     if (nearestEnemy && minDistance < 600) {
@@ -991,7 +1059,7 @@
                             const angle = this.droneAngle + (Math.PI * 2 / this.droneCount) * i;
                             const dx = this.x + Math.cos(angle) * distRadius; const dy = this.y + Math.sin(angle) * distRadius;
                             const targetAngle = Math.atan2(nearestEnemy.y - dy, nearestEnemy.x - dx);
-                            bullets.push(new Bullet(dx, dy, targetAngle, 800, this.droneDamage * this.damageMultiplier, 1, isAwakened));
+                            bullets.push(new Bullet(dx, dy, targetAngle, 800, this.droneDamage, 1, isAwakened));
                         }
                         soundManager.playShoot();
                     }
@@ -1001,10 +1069,11 @@
             if (this.hasAxe) {
                 this.axeTimer -= dt;
                 if (this.axeTimer <= 0) {
-                    this.axeTimer = this.axeCooldown / this.fireRateMultiplier; const isAwakened = (this.upgrades['axe'] || 0) >= 5;
+                    this.axeTimer = this.axeCooldown / (currentFireRate * this.cdr); 
+                    const isAwakened = (this.upgrades['axe'] || 0) >= 5;
                     for(let i=0; i<this.axeCount; i++) {
                         const vx = (Math.random() - 0.5) * 400; const vy = -600 - Math.random() * 200; 
-                        axes.push(new Axe(this.x, this.y, vx, vy, this.axeDamage * this.damageMultiplier, isAwakened));
+                        axes.push(new Axe(this.x, this.y, vx, vy, this.axeDamage, isAwakened));
                     }
                     soundManager.playShoot();
                 }
@@ -1013,9 +1082,10 @@
             if (this.hasMissile) {
                 this.missileTimer -= dt;
                 if (this.missileTimer <= 0) {
-                    this.missileTimer = this.missileBaseCooldown / this.fireRateMultiplier; const isAwakened = (this.upgrades['missile'] || 0) >= 5;
+                    this.missileTimer = this.missileBaseCooldown / (currentFireRate * this.cdr); 
+                    const isAwakened = (this.upgrades['missile'] || 0) >= 5;
                     const mCount = isAwakened ? this.missileCount + 1 : this.missileCount;
-                    for(let i=0; i<mCount; i++) { missiles.push(new Missile(this.x, this.y, this.missileDamage, this.missileRadius, isAwakened)); }
+                    for(let i=0; i<mCount; i++) { missiles.push(new Missile(this.x, this.y, this.missileDamage, this.missileRadius * aoeBonus, isAwakened)); }
                     soundManager.playShoot();
                 }
             }
@@ -1023,22 +1093,24 @@
             if (this.hasBlackhole) {
                 this.blackholeTimer -= dt;
                 if (this.blackholeTimer <= 0) {
-                    this.blackholeTimer = this.blackholeBaseCooldown; const isAwakened = (this.upgrades['blackhole'] || 0) >= 5;
+                    this.blackholeTimer = this.blackholeBaseCooldown / this.cdr; 
+                    const isAwakened = (this.upgrades['blackhole'] || 0) >= 5;
                     const bx = this.x + (Math.random() * 400 - 200); const by = this.y + (Math.random() * 400 - 200);
-                    blackHoles.push(new BlackHole(bx, by, this.blackholeRadius, this.blackholeDamage, isAwakened)); soundManager.playShoot();
+                    blackHoles.push(new BlackHole(bx, by, this.blackholeRadius * aoeBonus, this.blackholeDamage, isAwakened)); soundManager.playShoot();
                 }
             }
 
             if (this.hasMolotov) {
                 this.molotovTimer -= dt;
                 if (this.molotovTimer <= 0) {
-                    this.molotovTimer = this.molotovBaseCooldown;
+                    this.molotovTimer = this.molotovBaseCooldown / this.cdr;
                     if (enemies.length > 0) {
                         const isAwakened = (this.upgrades['molotov'] || 0) >= 5;
                         let throwCount = isAwakened ? this.molotovCount : Math.min(this.molotovCount, enemies.length);
                         for(let i=0; i<throwCount; i++) {
                             const target = enemies[Math.floor(Math.random() * enemies.length)]; const zoneType = isAwakened ? 'blueFire' : 'fire';
-                            damageZones.push(new DamageZone(target.x + (Math.random()*60-30), target.y + (Math.random()*60-30), this.molotovRadius, this.molotovDamage * this.damageMultiplier, zoneType));
+                            const dmgInfo = this.calcDamage(this.molotovDamage);
+                            damageZones.push(new DamageZone(target.x + (Math.random()*60-30), target.y + (Math.random()*60-30), this.molotovRadius * aoeBonus, dmgInfo.dmg, zoneType));
                         }
                         soundManager.playShoot();
                     }
@@ -1048,7 +1120,8 @@
             if (this.hasBoomerang) {
                 this.boomerangTimer -= dt;
                 if (this.boomerangTimer <= 0) {
-                    this.boomerangTimer = this.boomerangBaseCooldown; const isAwakened = (this.upgrades['boomerang'] || 0) >= 5;
+                    this.boomerangTimer = this.boomerangBaseCooldown / this.cdr; 
+                    const isAwakened = (this.upgrades['boomerang'] || 0) >= 5;
                     const bCount = isAwakened ? 6 : this.boomerangCount;
                     for(let i=0; i<bCount; i++) {
                         const angle = (Math.PI * 2 / bCount) * i + gameTime;
@@ -1060,19 +1133,27 @@
 
             if (this.hasAura) {
                 this.auraTimer -= dt;
-                if (this.auraTimer <= 0) { this.applyAuraDamage(); this.auraTimer = this.auraTickRate; }
+                if (this.auraTimer <= 0) { 
+                    const r = this.auraRadius * aoeBonus;
+                    for (let enemy of enemies) {
+                        if (Math.hypot(enemy.x - this.x, enemy.y - this.y) < r + enemy.radius) {
+                            const dmgInfo = this.calcDamage(this.auraDamage); enemy.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
+                        }
+                    }
+                    this.auraTimer = this.auraTickRate; 
+                }
             }
 
             if (this.hasLightning) {
                 this.lightningTimer -= dt;
                 if (this.lightningTimer <= 0) {
-                    this.lightningTimer = this.lightningBaseCooldown;
+                    this.lightningTimer = this.lightningBaseCooldown / this.cdr;
                     if (enemies.length > 0) {
                         const isAwakened = (this.upgrades['lightning'] || 0) >= 5; let targetsToHit = Math.min(this.lightningTargets, enemies.length);
                         for(let i = 0; i < targetsToHit; i++) {
                             const target = enemies[Math.floor(Math.random() * enemies.length)]; const dmgInfo = this.calcDamage(this.lightningDamage);
                             target.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); effects.push(new Effect(this.x, this.y - 300, target.x, target.y, isAwakened));
-                            if (isAwakened) damageZones.push(new DamageZone(target.x, target.y, 80, this.lightningDamage * this.damageMultiplier, 'lightning'));
+                            if (isAwakened) damageZones.push(new DamageZone(target.x, target.y, 80 * aoeBonus, dmgInfo.dmg, 'lightning'));
                         }
                         soundManager.playShoot();
                     }
@@ -1100,26 +1181,28 @@
                 });
             }
 
+            const aoeBonus = (this.upgrades['elemental']) ? (this.upgrades['elemental'] >= 5 ? 2.0 : 1 + this.upgrades['elemental']*0.15) : 1.0;
+
             if (this.hasAura) {
                 const isAwakened = (this.upgrades['aura'] || 0) >= 5;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.auraRadius, 0, Math.PI * 2);
+                const r = this.auraRadius * aoeBonus;
+                ctx.beginPath(); ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
                 if (isAwakened) {
-                    const pulse = 1 + Math.sin(gameTime * 15) * 0.05; ctx.arc(this.x, this.y, this.auraRadius * pulse, 0, Math.PI * 2);
+                    const pulse = 1 + Math.sin(gameTime * 15) * 0.05; ctx.arc(this.x, this.y, r * pulse, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(217, 4, 41, 0.3)'; ctx.strokeStyle = 'rgba(239, 35, 60, 0.8)'; ctx.lineWidth = 4;
-                } else {
-                    ctx.fillStyle = 'rgba(255, 200, 0, 0.2)'; ctx.strokeStyle = 'rgba(255, 200, 0, 0.5)'; ctx.lineWidth = 2;
-                }
+                } else { ctx.fillStyle = 'rgba(255, 200, 0, 0.2)'; ctx.strokeStyle = 'rgba(255, 200, 0, 0.5)'; ctx.lineWidth = 2; }
                 ctx.fill(); ctx.stroke();
             }
 
-            if (this.level >= 40) {
-                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(gameTime * -1); 
-                ctx.beginPath(); for(let i=0; i<12; i++) { const a = (Math.PI * 2 / 12) * i; ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * 120, Math.sin(a) * 120); }
-                ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)'; ctx.lineWidth = 2; ctx.stroke();
-                ctx.beginPath(); for(let i=0; i<8; i++) { const a = (Math.PI * 2 / 8) * i; ctx.lineTo(Math.cos(a) * 90, Math.sin(a) * 90); }
-                ctx.closePath(); ctx.strokeStyle = 'rgba(0, 245, 212, 0.5)'; ctx.lineWidth = 4; ctx.stroke();
-                ctx.beginPath(); ctx.arc(0, 0, 100, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; ctx.lineWidth = 1; ctx.stroke();
-                ctx.restore();
+            // 绘制圣骑士护盾特效
+            if (this.shieldCount > 0) {
+                for(let i=0; i<this.shieldCount; i++) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius + 15 + i*8, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(0, 245, 212, ${0.8 - i*0.2})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
             }
 
             if (this.hasDrone) {
@@ -1130,9 +1213,7 @@
                     ctx.save(); ctx.translate(dx, dy); ctx.rotate(angle);
                     if (isAwakened) {
                         ctx.fillStyle = '#2b2d42'; ctx.fillRect(-8, -8, 16, 16); ctx.fillStyle = (gameTime * 5 % 2 < 1) ? '#ef233c' : '#4cc9f0'; ctx.beginPath(); ctx.arc(0, -5, 3, 0, Math.PI*2); ctx.fill();
-                    } else {
-                        ctx.fillStyle = '#8d99ae'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#edf2f4'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill();
-                    }
+                    } else { ctx.fillStyle = '#8d99ae'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#edf2f4'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI*2); ctx.fill(); }
                     ctx.restore();
                 }
             }
@@ -1152,41 +1233,53 @@
                 }
             }
 
-            if (this.level >= 30) {
-                const orbRadius = 45; const colors = ['#ff5c77', '#4cc9f0', '#fee440', '#80ed99']; 
-                for(let i=0; i<4; i++) {
-                    const angle = gameTime * 3 + (Math.PI / 2) * i; const ox = this.x + Math.cos(angle) * orbRadius; const oy = this.y + Math.sin(angle) * orbRadius;
-                    ctx.beginPath(); ctx.arc(ox, oy, 6, 0, Math.PI*2); ctx.fillStyle = colors[i]; ctx.fill();
-                }
-            }
-
-            if (this.hasShield && this.shieldCount > 0) {
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 10, 0, Math.PI*2);
-                ctx.strokeStyle = `rgba(0, 245, 212, ${0.5 + Math.sin(gameTime*5)*0.2})`; ctx.lineWidth = 3; ctx.stroke();
-                ctx.fillStyle = 'rgba(0, 245, 212, 0.1)'; ctx.fill();
-                if (this.shieldCount > 1) { ctx.fillStyle = '#fff'; ctx.font = '12px Arial'; ctx.fillText(this.shieldCount, this.x + 15, this.y - 15); }
-            }
-
             ctx.save(); ctx.translate(this.x, this.y);
-            if (this.invulTimer > 0 && Math.floor(gameTime * 20) % 2 === 0) {
-            } else if (this.level >= 40) {
-                ctx.beginPath(); ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.shadowBlur = 30; ctx.shadowColor = '#ffffff';
+
+            // 形态绘制
+            if (this.level >= 40) {
+                ctx.rotate(gameTime * 0.8);
+                ctx.strokeStyle = '#fca311'; ctx.lineWidth = 2; ctx.setLineDash([15, 10, 5, 10]);
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 25, 0, Math.PI * 2); ctx.stroke();
+                
+                ctx.setLineDash([]); ctx.rotate(gameTime * -1.2); 
+                
+                ctx.strokeStyle = '#00f5d4'; ctx.lineWidth = 1; ctx.beginPath();
+                for(let i=0; i<6; i++) { const a = (Math.PI*2 / 6) * i; ctx.lineTo(Math.cos(a) * (this.radius + 10), Math.sin(a) * (this.radius + 10)); }
+                ctx.closePath(); ctx.stroke();
+
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 2, 0, Math.PI * 2); ctx.fillStyle = '#1a1a2e'; ctx.fill();
+                ctx.beginPath(); ctx.arc(0, 0, this.radius - 2, 0, Math.PI * 2);
+                ctx.fillStyle = this.invincibleTimer > 0 ? '#fff' : '#f72585'; 
+                ctx.shadowBlur = 20; ctx.shadowColor = '#f72585'; ctx.fill(); ctx.shadowBlur = 0;
+            } else if (this.level >= 30) {
+                const wingPulse = Math.sin(gameTime * 6) * 6; 
+                ctx.fillStyle = 'rgba(0, 245, 212, 0.4)'; ctx.shadowBlur = 15; ctx.shadowColor = '#00f5d4';
+                
+                ctx.beginPath(); ctx.ellipse(-20 - wingPulse, -10, 25 + wingPulse, 10, -Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#00f5d4'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.beginPath(); ctx.ellipse(20 + wingPulse, -10, 25 + wingPulse, 10, Math.PI/6, 0, Math.PI*2); ctx.fill(); ctx.stroke(); ctx.shadowBlur = 0;
+
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); 
+                ctx.fillStyle = this.invincibleTimer > 0 ? '#fff' : this.color; ctx.fill(); 
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
             } else if (this.level >= 20) {
                 ctx.rotate(gameTime * 3);
                 for (let i = 0; i < 3; i++) {
                     ctx.beginPath(); ctx.ellipse(0, 0, this.radius + 15, this.radius + 5, (i * Math.PI) / 3, 0, Math.PI * 2);
                     const hue = (gameTime * 150 + i * 40) % 360; ctx.strokeStyle = `hsl(${hue}, 100%, 60%)`; ctx.lineWidth = 3; ctx.stroke();
                 }
-                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.shadowBlur = 20; ctx.shadowColor = '#00f5d4';
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); 
+                ctx.fillStyle = this.invincibleTimer > 0 ? '#aaa' : '#fff'; ctx.fill(); ctx.shadowBlur = 20; ctx.shadowColor = '#00f5d4';
             } else if (this.level >= 10) {
                 ctx.rotate(gameTime * 2); ctx.beginPath();
                 for (let i = 0; i < 6; i++) { ctx.moveTo(0, 0); ctx.lineTo(28, 0); ctx.rotate(Math.PI / 3); }
                 ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 4; ctx.stroke();
                 ctx.beginPath(); ctx.arc(0, 0, this.radius + 5, 0, Math.PI * 2); ctx.fillStyle = '#ffd166'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.stroke();
             } else if (this.level >= 5) {
-                ctx.beginPath(); ctx.arc(0, 0, this.radius + 3, 0, Math.PI * 2); ctx.fillStyle = '#9b5de5'; ctx.fill(); ctx.strokeStyle = '#00f5d4'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, this.radius + 3, 0, Math.PI * 2); 
+                ctx.fillStyle = this.invincibleTimer > 0 ? '#fff' : this.color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
             } else {
-                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, this.radius, 0, Math.PI * 2); 
+                ctx.fillStyle = this.invincibleTimer > 0 ? '#fff' : this.color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
             }
             ctx.restore();
 
@@ -1195,7 +1288,7 @@
             ctx.fillStyle = '#0f0'; ctx.fillRect(this.x - hpWidth/2, this.y - this.radius - 20, hpWidth * hpRatio, 5);
         }
 
-        shootNearest() {
+        shootNearest(currentFireRate) {
             if (enemies.length === 0) return; let nearestEnemy = null, minDistance = Infinity;
             for (let enemy of enemies) { const dist = Math.hypot(enemy.x - this.x, enemy.y - this.y); if (dist < minDistance) { minDistance = dist; nearestEnemy = enemy; } }
             if (nearestEnemy && minDistance < 600) {
@@ -1209,19 +1302,11 @@
             }
         }
 
-        applyAuraDamage() {
-            for (let enemy of enemies) {
-                if (Math.hypot(enemy.x - this.x, enemy.y - this.y) < this.auraRadius + enemy.radius) {
-                    const dmgInfo = this.calcDamage(this.auraDamage); enemy.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
-                }
-            }
-        }
-
         gainXp(amount) {
             this.xp += amount * this.xpMultiplier;
             while (this.xp >= this.xpNeeded) {
                 this.xp -= this.xpNeeded; this.level++;
-                if (currentMode === 'rampage') { this.xpNeeded = Math.floor(this.xpNeeded * 1.15) + 50; } else { this.xpNeeded = Math.floor(this.xpNeeded * 1.3) + 20; }
+                if (currentMode === 'rampage' || currentMode === 'hard') { this.xpNeeded = Math.floor(this.xpNeeded * 1.15) + 50; } else { this.xpNeeded = Math.floor(this.xpNeeded * 1.3) + 20; }
                 if (this.level === 20 || this.level === 30 || this.level === 40) soundManager.playAwaken(); else soundManager.playLevelUp();
                 triggerLevelUp();
             }
@@ -1229,30 +1314,29 @@
         }
 
         takeDamage(amount) {
-            if (this.invulTimer > 0) return; 
-            if (this.hasShield && this.shieldCount > 0) {
-                this.shieldCount--; this.invulTimer = 1.0; 
-                if ((this.upgrades['shield'] || 0) >= 5) {
-                    effects.push(new Explosion(this.x, this.y, 200, false, 'ice')); soundManager.playAwaken();
-                    const dmgInfo = this.calcDamage(100);
-                    for(let e of enemies) {
-                        if(Math.hypot(e.x-this.x, e.y-this.y) < 200) {
-                            e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit);
-                            const angle = Math.atan2(e.y - this.y, e.x - this.x); e.x += Math.cos(angle) * 100; e.y += Math.sin(angle) * 100;
-                        }
-                    }
-                }
+            if (this.invincibleTimer > 0) return;
+
+            // 圣骑士护盾逻辑
+            if (this.shieldCount > 0) {
+                this.shieldCount--;
+                this.invincibleTimer = 1.0; // 破盾后获得1秒无敌
+                soundManager.playShoot(); 
                 return;
             }
-            this.hp -= amount; this.invulTimer = 0.2; 
-            if (this.hp <= 0) { this.hp = 0; gameOver(); }
+
+            this.hp -= amount; 
+            if (this.hp <= 0) { this.hp = 0; gameOver(false); }
         }
     }
 
     class Enemy {
         constructor(x, y, type = 'normal') {
             this.x = x; this.y = y;
-            const timeScaling = 1 + (gameTime / 60) * 1.5; const dmgScaling = 1 + (gameTime / 120);
+            let timeScaling = 1 + (gameTime / 60) * 1.5; 
+            let dmgScaling = 1 + (gameTime / 120);
+
+            if (currentMode === 'hard') { timeScaling = 1 + (gameTime / 60) * 3.0; dmgScaling = 1 + (gameTime / 60); }
+
             this.isElite = false; this.isBoss = false;
 
             if (type === 'fast') {
@@ -1268,6 +1352,7 @@
             }
 
             if (currentMode === 'rampage') { this.speed *= 1.4; this.damage *= 1.5; this.hp *= 1.2; this.xpValue = Math.floor(this.xpValue * 1.5); }
+            if (currentMode === 'hard') { this.speed *= 1.2; }
             this.markedForDeletion = false; this.slowTimer = 0; this.speedMultiplier = 1.0; this.isPlagued = false; 
         }
 
@@ -1277,7 +1362,12 @@
             this.x += Math.cos(angle) * actualSpeed * dt; this.y += Math.sin(angle) * actualSpeed * dt;
 
             if (Math.hypot(player.x - this.x, player.y - this.y) < this.radius + player.radius) {
-                player.takeDamage(this.damage * dt); this.x -= Math.cos(angle) * 2; this.y -= Math.sin(angle) * 2;
+                player.takeDamage(this.damage * dt); 
+                this.x -= Math.cos(angle) * 2; this.y -= Math.sin(angle) * 2; 
+                if (player.hasThorns) {
+                    const dmgInfo = player.calcDamage(player.thornsDamage);
+                    this.takeDamage(dmgInfo.dmg * dt * 5, false); 
+                }
             }
         }
 
@@ -1304,10 +1394,11 @@
                     floatingTexts.push(new FloatingText(player.x, player.y - 20, "+" + player.lifestealAmount, '#80ed99'));
                 }
 
-                if (this.isPlagued) {
-                    effects.push(new Explosion(this.x, this.y, 80, true, 'poison'));
-                    const dmgInfo = player.calcDamage(player.poisonDamage * 3);
-                    for(let e of enemies) { if(Math.hypot(e.x - this.x, e.y - this.y) < 80) e.takeDamage(dmgInfo.dmg, false); }
+                // 死亡爆破 (Death Bloom)
+                if (player.hasDeathBloom && Math.random() < player.deathBloomChance) {
+                    effects.push(new Explosion(this.x, this.y, 80, player.upgrades['death_bloom'] >= 5, 'bloom'));
+                    const dmgInfo = player.calcDamage(player.deathBloomDamage);
+                    for(let e of enemies) { if(e !== this && Math.hypot(e.x - this.x, e.y - this.y) < 80) e.takeDamage(dmgInfo.dmg, false); }
                 }
                 
                 if (this.isElite || this.isBoss) {
@@ -1321,14 +1412,23 @@
     // --- 游戏循环与系统逻辑 ---
 
     const camera = { x: 0, y: 0 };
-    let player;
-    let enemies = []; let bullets = []; let boomerangs = []; let missiles = []; let blackHoles = []; let axes = []; let slashes = []; let laserLines = []; let orbitals = [];
+    let enemies = []; let bullets = []; let boomerangs = []; let missiles = []; let blackHoles = []; let axes = []; let slashes = []; let laserLines = []; let orbitals = []; let shockwaves = []; let meteors = []; let arrows = []; let shurikens = []; let turrets = []; let voidSlashes = [];
     let gems = []; let chests = []; let floatingTexts = []; let effects = []; let damageZones = []; 
     let spawnTimer = 0; let spawnInterval = 1.5; let eliteTimer = 20; let lastBossMinute = 0; 
 
-    function saveScore() {
+    function saveScore(isWin) {
         let scores = JSON.parse(localStorage.getItem('survivor_leaderboard')) || [];
-        scores.push({ time: gameTime, kills: killCount, mode: currentMode === 'rampage' ? '狂暴' : '经典' });
+        
+        let cName = '战士';
+        if (selectedClass === 'mage') cName = '法师';
+        if (selectedClass === 'archer') cName = '射手';
+        
+        let mName = '经典';
+        if (currentMode === 'rampage') mName = '狂暴';
+        if (currentMode === 'hard') mName = '困难';
+        if (currentMode === 'debug') mName = '调试';
+
+        scores.push({ time: gameTime, kills: killCount, mode: mName, class: cName, win: isWin });
         scores.sort((a, b) => b.time - a.time || b.kills - a.kills); scores = scores.slice(0, 8);
         localStorage.setItem('survivor_leaderboard', JSON.stringify(scores));
     }
@@ -1339,14 +1439,13 @@
         if (scores.length === 0) { list.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">暂无记录</td></tr>'; return; }
         list.innerHTML = scores.map((s, index) => `
             <tr style="border-bottom: 1px solid #4a4e69; line-height: 2.5;">
-                <td>#${index + 1}</td><td style="color: ${s.mode === '狂暴' ? '#ff5c77' : '#00f5d4'}">${s.mode}</td>
+                <td>#${index + 1} ${s.class}</td><td style="color: ${s.mode === '狂暴' ? '#ff5c77' : (s.mode==='困难'?'#9b5de5':'#00f5d4')}">${s.mode} ${s.win?'👑':''}</td>
                 <td>${formatTime(s.time)}</td><td>${s.kills}</td>
             </tr>
         `).join('');
     }
     function hideLeaderboard() { leaderboardPanel.style.display = 'none'; startPanel.style.display = 'block'; }
 
-    // --- GM 调试模式专用逻辑 ---
     function openGM() {
         if(gameState !== 'playing') return;
         gameState = 'paused'; soundManager.stopBGM(); resetInput();
@@ -1362,32 +1461,51 @@
     function renderGMList() {
         gmBuffList.innerHTML = '';
         possibleUpgrades.forEach(u => {
+            if (u.classReq && u.classReq !== player.playerClass) return;
             const lvl = player.upgrades[u.id] || 0;
             const isMax = lvl >= 5;
             gmBuffList.innerHTML += `
                 <div class="gm-row">
-                    <span>${u.icon} ${u.name} <span style="color:${isMax?'#ef233c':'#ffd166'}">Lv.${lvl}</span></span>
-                    <div class="gm-actions">
-                        <button onclick="gmUpgradeBuff('${u.id}', false)" ${isMax?'disabled':''}>+1</button>
-                        <button class="max" onclick="gmUpgradeBuff('${u.id}', true)" ${isMax?'disabled':''}>MAX</button>
+                    <span style="font-size:14px;">${u.icon} ${u.name} <span style="color:${isMax?'#ef233c':'#ffd166'}">Lv.${lvl}</span></span>
+                    <div class="gm-actions" style="display:flex; gap:3px;">
+                        <button style="background:#ffb703; color:#1a1a2e; padding:4px 6px;" onclick="gmSetBuffLevel('${u.id}', 0)" ${lvl===0?'disabled':''}>清空</button>
+                        <button style="background:#4a4e69; color:white; padding:4px 8px;" onclick="gmSetBuffLevel('${u.id}', ${lvl - 1})" ${lvl===0?'disabled':''}>-1</button>
+                        <button style="background:#4cc9f0; color:#1a1a2e; padding:4px 8px;" onclick="gmSetBuffLevel('${u.id}', ${lvl + 1})" ${isMax?'disabled':''}>+1</button>
+                        <button class="max" style="padding:4px 6px;" onclick="gmSetBuffLevel('${u.id}', 5)" ${isMax?'disabled':''}>MAX</button>
                     </div>
                 </div>
             `;
         });
     }
 
-    function gmUpgradeBuff(id, toMax) {
-        const currentLvl = player.upgrades[id] || 0;
-        const times = toMax ? (5 - currentLvl) : 1;
-        for(let i=0; i<times; i++) grantBuffLogic(id);
-        renderGMList(); // 刷新GM列表展示
-        updateHUD(); 
+    function gmSetBuffLevel(id, targetLvl) {
+        targetLvl = Math.max(0, Math.min(5, targetLvl));
+        const hpPercent = player.hp / player.maxHp;
+        
+        let tempUpgrades = { ...player.upgrades };
+        tempUpgrades[id] = targetLvl;
+        if (tempUpgrades[id] <= 0) delete tempUpgrades[id];
+
+        let newPlayer = new Player(player.playerClass);
+        newPlayer.level = player.level;
+        newPlayer.xp = player.xp;
+        newPlayer.xpNeeded = player.xpNeeded;
+        newPlayer.trail = player.trail;
+        
+        player = newPlayer;
+
+        for(let key in tempUpgrades) {
+            let lvl = tempUpgrades[key];
+            for(let i=0; i<lvl; i++) { grantBuffLogic(key); }
+        }
+
+        player.hp = player.maxHp * hpPercent;
+        renderGMList(); updateHUD(); 
     }
 
     function gmSetLevel(targetLvl) {
         while(player.level < targetLvl) {
             player.level++;
-            // 触发等级专属的外观觉醒音效
             if (player.level === 20 || player.level === 30 || player.level === 40) soundManager.playAwaken();
         }
         updateHUD();
@@ -1416,11 +1534,13 @@
         joystickZone.style.display = 'block';
         gameState = 'playing'; lastTime = performance.now(); soundManager.startBGM(); requestAnimationFrame(gameLoop);
     }
-    function forceEndGame() { settingsPanel.style.display = 'none'; player.hp = 0; gameOver(); }
+    function forceEndGame() { settingsPanel.style.display = 'none'; player.hp = 0; gameOver(false); }
 
     function startGame(mode = 'classic') {
-        currentMode = mode; resetInput(); player = new Player();
-        enemies = []; bullets = []; boomerangs = []; missiles = []; blackHoles = []; axes = []; slashes = []; laserLines = []; orbitals = [];
+        currentMode = mode; resetInput(); 
+        player = new Player(selectedClass); 
+        
+        enemies = []; bullets = []; boomerangs = []; missiles = []; blackHoles = []; axes = []; slashes = []; laserLines = []; orbitals = []; shockwaves = []; meteors = []; arrows = []; shurikens = []; turrets = []; voidSlashes = [];
         gems = []; chests = []; floatingTexts = []; effects = []; damageZones = [];
         gameTime = 0; killCount = 0; spawnInterval = 1.5; eliteTimer = 20; lastBossMinute = 0;
         startPanel.style.display = 'none'; gameoverPanel.style.display = 'none'; levelupPanel.style.display = 'none'; leaderboardPanel.style.display = 'none'; settingsPanel.style.display = 'none'; gmPanel.style.display = 'none';
@@ -1431,29 +1551,53 @@
         updateHUD(); gameState = 'playing'; lastTime = performance.now(); soundManager.startBGM(); requestAnimationFrame(gameLoop);
     }
 
-    function gameOver() {
+    function gameOver(isWin) {
         gameState = 'gameover'; soundManager.stopBGM(); resetInput();
         xpContainer.style.display = 'none'; levelText.style.display = 'none'; timerText.style.display = 'none'; settingsBtn.style.display = 'none'; gmBtn.style.display = 'none'; joystickZone.style.display = 'none'; 
-        saveScore(); 
+        
+        saveScore(isWin); 
+        
+        if (isWin) {
+            endTitle.innerText = "🏆 任务完成 🏆"; endTitle.style.color = "#ffd166";
+            soundManager.playVictory();
+        } else {
+            endTitle.innerText = "💀 游戏结束 💀"; endTitle.style.color = "#e94560";
+        }
         
         let modeName = '🌿 经典';
         if(currentMode === 'rampage') modeName = '🩸 狂暴';
+        if(currentMode === 'hard') modeName = '💀 困难';
         if(currentMode === 'debug') modeName = '🐛 调试';
-        finalStats.innerHTML = `模式: ${modeName}<br>存活时间: ${formatTime(gameTime)} <br> 击杀数: ${killCount} <br> 最终等级: ${player.level}`;
+        
+        let className = '🗡️ 战士';
+        if(selectedClass === 'mage') className = '🧙‍♂️ 法师';
+        if(selectedClass === 'archer') className = '🏹 射手';
+
+        finalStats.innerHTML = `职业: ${className}<br>模式: ${modeName}<br>存活时间: ${formatTime(gameTime)} <br> 击杀数: ${killCount} <br> 最终等级: ${player.level}`;
         
         gameoverPanel.style.display = 'block';
     }
 
     function updateHUD() {
         const percent = (player.xp / player.xpNeeded) * 100; xpBar.style.width = `${percent}%`; 
-        levelText.innerText = `Lv. ${player.level}`; timerText.innerText = formatTime(gameTime);
+        levelText.innerText = `Lv. ${player.level}`; 
+        
+        if (currentMode === 'classic') {
+            let timeLeft = 600 - gameTime;
+            if (timeLeft <= 0) { timeLeft = 0; gameOver(true); }
+            timerText.innerText = formatTime(timeLeft);
+        } else {
+            timerText.innerText = formatTime(gameTime);
+        }
     }
 
     function handleSpawning(dt) {
         spawnTimer -= dt; spawnInterval = Math.max(0.2, 1.5 - (gameTime / 60) * 0.4);
+        if (currentMode === 'hard') spawnInterval = Math.max(0.1, spawnInterval * 0.7);
+
         eliteTimer -= dt;
         if (eliteTimer <= 0) {
-            eliteTimer = 20 + Math.random() * 20;
+            eliteTimer = (currentMode === 'hard') ? (15 + Math.random()*15) : (20 + Math.random() * 20);
             const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) / 2 + 150; 
             const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist; enemies.push(new Enemy(ex, ey, 'elite'));
         }
@@ -1467,6 +1611,8 @@
         if (spawnTimer <= 0) {
             let spawnCount = Math.floor(1 + gameTime / 30); 
             if (currentMode === 'rampage') { spawnCount *= 3; spawnInterval = Math.max(0.05, spawnInterval * 0.5); }
+            if (currentMode === 'hard') { spawnCount = Math.floor(spawnCount * 1.5); }
+
             for(let i=0; i<spawnCount; i++) {
                 const angle = Math.random() * Math.PI * 2; const dist = Math.max(canvas.width, canvas.height) / 2 + 100; 
                 const ex = player.x + Math.cos(angle) * dist; const ey = player.y + Math.sin(angle) * dist;
@@ -1482,14 +1628,26 @@
 
     function triggerLevelUp() {
         gameState = 'levelup'; joystickZone.style.display = 'none'; resetInput();
-        const availableUpgrades = possibleUpgrades.filter(u => (player.upgrades[u.id] || 0) < 5); let choices = [];
+        
+        const availableUpgrades = possibleUpgrades.filter(u => {
+            if ((player.upgrades[u.id] || 0) >= 5) return false;
+            if (u.classReq && u.classReq !== player.playerClass) return false;
+            return true;
+        });
+
+        let choices = [];
         if (availableUpgrades.length === 0) { choices = [{ id: 'fallback_meat', name: '美味烤肉', desc: '已经神功大成！恢复 100 点生命值。', icon: '🍖' }]; } 
         else { const shuffled = [...availableUpgrades].sort(() => 0.5 - Math.random()); choices = shuffled.slice(0, Math.min(3, shuffled.length)); }
         
         upgradeOptions.innerHTML = '';
         choices.forEach(choice => {
             const btn = document.createElement('button'); const currentLvl = player.upgrades[choice.id] || 0; const isNextMax = currentLvl === 4; 
-            btn.className = `upgrade-btn ${isNextMax ? 'max-level-btn' : ''}`;
+            
+            let btnClass = `upgrade-btn ${isNextMax ? 'max-level-btn' : ''}`;
+            if (choice.classReq) btnClass += ' class-exclusive'; 
+
+            btn.className = btnClass;
+
             let lvlText = `<span style="float:right; color:#00f5d4;">新!</span>`;
             if (choice.id === 'fallback_meat') { lvlText = ''; } else if (currentLvl > 0) { lvlText = `<span style="float:right; color:${isNextMax?'#fff':'#ffd166'};">Lv.${currentLvl + 1}${isNextMax?' 满级觉醒!':''}</span>`; }
             btn.innerHTML = `<strong>${choice.icon} ${choice.name}</strong> ${lvlText}<br><span style="font-size:14px; color:${isNextMax?'#fff':'#aaa'};">${choice.desc}</span>`;
@@ -1504,29 +1662,56 @@
         finishLevelUp();
     }
 
-    // 核心的升星和觉醒逻辑拆分出来，以便 GM 功能直接调用
     function grantBuffLogic(id) {
         if(!player.upgrades[id]) player.upgrades[id] = 0;
-        if(player.upgrades[id] >= 5) return; // 锁死最高5级，防止GM乱点越界
+        if(player.upgrades[id] >= 5) return; 
         
         player.upgrades[id]++; const isMaxLevel = player.upgrades[id] === 5; 
 
         switch(id) {
-            case 'katana':
-                if(!player.hasKatana) player.hasKatana = true; else { player.katanaCooldown = Math.max(0.5, player.katanaCooldown - 0.3); player.katanaDamage += 30; player.katanaRadius += 20; }
-                if(isMaxLevel) { player.katanaRadius += 80; player.katanaDamage *= 2; soundManager.playAwaken(); } break;
-            case 'poison':
-                if(!player.hasPoison) player.hasPoison = true; else { player.poisonCooldown = Math.max(1.0, player.poisonCooldown - 0.5); player.poisonDamage += 10; player.poisonCount += 1; }
-                if(isMaxLevel) { player.poisonCount += 2; player.poisonDamage *= 2; soundManager.playAwaken(); } break;
-            case 'shield':
-                if(!player.hasShield) player.hasShield = true; else { player.shieldRegenRate = Math.max(5.0, player.shieldRegenRate - 2.5); }
-                if(isMaxLevel) { player.shieldMax = 3; player.shieldCount = 3; soundManager.playAwaken(); } break;
-            case 'laser':
-                if(!player.hasLaser) player.hasLaser = true; else { player.laserBounces += 2; player.laserDamage += 15; player.laserCooldown = Math.max(0.5, player.laserCooldown - 0.2); }
-                if(isMaxLevel) { player.laserBounces = 15; player.laserDamage *= 2; soundManager.playAwaken(); } break;
-            case 'orbital':
-                if(!player.hasOrbital) player.hasOrbital = true; else { player.orbitalCooldown = Math.max(2.0, player.orbitalCooldown - 0.8); player.orbitalDamage += 50; player.orbitalRadius += 20; }
-                if(isMaxLevel) { player.orbitalRadius += 50; player.orbitalDamage *= 2; soundManager.playAwaken(); } break;
+            // --- 致敬元气的新增技能 ---
+            case 'holy_shield':
+                player.maxShield = isMaxLevel ? 3 : 1; 
+                player.shieldRegenTime = Math.max(2, 10 - player.upgrades['holy_shield'] * 1.5);
+                if(isMaxLevel) soundManager.playAwaken(); break;
+            case 'death_ray':
+                if(!player.hasDeathRay) player.hasDeathRay = true; else { player.deathRayCooldown = Math.max(1, player.deathRayCooldown - 0.5); player.deathRayDamage += 40; }
+                if(isMaxLevel) { player.deathRayDamage *= 2; soundManager.playAwaken(); } break;
+            case 'death_bloom':
+                if(!player.hasDeathBloom) player.hasDeathBloom = true; player.deathBloomChance += isMaxLevel ? 0.5 : 0.1; player.deathBloomDamage += 20;
+                if(isMaxLevel) soundManager.playAwaken(); break;
+            case 'void_slash':
+                if(!player.hasVoidSlash) player.hasVoidSlash = true; else { player.voidSlashCooldown = Math.max(0.5, player.voidSlashCooldown - 0.3); player.voidSlashDamage += 40; }
+                if(isMaxLevel) { player.voidSlashRadius *= 1.5; soundManager.playAwaken(); } break;
+            case 'turret':
+                if(!player.hasTurret) player.hasTurret = true; else { player.turretCooldown = Math.max(2, player.turretCooldown - 1); player.turretDamage += 10; }
+                if(isMaxLevel) soundManager.playAwaken(); break;
+
+            // --- 原有技能 ---
+            case 'shuriken':
+                if(!player.hasShuriken) player.hasShuriken = true; else { player.shurikenCooldown = Math.max(0.5, player.shurikenCooldown - 0.2); player.shurikenDamage += 20; player.shurikenCount += 1; }
+                if(isMaxLevel) { player.shurikenCount = 8; player.shurikenDamage *= 2; soundManager.playAwaken(); } break;
+            case 'scythe':
+                if(!player.hasScythe) player.hasScythe = true; else { player.scytheCooldown = Math.max(0.8, player.scytheCooldown - 0.2); player.scytheDamage += 30; player.scytheRadius += 10; }
+                if(isMaxLevel) { player.scytheRadius += 50; player.scytheDamage *= 2; soundManager.playAwaken(); } break;
+            case 'thorns':
+                if(!player.hasThorns) player.hasThorns = true; else { player.thornsDamage += 20; }
+                if(isMaxLevel) { player.thornsDamage *= 2.5; soundManager.playAwaken(); } break;
+            case 'haste':
+                player.cdr += isMaxLevel ? 0.5 : 0.15; 
+                if(isMaxLevel) soundManager.playAwaken(); break;
+            case 'shockwave':
+                if(!player.hasShockwave) player.hasShockwave = true; else { player.shockwaveCooldown = Math.max(1.0, player.shockwaveCooldown - 0.4); player.shockwaveDamage += 20; player.shockwaveRadius += 20;}
+                if(isMaxLevel) { player.shockwaveRadius += 100; player.shockwaveDamage *= 2; soundManager.playAwaken(); } break;
+            case 'meteor':
+                if(!player.hasMeteor) player.hasMeteor = true; else { player.meteorCooldown = Math.max(2.0, player.meteorCooldown - 0.6); player.meteorDamage += 50; player.meteorRadius += 20; }
+                if(isMaxLevel) { player.meteorCount += 2; player.meteorDamage *= 2; soundManager.playAwaken(); } break;
+            case 'arrow':
+                if(!player.hasArrow) player.hasArrow = true; else { player.arrowCooldown = Math.max(0.5, player.arrowCooldown - 0.2); player.arrowDamage += 30; }
+                if(isMaxLevel) { player.arrowDamage *= 2; soundManager.playAwaken(); } break; 
+            case 'berserker': break;
+            case 'elemental': break;
+            case 'hawkeye': player.critChance += isMaxLevel ? 0.3 : 0.1; player.pickupRange += isMaxLevel ? 200 : 50; break;
             case 'xp_scroll': player.xpMultiplier += isMaxLevel ? 0.5 : 0.15; break;
             case 'vampire': player.lifestealChance += isMaxLevel ? 0.1 : 0.03; player.lifestealAmount += isMaxLevel ? 5 : 1; break;
             case 'frost':
@@ -1594,6 +1779,8 @@
         bullets.forEach(b => b.update(dt)); boomerangs.forEach(b => b.update(dt)); 
         missiles.forEach(m => m.update(dt)); blackHoles.forEach(bh => bh.update(dt)); axes.forEach(a => a.update(dt)); 
         slashes.forEach(s => s.update(dt)); laserLines.forEach(l => l.update(dt)); orbitals.forEach(o => o.update(dt));
+        shockwaves.forEach(sw => sw.update(dt)); meteors.forEach(m => m.update(dt)); arrows.forEach(a => a.update(dt));
+        shurikens.forEach(s => s.update(dt)); turrets.forEach(t => t.update(dt)); voidSlashes.forEach(vs => vs.update(dt));
         enemies.forEach(e => e.update(dt));
         gems.forEach(g => g.update(dt)); chests.forEach(c => c.update(dt)); 
         floatingTexts.forEach(ft => ft.update(dt));
@@ -1606,6 +1793,15 @@
                 if (Math.hypot(b.x - e.x, b.y - e.y) < b.radius + e.radius) {
                     const dmgInfo = player.calcDamage(b.baseDamage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); b.hitEnemies.add(e); b.pierce--;
                     if (b.pierce <= 0) { b.markedForDeletion = true; break; }
+                }
+            }
+        }
+        for (let a of arrows) {
+            if (a.markedForDeletion) continue;
+            for (let e of enemies) {
+                if (e.markedForDeletion || a.hitEnemies.has(e)) continue; 
+                if (Math.hypot(a.x - e.x, a.y - e.y) < 15 + e.radius) {
+                    const dmgInfo = player.calcDamage(a.damage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); a.hitEnemies.add(e); 
                 }
             }
         }
@@ -1627,10 +1823,22 @@
                 }
             }
         }
+        for (let s of shurikens) {
+            if (s.markedForDeletion) continue;
+            for (let e of enemies) {
+                if (e.markedForDeletion) continue; 
+                if (Math.hypot(s.x - e.x, s.y - e.y) < s.radius + e.radius) {
+                    const dmgInfo = player.calcDamage(s.damage); e.takeDamage(dmgInfo.dmg, dmgInfo.isCrit); 
+                    if (!s.isAwakened) s.markedForDeletion = true; 
+                }
+            }
+        }
 
         bullets = bullets.filter(b => !b.markedForDeletion); boomerangs = boomerangs.filter(b => !b.markedForDeletion); 
         missiles = missiles.filter(m => !m.markedForDeletion); blackHoles = blackHoles.filter(bh => !bh.markedForDeletion); axes = axes.filter(a => !a.markedForDeletion);
         slashes = slashes.filter(s => !s.markedForDeletion); laserLines = laserLines.filter(l => l.life > 0); orbitals = orbitals.filter(o => !o.markedForDeletion);
+        shockwaves = shockwaves.filter(sw => !sw.markedForDeletion); meteors = meteors.filter(m => !m.markedForDeletion); arrows = arrows.filter(a => !a.markedForDeletion);
+        shurikens = shurikens.filter(s => !s.markedForDeletion); turrets = turrets.filter(t => !t.markedForDeletion); voidSlashes = voidSlashes.filter(vs => !vs.markedForDeletion);
         enemies = enemies.filter(e => !e.markedForDeletion); gems = gems.filter(g => !g.markedForDeletion); chests = chests.filter(c => !c.markedForDeletion);
         floatingTexts = floatingTexts.filter(ft => ft.life > 0); effects = effects.filter(eff => eff.life > 0); damageZones = damageZones.filter(dz => dz.lifeTime > 0);
 
@@ -1640,11 +1848,11 @@
         ctx.save(); ctx.translate(-camera.x, -camera.y);
 
         drawGrid(); damageZones.forEach(dz => dz.draw()); orbitals.forEach(o => o.draw()); blackHoles.forEach(bh => bh.draw());
-        gems.forEach(g => g.draw()); chests.forEach(c => c.draw());
+        gems.forEach(g => g.draw()); chests.forEach(c => c.draw()); turrets.forEach(t => t.draw());
         enemies.forEach(e => e.draw()); player.draw();
-        slashes.forEach(s => s.draw()); laserLines.forEach(l => l.draw());
-        bullets.forEach(b => b.draw()); boomerangs.forEach(b => b.draw()); 
-        missiles.forEach(m => m.draw()); axes.forEach(a => a.draw()); 
+        slashes.forEach(s => s.draw()); shockwaves.forEach(sw => sw.draw()); laserLines.forEach(l => l.draw()); meteors.forEach(m => m.draw()); voidSlashes.forEach(vs => vs.draw());
+        bullets.forEach(b => b.draw()); arrows.forEach(a => a.draw()); boomerangs.forEach(b => b.draw()); 
+        missiles.forEach(m => m.draw()); axes.forEach(a => a.draw()); shurikens.forEach(s => s.draw());
         effects.forEach(eff => eff.draw()); floatingTexts.forEach(ft => ft.draw());
 
         ctx.restore(); 
