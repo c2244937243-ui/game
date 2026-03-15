@@ -289,4 +289,211 @@
                 // 我们判断水果顶部是否越过红线
                 if (body.position.y - FRUITS[body.fruitLevel].radius < 150) {
                     // 并且水果基本处于静止状态 (防止掉落途中的误判)
-                    if (Math.abs(body.velocity.y) < 0.2
+                    if (Math.abs(body.velocity.y) < 0.2 && Math.abs(body.velocity.x) < 0.2) {
+                        isAboveLine = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 如果停留越线超过 120 帧 (约2秒)
+        if (isAboveLine) {
+            gameOverTimer++;
+            if (gameOverTimer > 120) {
+                triggerGameOver();
+            }
+        } else {
+            // 安全就重置倒计时
+            gameOverTimer = 0; 
+        }
+    });
+
+    // 触发游戏结束
+    function triggerGameOver() {
+        gameOver = true;
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('game-over').style.display = 'flex';
+    }
+
+    // 重新开始游戏
+    window.restart = function() {
+        // 清空所有水果
+        const bodies = Composite.allBodies(engine.world);
+        const fruitBodies = bodies.filter(b => b.fruitLevel !== undefined);
+        Composite.remove(engine.world, fruitBodies);
+        
+        // 重置状态
+        score = 0;
+        gameOver = false;
+        gameOverTimer = 0;
+        isDropping = false;
+        currentLevel = getRandomFruitLevel();
+        nextLevel = getRandomFruitLevel();
+        updateUI();
+        
+        document.getElementById('game-over').style.display = 'none';
+    };
+
+    // --- 玩家操作：瞄准与掉落 ---
+    function updatePreviewPosition(e) {
+        if (gameOver) return;
+        const rect = canvas.getBoundingClientRect();
+        // 因为外层可能有CSS scale，所以要把 clientX 转换成实际内部 400px 的坐标
+        const scaleX = 400 / rect.width;
+        previewX = (e.clientX - rect.left) * scaleX;
+    }
+
+    // 触摸/鼠标按下
+    canvas.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        updatePreviewPosition(e);
+    });
+
+    // 拖动瞄准
+    canvas.addEventListener('pointermove', (e) => {
+        e.preventDefault();
+        if (e.buttons > 0 || e.pointerType === 'touch') {
+            updatePreviewPosition(e);
+        }
+    });
+
+    // 松手掉落
+    canvas.addEventListener('pointerup', (e) => {
+        e.preventDefault();
+        if (gameOver || isDropping) return;
+        updatePreviewPosition(e);
+        dropFruit(previewX);
+    });
+
+    // 掉落逻辑
+    function dropFruit(x) {
+        isDropping = true;
+        const fruit = FRUITS[currentLevel];
+        
+        // 边界限制，防止水果卡进墙里
+        const wallThickness = 25;
+        x = Math.max(wallThickness + fruit.radius, Math.min(canvas.width - wallThickness - fruit.radius, x));
+
+        // 生成真实掉落的水果 (初始Y位置在顶部 50 的地方)
+        const newBody = Bodies.circle(x, 50, fruit.radius, {
+            restitution: 0.2,
+            friction: 0.1,
+            fruitLevel: currentLevel
+        });
+        
+        Composite.add(engine.world, newBody);
+
+        // 切换到下一个
+        currentLevel = nextLevel;
+        nextLevel = getRandomFruitLevel();
+        updateUI();
+
+        // 冷却时间 (0.8秒后才能再次丢水果)
+        setTimeout(() => {
+            isDropping = false;
+        }, 800);
+    }
+
+    // --- 自定义渲染引擎 (完美绘制 Emoji 和背景色) ---
+    function renderLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 绘制危险红线
+        ctx.beginPath();
+        ctx.moveTo(0, 150);
+        ctx.lineTo(canvas.width, 150);
+        ctx.setLineDash([12, 12]);
+        // 如果快要越线了，红线会变深警告
+        ctx.strokeStyle = gameOverTimer > 0 ? '#ff0000' : 'rgba(255, 100, 100, 0.4)'; 
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.setLineDash([]); // 恢复实线
+
+        // 绘制顶部预览水果 (未掉落状态)
+        if (!isDropping && !gameOver) {
+            const fruit = FRUITS[currentLevel];
+            const wallThickness = 25;
+            let safeX = Math.max(wallThickness + fruit.radius, Math.min(canvas.width - wallThickness - fruit.radius, previewX));
+
+            ctx.save();
+            ctx.translate(safeX, 50); // 预览位置固定在 Y=50
+            
+            // 画一条往下指引的瞄准虚线
+            ctx.beginPath();
+            ctx.moveTo(0, fruit.radius);
+            ctx.lineTo(0, canvas.height);
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 半透明绘制预览水果
+            ctx.globalAlpha = 0.8;
+            drawFruitShape(ctx, fruit, 0, 0);
+            ctx.restore();
+        }
+
+        // 遍历所有物理刚体并绘制
+        const bodies = Composite.allBodies(engine.world);
+        for (let body of bodies) {
+            if (body.fruitLevel !== undefined) {
+                // 绘制水果
+                const fruit = FRUITS[body.fruitLevel];
+                ctx.save();
+                ctx.translate(body.position.x, body.position.y);
+                ctx.rotate(body.angle);
+                
+                // 完全不透明绘制真实水果
+                ctx.globalAlpha = 1.0;
+                drawFruitShape(ctx, fruit, 0, 0);
+                
+                ctx.restore();
+            } else if (body.isStatic) {
+                // 绘制地板
+                ctx.fillStyle = body.render.fillStyle || '#d4a373';
+                const w = body.bounds.max.x - body.bounds.min.x;
+                const h = body.bounds.max.y - body.bounds.min.y;
+                ctx.fillRect(body.bounds.min.x, body.bounds.min.y, w, h);
+            }
+        }
+
+        // 循环下一帧
+        requestAnimationFrame(renderLoop);
+    }
+
+    // 辅助函数：绘制单个水果 (纯 Emoji 极简版)
+    function drawFruitShape(ctx, fruit, x, y) {
+        // 居中绘制 Emoji，字体大小直接拉满到物理碰撞圆的直径 (半径的2倍)
+        ctx.font = `${fruit.radius * 2}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 保留一点点小阴影，让水果从背景里浮出来，更有质感
+        ctx.shadowColor = 'rgba(0,0,0,0.2)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetY = 3;
+        
+        // Y轴加一点点微调，让 Emoji 的视觉中心对准物理引擎的圆心
+        ctx.fillText(fruit.emoji, x, y + fruit.radius * 0.1); 
+        
+        // 用完赶紧恢复阴影设置，别影响画其他东西（比如红线）
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+    }
+
+    // 初始化游戏界面
+    updateUI();
+
+    // 启动物理引擎和渲染循环
+    Runner.run(Runner.create(), engine);
+    requestAnimationFrame(renderLoop);
+
+</script>
+</body>
+</html>
+
+
+
